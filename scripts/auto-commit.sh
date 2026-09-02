@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Auto-commit hook.
+# Auto-commit hook for this repository.
 #
 # Wired up as a PostToolUse hook (see .claude/settings.json) so every Write /
 # Edit / NotebookEdit that Claude Code makes is committed and pushed. Runs
