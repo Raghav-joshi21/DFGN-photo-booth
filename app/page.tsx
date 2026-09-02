@@ -139,7 +139,7 @@ export default function Home() {
                   />
                 </div>
 
-                <span className="absolute bottom-1 left-1/2 z-10 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
+                <span className="absolute -bottom-4 left-1/2 z-10 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
                   <GridIcon className="h-6 w-6 text-white" />
                 </span>
               </div>
