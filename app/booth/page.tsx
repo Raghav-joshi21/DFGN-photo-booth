@@ -57,9 +57,10 @@ function IdleScreen() {
   }, []);
 
   return (
-    <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-5 py-8 lg:flex-row">
-      {/* Camera — live from the moment the booth opens. */}
-      <section className="flex w-full shrink-0 flex-col lg:w-[24rem] xl:w-[27rem]">
+    <div className="relative mx-auto flex w-full max-w-[100rem] flex-1 flex-col gap-8 px-5 py-8 lg:flex-row">
+      {/* Camera — live from the moment the booth opens, and the biggest thing
+          on screen: it is what people walk up to. */}
+      <section className="flex w-full shrink-0 flex-col lg:w-[34rem] xl:w-[40rem]">
         <header className="mb-4 flex items-center gap-3">
           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
             <Clip
@@ -74,7 +75,9 @@ function IdleScreen() {
             <h2 className="font-display text-2xl font-extrabold uppercase tracking-tight text-ink">
               Step up &amp; smile
             </h2>
-            <p className="text-sm text-ink/60">Hit the countdown when you&apos;re ready.</p>
+            <p className="text-sm text-ink/60">
+              Pick a filter, then hit the countdown.
+            </p>
           </div>
         </header>
 
@@ -83,44 +86,54 @@ function IdleScreen() {
 
       {/* Wall */}
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-shadow-brand font-display text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
-              The Spud Wall
-            </h1>
-            <p className="text-sm font-semibold text-ink/50">
-              {loading
-                ? "loading…"
-                : `${photos.length} spud${photos.length === 1 ? "" : "s"}`}
-            </p>
-          </div>
-
-          {/* Compact so it sits beside the heading instead of stealing a column
-              from the wall. */}
-          <div className="flex items-center gap-3 rounded-2xl border-[3px] border-ink bg-cream-light px-3 py-2 shadow-[4px_4px_0_var(--color-ink)]">
-            <div className="rounded-md bg-white p-1">
-              {uploadUrl ? (
-                <QRCodeSVG value={uploadUrl} size={64} marginSize={0} />
-              ) : (
-                // Reserve the box so the row doesn't jump once the URL resolves.
-                <div className="h-16 w-16" />
-              )}
-            </div>
-            <div className="max-w-[11rem]">
-              <p className="font-display text-sm font-extrabold leading-tight text-ink">
-                Or send one from your phone
-              </p>
-              <p className="mt-0.5 text-xs text-ink/60">
-                Scan to add your selfie to the wall
-              </p>
-            </div>
-          </div>
+        <header className="mb-5 flex items-baseline gap-3">
+          <h1 className="text-shadow-brand font-display text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
+            The Spud Wall
+          </h1>
+          <p className="text-sm font-semibold text-ink/50">
+            {loading
+              ? "loading…"
+              : `${photos.length} spud${photos.length === 1 ? "" : "s"}`}
+          </p>
         </header>
 
         <div className="flex-1 overflow-y-auto">
           <PhotoWall photos={photos} loading={loading} disabled={disabled} />
         </div>
       </section>
+
+      {/* Phone-upload rail: the potato points down at the code it is about. */}
+      <aside className="flex w-full shrink-0 flex-col items-center lg:w-64">
+        <div className="flex flex-col items-center rounded-[26px] border-[3px] border-ink bg-cream-light p-4 pt-2 text-center shadow-[6px_6px_0_var(--color-ink)]">
+          {/* Inside the card, not above it: the clip is flattened onto the
+              card's cream (video has no alpha), so on the page's gradient
+              ground its rectangle would show. */}
+          <Clip
+            src="/art/potato-pointing.mp4"
+            poster="/art/potato-pointing-poster.jpg"
+            width={320}
+            height={328}
+            className="w-32"
+          />
+
+          <p className="font-display text-lg font-extrabold leading-tight text-ink">
+            Or send one from your phone
+          </p>
+
+          <div className="mt-3 rounded-xl border-[3px] border-ink bg-white p-2.5">
+            {uploadUrl ? (
+              <QRCodeSVG value={uploadUrl} size={150} marginSize={0} />
+            ) : (
+              // Reserve the box so the card doesn't jump once the URL resolves.
+              <div className="h-[150px] w-[150px]" />
+            )}
+          </div>
+
+          <p className="mt-3 text-sm text-ink/60">
+            Scan to add your selfie to the wall
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }

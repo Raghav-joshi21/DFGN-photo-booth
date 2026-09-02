@@ -136,6 +136,31 @@ is one commit per edit, not per task. To review or disable the hook, run
 > the public repo.** `.env.local`, `certificates/`, and `.next/` are gitignored,
 > so keys and certs stay local — but keep it that way when adding new files.
 
+## Snap Camera Kit (live filters)
+
+The booth's self-camera can run Snap lenses live on the preview, before the
+countdown. Set `NEXT_PUBLIC_CAMERA_KIT_API_TOKEN` and
+`NEXT_PUBLIC_CAMERA_KIT_LENS_GROUP_ID` (see [`.env.local.example`](./.env.local.example))
+and a filter strip appears under the preview; the capture is then taken from
+Camera Kit's rendered output, so the lens is baked into the photo.
+
+It is entirely optional. With no credentials — or if the SDK fails to load, the
+token is rejected, or the lens group is empty — the booth falls back to the
+plain webcam preview and the rest of the capture flow is unchanged. The SDK is
+~7MB and is imported dynamically, so an unconfigured booth never downloads it.
+
+Only potato-themed lenses are offered: lens names are matched against a
+pattern in [`lib/camera-kit/index.ts`](./lib/camera-kit/index.ts). If a group
+contains lenses but none match, all of them are shown and a warning is logged —
+an empty filter strip would be worse than an unfiltered one.
+
+> **Snap branding requirement.** Snap's guidelines require visible attribution
+> whenever a Lens is active. The booth renders a small "Powered by Snap"
+> watermark over the preview while a lens is applied. Snap's requirements change,
+> so check the current wording and placement rules at
+> <https://developers.snap.com/camera-kit> before running this at an event —
+> and note the watermark is on the *preview*, not burned into the saved photo.
+
 ## Environment variables
 
 See [`.env.local.example`](./.env.local.example). Summary:

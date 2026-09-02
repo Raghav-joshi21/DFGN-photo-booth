@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import type { Lens } from "@snap/camera-kit";
+
+import {
+  hasCameraKitEnv,
+  startCameraKit,
+  type CameraKitHandle,
+} from "@/lib/camera-kit";
+
 type Phase = "preview" | "counting" | "captured";
 
 /**
@@ -31,6 +39,17 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   // Bumping this re-runs the acquire effect (the "Try again" button).
   const [attempt, setAttempt] = useState(0);
+
+  // --- Snap Camera Kit (optional live filters) ---------------------------
+  // `lens === null` is the always-available "no filter" option, and the
+  // default: a guest who ignores the strip gets a plain photo.
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const kitRef = useRef<CameraKitHandle | null>(null);
+  const [lenses, setLenses] = useState<Lens[]>([]);
+  const [activeLensId, setActiveLensId] = useState<string | null>(null);
+  const [kitReady, setKitReady] = useState(false);
+  // Set once the stream exists, so the Camera Kit effect can wait for it.
+  const [streamReady, setStreamReady] = useState(false);
 
   // Acquire the camera on mount, release it on unmount.
   //
@@ -71,6 +90,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         }
 
         streamRef.current = stream;
+        setStreamReady(true);
         const video = videoRef.current;
         if (!video) return;
 
@@ -107,11 +127,62 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
     return () => {
       cancelled = true;
+      setStreamReady(false);
       stream?.getTracks().forEach((t) => t.stop());
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
   }, [attempt]);
+
+  // Bring up Camera Kit on top of the live stream. Entirely optional: if it
+  // never becomes ready the plain <video> preview stays on screen and the rest
+  // of the flow is untouched.
+  useEffect(() => {
+    if (!streamReady || !hasCameraKitEnv()) return;
+    const stream = streamRef.current;
+    const canvas = canvasRef.current;
+    if (!stream || !canvas) return;
+
+    let cancelled = false;
+    let handle: CameraKitHandle | null = null;
+
+    startCameraKit(stream, canvas).then((result) => {
+      if (!result) return;
+      if (cancelled) {
+        result.destroy();
+        return;
+      }
+      handle = result;
+      kitRef.current = result;
+      setLenses(result.lenses);
+      setKitReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+      handle?.destroy();
+      kitRef.current = null;
+      setKitReady(false);
+      setLenses([]);
+      setActiveLensId(null);
+    };
+  }, [streamReady, attempt]);
+
+  /** Swap the live lens. `null` removes it (the "no filter" option). */
+  const selectLens = useCallback(async (lens: Lens | null) => {
+    const kit = kitRef.current;
+    if (!kit) return;
+    // Optimistic: the strip should respond immediately, not after the lens
+    // finishes downloading.
+    setActiveLensId(lens?.id ?? null);
+    try {
+      if (lens) await kit.session.applyLens(lens);
+      else await kit.session.removeLens();
+    } catch (err) {
+      console.warn("[booth] could not apply lens", err);
+      setActiveLensId(null);
+    }
+  }, []);
 
   // Countdown driver.
   useEffect(() => {
@@ -128,21 +199,29 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const capture = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    const size = Math.min(video.videoWidth, video.videoHeight) || 720;
+
+    // With a lens applied the raw webcam frame no longer matches what the guest
+    // sees, so the snapshot has to come from Camera Kit's rendered canvas.
+    const kitCanvas = kitReady ? canvasRef.current : null;
+    const source: HTMLVideoElement | HTMLCanvasElement = kitCanvas ?? video;
+    const srcW = kitCanvas ? kitCanvas.width : video.videoWidth;
+    const srcH = kitCanvas ? kitCanvas.height : video.videoHeight;
+
+    const size = Math.min(srcW, srcH) || 720;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     // Center-crop to a square and mirror (selfie view).
-    const sx = (video.videoWidth - size) / 2;
-    const sy = (video.videoHeight - size) / 2;
+    const sx = (srcW - size) / 2;
+    const sy = (srcH - size) / 2;
     ctx.translate(size, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+    ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     setPhase("captured");
-  }, []);
+  }, [kitReady]);
 
   const startCountdown = () => {
     setCount(3);
@@ -172,7 +251,15 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           playsInline
           muted
           className="h-full w-full object-cover -scale-x-100"
-          hidden={phase === "captured"}
+          hidden={phase === "captured" || kitReady}
+        />
+
+        {/* Camera Kit's rendered output. Mounted always so the canvas ref
+            exists before the session boots; only shown once it is live. */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full object-cover -scale-x-100"
+          hidden={!kitReady || phase === "captured"}
         />
 
         {/* Captured still. */}
@@ -202,6 +289,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           ) : null}
         </AnimatePresence>
 
+        {/* Snap's guidelines require visible attribution whenever a Lens is
+            active — see the Camera Kit section of the README. */}
+        {kitReady && activeLensId && phase !== "captured" ? (
+          <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+            Powered by Snap
+          </span>
+        ) : null}
+
         {error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
             <p className="max-w-sm text-balance">{error}</p>
@@ -214,6 +309,31 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           </div>
         ) : null}
       </div>
+
+      {/* Filter picker — only when Camera Kit actually came up. */}
+      {kitReady && lenses.length > 0 && phase !== "captured" ? (
+        <div className="w-full">
+          <p className="mb-2 text-center font-display text-sm font-bold uppercase tracking-wide text-ink/60">
+            Pick a filter
+          </p>
+          <div className="flex w-full snap-x gap-2.5 overflow-x-auto pb-1">
+            <FilterChip
+              label="No filter"
+              active={activeLensId === null}
+              onClick={() => selectLens(null)}
+            />
+            {lenses.map((lens) => (
+              <FilterChip
+                key={lens.id}
+                label={lens.name}
+                icon={lens.iconUrl}
+                active={activeLensId === lens.id}
+                onClick={() => selectLens(lens)}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-center gap-3">
         {phase === "captured" ? (
@@ -252,5 +372,49 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * One entry in the filter strip. Square thumbnail when the lens ships an icon,
+ * otherwise the lens name — a strip of blank tiles would be unusable.
+ */
+function FilterChip({
+  label,
+  icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon?: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={label}
+      className={`flex shrink-0 snap-start flex-col items-center gap-1 rounded-xl border-[3px] px-2 py-1.5 transition-transform hover:-translate-y-0.5 ${
+        active
+          ? "border-ink bg-brand-orange text-white shadow-[3px_3px_0_var(--color-ink)]"
+          : "border-ink/25 bg-cream-light text-ink"
+      }`}
+    >
+      {icon ? (
+        // Lens icons are served from Snap's CDN; next/image would need each
+        // host allow-listed, and these are small decorative thumbnails.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={icon} alt="" className="h-10 w-10 rounded-md object-cover" />
+      ) : (
+        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-ink/10 text-lg">
+          🥔
+        </span>
+      )}
+      <span className="max-w-[4.5rem] truncate font-display text-[11px] font-bold">
+        {label}
+      </span>
+    </button>
   );
 }
