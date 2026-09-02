@@ -2,44 +2,38 @@
 
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import Image from "next/image";
 
-import { PhotoWall } from "@/components/booth/PhotoWall";
+import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
 import { Clip } from "@/components/site/Clip";
-import { FallingPotatoes } from "@/components/site/FallingPotatoes";
-import { TopNav } from "@/components/site/TopNav";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
 import { useBoothStore } from "@/lib/stores/booth-store";
 
 /**
  * Booth (kiosk) route.
  *
- * Screen switching is driven by `useBoothStore().screen`:
- *   - idle:   live camera on the left, photo wall + QR on the right
- *   - game:   AR mini-game (placeholder — see lib/ar)
+ * Deliberately chrome-free: no site header, no nav links. This screen is a
+ * fixed display people walk up to, not a page they browse, so anything they
+ * cannot act on from arm's length is just clutter.
  *
- * There is deliberately no separate camera screen: on a kiosk, making someone
- * press a button before the camera even turns on is a step for nothing. The
- * preview runs on the idle screen, so stepping up and hitting the countdown is
- * the whole interaction.
+ * Three columns, left to right: the live wall, the camera, the phone-upload
+ * panel. The camera is the middle and the largest — it is what the guest is
+ * actually there for.
  *
- * The chrome lives here rather than in each screen so the header, ground and
- * backdrop stay put while the screens swap underneath.
+ * Screen switching is driven by `useBoothStore().screen`; the camera is always
+ * live on idle, so there is no separate capture screen.
  */
 export default function BoothPage() {
   const screen = useBoothStore((s) => s.screen);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-cream font-body text-ink">
-      <TopNav />
-
+    <div className="flex h-dvh flex-col overflow-hidden bg-cream font-body text-ink">
       <main className="relative flex flex-1 flex-col overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
-        <FallingPotatoes />
-
         {screen === "game" ? <GameScreen /> : <IdleScreen />}
       </main>
     </div>
@@ -47,7 +41,7 @@ export default function BoothPage() {
 }
 
 function IdleScreen() {
-  const { photos, loading, disabled } = useApprovedPhotos();
+  const { photos } = useApprovedPhotos();
 
   // The QR points guests at THIS host's /upload. When the booth is opened via
   // the LAN URL, window.location.origin is already the right https://<ip>:port.
@@ -57,10 +51,14 @@ function IdleScreen() {
   }, []);
 
   return (
-    <div className="relative mx-auto flex w-full max-w-[100rem] flex-1 flex-col gap-8 px-5 py-8 lg:flex-row">
-      {/* Camera — live from the moment the booth opens, and the biggest thing
-          on screen: it is what people walk up to. */}
-      <section className="flex w-full shrink-0 flex-col lg:w-[34rem] xl:w-[40rem]">
+    <div className="relative flex h-full w-full gap-6 p-6">
+      {/* Wall — ambient, wordless, always moving. */}
+      <section className="hidden h-full w-56 shrink-0 xl:block 2xl:w-64">
+        <ScrollingWall photos={photos} />
+      </section>
+
+      {/* Camera — the main event. */}
+      <section className="flex min-w-0 flex-1 flex-col items-center justify-center">
         <header className="mb-4 flex items-center gap-3">
           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
             <Clip
@@ -72,9 +70,9 @@ function IdleScreen() {
             />
           </div>
           <div>
-            <h2 className="font-display text-2xl font-extrabold uppercase tracking-tight text-ink">
+            <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-ink">
               Step up &amp; smile
-            </h2>
+            </h1>
             <p className="text-sm text-ink/60">
               Pick a filter, then hit the countdown.
             </p>
@@ -84,55 +82,46 @@ function IdleScreen() {
         <SelfCamera />
       </section>
 
-      {/* Wall */}
-      <section className="flex min-w-0 flex-1 flex-col">
-        <header className="mb-5 flex items-baseline gap-3">
-          <h1 className="text-shadow-brand font-display text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
-            The Spud Wall
-          </h1>
-          <p className="text-sm font-semibold text-ink/50">
-            {loading
-              ? "loading…"
-              : `${photos.length} spud${photos.length === 1 ? "" : "s"}`}
+      {/* Phone-upload panel — full height of the right side. */}
+      <aside className="hidden h-full w-72 shrink-0 flex-col items-center justify-center gap-6 rounded-[26px] border-[3px] border-ink bg-cream-light p-6 text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex">
+        <Image
+          src="/art/dfgn-logo.png"
+          alt="DFGN"
+          width={447}
+          height={447}
+          className="h-10 w-10"
+        />
+
+        <div>
+          <p className="font-display text-2xl font-extrabold uppercase leading-tight tracking-tight text-ink">
+            Send one from your phone
           </p>
-        </header>
-
-        <div className="flex-1 overflow-y-auto">
-          <PhotoWall photos={photos} loading={loading} disabled={disabled} />
-        </div>
-      </section>
-
-      {/* Phone-upload rail: the potato points down at the code it is about. */}
-      <aside className="flex w-full shrink-0 flex-col items-center lg:w-64">
-        <div className="flex flex-col items-center rounded-[26px] border-[3px] border-ink bg-cream-light p-4 pt-2 text-center shadow-[6px_6px_0_var(--color-ink)]">
-          {/* Inside the card, not above it: the clip is flattened onto the
-              card's cream (video has no alpha), so on the page's gradient
-              ground its rectangle would show. */}
-          <Clip
-            src="/art/potato-pointing.mp4"
-            poster="/art/potato-pointing-poster.jpg"
-            width={320}
-            height={328}
-            className="w-32"
-          />
-
-          <p className="font-display text-lg font-extrabold leading-tight text-ink">
-            Or send one from your phone
-          </p>
-
-          <div className="mt-3 rounded-xl border-[3px] border-ink bg-white p-2.5">
-            {uploadUrl ? (
-              <QRCodeSVG value={uploadUrl} size={150} marginSize={0} />
-            ) : (
-              // Reserve the box so the card doesn't jump once the URL resolves.
-              <div className="h-[150px] w-[150px]" />
-            )}
-          </div>
-
-          <p className="mt-3 text-sm text-ink/60">
-            Scan to add your selfie to the wall
+          <p className="mt-2 text-sm text-ink/60">
+            No queue, no waiting — it lands on the wall.
           </p>
         </div>
+
+        {/* The potato points down at the code. */}
+        <Clip
+          src="/art/potato-pointing.mp4"
+          poster="/art/potato-pointing-poster.jpg"
+          width={320}
+          height={328}
+          className="w-36"
+        />
+
+        <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
+          {uploadUrl ? (
+            <QRCodeSVG value={uploadUrl} size={176} marginSize={0} />
+          ) : (
+            // Reserve the box so the panel doesn't jump once the URL resolves.
+            <div className="h-[176px] w-[176px]" />
+          )}
+        </div>
+
+        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink/50">
+          Scan to join the wall
+        </p>
       </aside>
     </div>
   );
@@ -147,7 +136,8 @@ function GameScreen() {
       </h2>
       <p className="text-base text-ink/70">
         Placeholder. The face-tracking &ldquo;catch the falling potatoes&rdquo;
-        game mounts here — its logic lives in <code className="font-mono text-sm">lib/ar</code>.
+        game mounts here — its logic lives in{" "}
+        <code className="font-mono text-sm">lib/ar</code>.
       </p>
       <button
         onClick={() => setScreen("idle")}

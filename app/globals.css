@@ -175,3 +175,26 @@ body {
     display: block;
   }
 }
+
+/* --- Booth wall marquee ---------------------------------------------------
+   The list is rendered twice and translated by exactly -50%, so the second
+   copy lands where the first began and the loop is seamless. */
+
+@keyframes wall-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.wall-scroll {
+  animation: wall-scroll linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wall-scroll {
+    animation: none;
+  }
+}

@@ -77,7 +77,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: 1280, height: 1280 },
+          video: { facingMode: "user", width: { ideal: 1600 }, height: { ideal: 1200 } },
           audio: false,
         });
 
@@ -243,8 +243,8 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   };
 
   return (
-    <div className="flex w-full max-w-xl flex-col items-center gap-6">
-      <div className="relative aspect-square w-full overflow-hidden rounded-[26px] border-[3px] border-ink bg-black shadow-[6px_6px_0_var(--color-ink)]">
+    <div className="flex w-full flex-col items-center gap-4">
+      <div className="relative mx-auto aspect-[4/3] w-full max-w-[calc((100vh-19rem)*4/3)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)]">
         {/* Live preview (hidden once we have a capture). */}
         <video
           ref={videoRef}
