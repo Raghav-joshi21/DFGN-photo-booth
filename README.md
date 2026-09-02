@@ -213,6 +213,26 @@ Then fill in `.env.local` (copy from `.env.local.example`) with the project URL
 and anon key, restart the dev server, and the booth wall switches from
 "Supabase not configured" to the live wall.
 
+### Verifying the setup
+
+```bash
+pnpm check:supabase
+```
+
+Checks the env vars, that the table and public bucket exist, that Realtime
+subscribes — and actively tries to break the RLS rules with the anon key
+(inserting a pre-approved photo, approving a pending one). Both must fail; if
+either succeeds, any guest could push unmoderated photos to the big screen. It
+cleans up its own test rows using the service-role key.
+
+> **Gotcha worth knowing:** PostgREST implements `.select()` as a `RETURNING`
+> clause, and Postgres enforces the SELECT policy on returned rows. Since ours
+> exposes only approved photos, chaining `.select()` onto an insert of a
+> `pending` row fails with *"new row violates row-level security policy"* — which
+> reads like the INSERT was rejected when it actually succeeded. That is why
+> `uploadGuestPhoto` mints the row id client-side and inserts without
+> `.select()`. Don't add one back.
+
 Optionally regenerate the DB types so they're derived from the real schema
 instead of the hand-written stand-in:
 

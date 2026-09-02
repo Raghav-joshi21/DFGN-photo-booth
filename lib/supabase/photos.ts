@@ -68,14 +68,33 @@ export async function uploadGuestPhoto(file: File): Promise<Photo> {
     data: { publicUrl },
   } = supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(path);
 
-  const { data, error: insertError } = await supabase
+  // NOTE: deliberately no `.select()` on this insert.
+  //
+  // PostgREST implements `.select()` as a RETURNING clause, and Postgres
+  // enforces the table's SELECT policy on returned rows. Ours only exposes
+  // approved photos, so returning a freshly-inserted 'pending' row is denied —
+  // and Postgres reports that as "new row violates row-level security policy",
+  // which reads like the INSERT was rejected when it actually succeeded.
+  //
+  // Rather than widen the SELECT policy (which would leak unmoderated photos to
+  // anyone with the anon key), we mint the id client-side and build the domain
+  // object locally. No round-trip needed.
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+
+  const { error: insertError } = await supabase
     .from("photos")
-    .insert({ source: "upload", original_url: publicUrl, status: "pending" })
-    .select("*")
-    .single();
+    .insert({ id, source: "upload", original_url: publicUrl, status: "pending" });
   if (insertError) throw insertError;
 
-  return mapRow(data);
+  return {
+    id,
+    source: "upload",
+    originalUrl: publicUrl,
+    editedUrl: null,
+    status: "pending",
+    createdAt,
+  };
 }
 
 /**
