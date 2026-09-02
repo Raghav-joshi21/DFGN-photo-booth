@@ -179,7 +179,9 @@ function ChoiceCard({
       className={`group relative flex flex-col items-center overflow-hidden rounded-[26px] border-[3px] border-ink p-6 shadow-[6px_6px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange ${className}`}
     >
       {children}
-      <h2 className="mt-2 text-center font-display text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
+      {/* mt-7, not mt-2: the gallery art has a badge hanging below its box, and
+          both titles must sit on the same line across the two cards. */}
+      <h2 className="mt-7 text-center font-display text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
         {title}
       </h2>
       <span
