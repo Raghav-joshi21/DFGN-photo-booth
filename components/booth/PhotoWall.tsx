@@ -71,8 +71,8 @@ export function PhotoWall({
 function EmptyState({ title, body }: { title: string; body?: string }) {
   return (
     <div className="flex min-h-[40vh] w-full flex-col items-center justify-center gap-2 text-center">
-      <p className="text-lg font-medium opacity-80">{title}</p>
-      {body ? <p className="max-w-sm text-sm opacity-50">{body}</p> : null}
+      <p className="font-display text-xl font-extrabold text-ink">{title}</p>
+      {body ? <p className="max-w-sm text-sm text-ink/60">{body}</p> : null}
     </div>
   );
 }

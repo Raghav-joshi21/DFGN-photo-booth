@@ -160,7 +160,7 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="flex w-full max-w-xl flex-col items-center gap-6">
-      <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-black shadow-2xl">
+      <div className="relative aspect-square w-full overflow-hidden rounded-[26px] border-[3px] border-ink bg-black shadow-[6px_6px_0_var(--color-ink)]">
         {/* Live preview (hidden once we have a capture). */}
         <video
           ref={videoRef}
@@ -190,7 +190,7 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
               exit={{ scale: 1.6, opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <span className="text-[9rem] font-bold text-white drop-shadow-lg">
+              <span className="font-display text-[9rem] font-extrabold text-white drop-shadow-lg">
                 {count}
               </span>
             </motion.div>
@@ -202,7 +202,7 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
             <p className="max-w-sm text-balance">{error}</p>
             <button
               onClick={() => setAttempt((n) => n + 1)}
-              className="rounded-full bg-white px-5 py-2 font-medium text-black hover:opacity-90"
+              className="rounded-full border-[3px] border-ink bg-cream-light px-5 py-2 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)]"
             >
               Try again
             </button>
@@ -215,13 +215,13 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
           <>
             <button
               onClick={retake}
-              className="rounded-full border border-foreground/20 px-6 py-3 font-medium hover:bg-foreground/5"
+              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
             >
               Retake
             </button>
             <button
               onClick={usePhoto}
-              className="rounded-full bg-foreground px-6 py-3 font-medium text-background hover:opacity-90"
+              className="rounded-full border-[3px] border-ink bg-brand-orange px-6 py-2.5 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
             >
               Use this photo
             </button>
@@ -230,14 +230,14 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
           <>
             <button
               onClick={onExit}
-              className="rounded-full border border-foreground/20 px-6 py-3 font-medium hover:bg-foreground/5"
+              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
             >
               Back
             </button>
             <button
               onClick={startCountdown}
               disabled={phase === "counting" || !!error}
-              className="rounded-full bg-foreground px-8 py-3 font-medium text-background hover:opacity-90 disabled:opacity-40"
+              className="rounded-full border-[3px] border-ink bg-brand-orange px-8 py-2.5 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
             >
               {phase === "counting" ? "Smile!" : "Start countdown"}
             </button>
