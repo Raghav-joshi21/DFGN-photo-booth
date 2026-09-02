@@ -46,25 +46,3 @@ export function PotatoSticker({
     />
   );
 }
-
-/**
- * The tilted sheet of stickers that decorates the hero. Purely decorative.
- */
-export function StickerSheet({
-  variants,
-  className = "",
-}: {
-  variants: PotatoVariant[];
-  className?: string;
-}) {
-  return (
-    <div
-      aria-hidden
-      className={`grid grid-cols-2 gap-2 rounded-lg bg-white/85 p-3 shadow-lg shadow-ink/10 ring-1 ring-ink/10 ${className}`}
-    >
-      {variants.map((v, i) => (
-        <PotatoSticker key={`${v}-${i}`} variant={v} className="h-16 w-16" />
-      ))}
-    </div>
-  );
-}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { PotatoSticker, StickerSheet } from "@/components/site/PotatoSticker";
+import { FallingPotatoes } from "@/components/site/FallingPotatoes";
+import { PotatoSticker } from "@/components/site/PotatoSticker";
 import { TopNav } from "@/components/site/TopNav";
 
 /**
@@ -21,15 +22,7 @@ export default function Home() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
 
-        {/* Decorative sticker sheets, hidden on small screens where they'd crowd. */}
-        <StickerSheet
-          variants={["scientist", "jumper", "badge", "party"]}
-          className="absolute left-6 top-6 hidden w-52 -rotate-3 lg:grid"
-        />
-        <StickerSheet
-          variants={["jumper", "party"]}
-          className="absolute -right-10 bottom-10 hidden w-40 rotate-6 xl:grid"
-        />
+        <FallingPotatoes />
 
         <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center px-5 py-12 sm:py-16">
           {/* Hero */}

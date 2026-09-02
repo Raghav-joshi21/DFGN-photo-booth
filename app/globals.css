@@ -44,3 +44,54 @@ body {
 .text-shadow-brand {
   text-shadow: 4px 5px 0 rgba(90, 22, 24, 0.22);
 }
+
+/* --- Falling potato backdrop ---------------------------------------------
+   Three separate motions so the drops don't look mechanically identical:
+   the wrapper falls, the inner element sways and spins. Sway uses `transform`
+   while spin uses the independent `rotate` property, so both can animate on
+   the same element without one overwriting the other. */
+
+@keyframes potato-fall {
+  from {
+    transform: translate3d(0, -25vh, 0);
+  }
+  to {
+    transform: translate3d(0, 120vh, 0);
+  }
+}
+
+@keyframes potato-sway {
+  from {
+    transform: translateX(-16px);
+  }
+  to {
+    transform: translateX(16px);
+  }
+}
+
+@keyframes potato-spin {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
+}
+
+.potato-drop {
+  animation: potato-fall linear infinite;
+}
+
+.potato-drop-inner {
+  animation:
+    potato-sway 5s ease-in-out infinite alternate,
+    potato-spin 14s linear infinite;
+}
+
+/* Purely decorative, so remove it entirely rather than freezing it mid-screen
+   for anyone who has asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .potato-backdrop {
+    display: none;
+  }
+}

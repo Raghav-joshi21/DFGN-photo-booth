@@ -33,7 +33,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.png",
+        // Separate file: a maskable icon needs a ~20% safe-zone inset and an
+        // opaque ground, or the launcher's circular mask clips the artwork.
+        src: "/icons/icon-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
