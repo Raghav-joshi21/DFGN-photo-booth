@@ -16,7 +16,7 @@ export default function Home() {
     <div className="flex min-h-full flex-1 flex-col bg-cream font-body text-ink">
       <TopNav />
 
-      <main className="relative flex-1 overflow-hidden">
+      <main className="relative flex flex-1 flex-col overflow-hidden">
         {/* Soft sage wash in the corners, matching the design's warm ground. */}
         <div
           aria-hidden
@@ -25,7 +25,7 @@ export default function Home() {
 
         <FallingPotatoes />
 
-        <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center px-5 py-12 sm:py-16">
+        <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-5 py-12 sm:py-16">
           {/* Hero */}
           <div className="relative">
             <h1 className="text-shadow-brand text-center font-display text-5xl font-extrabold tracking-tight text-ink sm:text-6xl md:text-7xl">
@@ -41,7 +41,7 @@ export default function Home() {
               height={100}
               unoptimized
               priority
-              className="pointer-events-none absolute -right-24 -top-14 w-28 sm:-right-36 sm:-top-16 sm:w-40"
+              className="pointer-events-none absolute -right-40 -top-16 w-36 sm:-right-56 sm:-top-20 sm:w-52"
             />
           </div>
 
