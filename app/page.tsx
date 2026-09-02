@@ -114,14 +114,12 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* The clip as the front print. It is flattened onto white and
-                    framed like the others, so its rectangle reads as a photo
-                    border instead of a stray edge — video has no alpha, and
-                    Chrome colour-manages it separately from CSS colours, so
-                    blending it into the card background is not reliable. */}
+                {/* The clip as the front print. This cut ships its own designed
+                    background, so nothing is keyed out — the frame around it is
+                    what makes the video's rectangle read as a photo border. */}
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 rotate-2 rounded-md border border-ink/15 bg-white p-1.5 pb-4 shadow-lg shadow-ink/20">
                   <video
-                    className="motion-video block w-44 rounded-sm"
+                    className="motion-video block w-48 rounded-sm"
                     src="/art/potato-clicking.mp4"
                     poster="/art/potato-clicking-poster.jpg"
                     autoPlay
@@ -135,8 +133,8 @@ export default function Home() {
                     alt=""
                     aria-hidden
                     width={400}
-                    height={242}
-                    className="motion-still block w-44 rounded-sm"
+                    height={226}
+                    className="motion-still block w-48 rounded-sm"
                   />
                 </div>
 
