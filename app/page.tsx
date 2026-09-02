@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { FallingPotatoes } from "@/components/site/FallingPotatoes";
@@ -30,7 +31,18 @@ export default function Home() {
             <h1 className="text-shadow-brand text-center font-display text-5xl font-extrabold tracking-tight text-ink sm:text-6xl md:text-7xl">
               DF Photo Booth
             </h1>
-            <StarBadge className="absolute -right-7 -top-6 h-14 w-14 sm:-right-12 sm:-top-7 sm:h-16 sm:w-16" />
+            {/* `unoptimized` is required: Next's image optimizer would
+                otherwise re-encode this to a still first frame. */}
+            <Image
+              src="/art/potato-sleep.gif"
+              alt=""
+              aria-hidden
+              width={160}
+              height={100}
+              unoptimized
+              priority
+              className="pointer-events-none absolute -right-24 -top-14 w-28 sm:-right-36 sm:-top-16 sm:w-40"
+            />
           </div>
 
           <p className="mt-5 max-w-2xl text-center text-base text-ink/75 sm:text-lg">
@@ -131,22 +143,6 @@ function ChoiceCard({
         {cta}
       </span>
     </Link>
-  );
-}
-
-function StarBadge({ className = "" }: { className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={`flex items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)] ${className}`}
-    >
-      <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" role="presentation">
-        <path
-          d="M12 3.5 14.4 9l6 .5-4.6 4 1.4 5.9L12 16.3 6.8 19.4l1.4-5.9-4.6-4 6-.5Z"
-          fill="#5a1618"
-        />
-      </svg>
-    </span>
   );
 }
 

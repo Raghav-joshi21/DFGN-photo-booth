@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large design sources (GIF/PSD/AE exports). Keep locally, never commit —
+# a 16MB binary in history bloats every future clone.
+/design-source/
