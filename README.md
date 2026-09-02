@@ -104,6 +104,38 @@ Dev scripts:
 | `pnpm dev:https` | `next dev --experimental-https` (localhost, HTTPS) |
 | `pnpm dev:lan` | HTTPS (LAN-IP cert) + `0.0.0.0` + prints the LAN URL — use this for phone testing |
 
+## Auto-commit hook
+
+`.claude/settings.json` registers a `PostToolUse` hook so every file Claude Code
+writes is committed and pushed to `origin` automatically:
+
+```
+Write | Edit | NotebookEdit  →  scripts/auto-commit.sh
+```
+
+The script runs `async` (it never blocks the edit) and is deliberately
+defensive, because it fires unattended after every single edit:
+
+- **Always exits 0.** A non-zero exit from a `PostToolUse` hook surfaces as a
+  tool failure; bookkeeping must not break the actual work.
+- **Skips mid-operation.** No commits during a merge, rebase, cherry-pick,
+  revert, or bisect, and none on a detached HEAD.
+- **Takes a lock.** Parallel edits fire parallel hooks; two `git commit` runs
+  racing on one index fail with `index.lock exists`. A stale lock older than
+  5 minutes is cleared automatically.
+- **Tolerates push failure.** Offline or rejected pushes leave the commit safely
+  on the local branch and print a note to stderr.
+- **Ignores gitignore-only changes**, so touching `.env.local` commits nothing.
+
+Commits are titled `chore(auto): update <files>`. Expect a noisy history — this
+is one commit per edit, not per task. To review or disable the hook, run
+`/hooks`; to turn it off permanently, delete the `PostToolUse` block from
+`.claude/settings.json`.
+
+> Because the push is unconditional, **anything Claude writes goes straight to
+> the public repo.** `.env.local`, `certificates/`, and `.next/` are gitignored,
+> so keys and certs stay local — but keep it that way when adding new files.
+
 ## Environment variables
 
 See [`.env.local.example`](./.env.local.example). Summary:
