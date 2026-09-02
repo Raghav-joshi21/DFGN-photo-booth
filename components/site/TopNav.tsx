@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { PotatoBot } from "./PotatoBot";
+
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/booth", label: "Capture" },
@@ -101,6 +103,8 @@ export function TopNav() {
           ) : null}
         </div>
       </div>
+
+      <PotatoBot />
     </header>
   );
 }

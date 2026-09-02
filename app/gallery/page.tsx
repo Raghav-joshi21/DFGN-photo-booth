@@ -1,7 +1,6 @@
 "use client";
 
 import { PhotoWall } from "@/components/booth/PhotoWall";
-import { PotatoBot } from "@/components/site/PotatoBot";
 import { TopNav } from "@/components/site/TopNav";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
 
@@ -40,8 +39,6 @@ export default function GalleryPage() {
           <PhotoWall photos={photos} loading={loading} disabled={disabled} />
         </div>
       </main>
-
-      <PotatoBot />
     </div>
   );
 }
