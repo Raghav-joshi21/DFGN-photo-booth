@@ -95,3 +95,43 @@ body {
     display: none;
   }
 }
+
+/* --- Potato bot ----------------------------------------------------------
+   Kept separate from the roll/spin transforms in the component: the bob sits
+   on its own wrapper so a vertical bounce never gets rotated by the spin. */
+
+@keyframes potato-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes potato-bubble-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.potato-bot-bob {
+  animation: potato-bob 2.6s ease-in-out infinite;
+}
+
+.potato-bot-bubble {
+  animation: potato-bubble-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .potato-bot-bob,
+  .potato-bot-bubble {
+    animation: none;
+  }
+}

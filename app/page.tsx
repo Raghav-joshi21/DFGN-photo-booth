@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FallingPotatoes } from "@/components/site/FallingPotatoes";
+import { PotatoBot } from "@/components/site/PotatoBot";
 import { PotatoSticker } from "@/components/site/PotatoSticker";
 import { TopNav } from "@/components/site/TopNav";
 
@@ -89,6 +90,8 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <PotatoBot />
     </div>
   );
 }
