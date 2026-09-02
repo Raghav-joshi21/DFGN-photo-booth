@@ -15,8 +15,12 @@ type Phase = "preview" | "counting" | "captured";
  *
  * getUserMedia needs a secure context, so this only works over https:// or
  * localhost. Run `pnpm dev:lan` (HTTPS) when testing from the LAN.
+ *
+ * `onExit` is optional: mounted inline on the booth's idle screen there is
+ * nowhere to go back to, so the Back button is simply omitted and finishing a
+ * capture returns to the live preview instead.
  */
-export function SelfCamera({ onExit }: { onExit: () => void }) {
+export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -155,7 +159,8 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
     // source:'booth' photo, then play the Polaroid-eject animation as the
     // print "slides out" onto the wall. Stubbed for now.
     console.log("[booth] use photo (stub) — captured length:", captured?.length);
-    onExit();
+    if (onExit) onExit();
+    else retake(); // Inline: hand the booth straight back to a live preview.
   };
 
   return (
@@ -228,12 +233,14 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
           </>
         ) : (
           <>
-            <button
-              onClick={onExit}
-              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
-            >
-              Back
-            </button>
+            {onExit ? (
+              <button
+                onClick={onExit}
+                className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
+              >
+                Back
+              </button>
+            ) : null}
             <button
               onClick={startCountdown}
               disabled={phase === "counting" || !!error}
