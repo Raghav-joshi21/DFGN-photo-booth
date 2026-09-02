@@ -58,7 +58,7 @@ export default function Home() {
             >
               <div className="relative flex h-44 items-center justify-center">
                 <div className="flex h-44 w-44 items-center justify-center overflow-hidden border-[5px] border-brand-orange bg-gradient-to-b from-cream-light to-sage [border-radius:48%_52%_45%_55%/55%_45%_55%_45%]">
-                  <PotatoSticker variant="badge" className="h-32 w-auto" />
+                  <PotatoSticker variant="badge" priority className="h-32 w-32" />
                 </div>
               </div>
             </ChoiceCard>
@@ -83,7 +83,7 @@ export default function Home() {
                     >
                       <PotatoSticker
                         variant={(["scientist", "party", "jumper"] as const)[i]}
-                        className="h-16 w-auto"
+                        className="h-16 w-16"
                       />
                     </div>
                   ))}
