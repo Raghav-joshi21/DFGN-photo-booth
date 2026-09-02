@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -27,7 +28,14 @@ export function TopNav() {
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-5">
         {/* Wordmark */}
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <SproutMark className="h-7 w-7 text-ink" />
+          <Image
+            src="/art/dfgn-logo.png"
+            alt="DFGN"
+            width={447}
+            height={447}
+            priority
+            className="h-8 w-8"
+          />
           <span className="hidden font-display text-xl font-extrabold tracking-tight text-ink sm:inline sm:text-2xl">
             DFGN UnBoxed 2026
           </span>
@@ -106,27 +114,6 @@ export function TopNav() {
 
       <PotatoBot />
     </header>
-  );
-}
-
-function SproutMark({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} role="presentation">
-      <path
-        d="M12 21v-7"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M12 14C12 9.5 9 6.5 4.5 6.5 4.5 11 7.5 14 12 14Z"
-        fill="currentColor"
-      />
-      <path
-        d="M12 14c0-4 2.6-6.8 6.6-6.8C18.6 11.2 16 14 12 14Z"
-        fill="currentColor"
-      />
-    </svg>
   );
 }
 
