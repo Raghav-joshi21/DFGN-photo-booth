@@ -160,3 +160,18 @@ body {
     animation: none;
   }
 }
+
+/* Autoplaying video is motion too: swap it for a still frame when the viewer
+   has asked for less of it. */
+.motion-still {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-video {
+    display: none;
+  }
+  .motion-still {
+    display: block;
+  }
+}

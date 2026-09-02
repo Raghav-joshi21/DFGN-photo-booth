@@ -62,8 +62,28 @@ export default function Home() {
               className="bg-brand-yellow"
             >
               <div className="relative flex h-44 items-center justify-center">
-                <div className="flex h-44 w-44 items-center justify-center overflow-hidden border-[5px] border-brand-orange bg-gradient-to-b from-cream-light to-sage [border-radius:48%_52%_45%_55%/55%_45%_55%_45%]">
-                  <PotatoSticker variant="badge" priority className="h-32 w-32" />
+                <div className="h-44 w-44 overflow-hidden border-[5px] border-brand-orange bg-cream-light [border-radius:48%_52%_45%_55%/55%_45%_55%_45%]">
+                  {/* The source had a transparency checkerboard baked in (h264
+                      carries no alpha), so it is keyed out and flattened onto
+                      cream — hence the matching solid background here. */}
+                  <video
+                    className="motion-video h-full w-full object-cover"
+                    src="/art/potato-booth.mp4"
+                    poster="/art/potato-booth-poster.jpg"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-hidden
+                  />
+                  <Image
+                    src="/art/potato-booth-poster.jpg"
+                    alt=""
+                    aria-hidden
+                    width={360}
+                    height={360}
+                    className="motion-still h-full w-full object-cover"
+                  />
                 </div>
               </div>
             </ChoiceCard>
