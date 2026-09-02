@@ -25,36 +25,89 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
   const [captured, setCaptured] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const startCamera = useCallback(async () => {
-    setError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 1280, height: 1280 },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-    } catch (err) {
-      console.error("[booth] camera error", err);
-      setError(
-        "Couldn't access the camera. Grant permission and make sure you're on https:// (use `pnpm dev:lan`).",
-      );
-    }
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-  }, []);
+  // Bumping this re-runs the acquire effect (the "Try again" button).
+  const [attempt, setAttempt] = useState(0);
 
   // Acquire the camera on mount, release it on unmount.
+  //
+  // Written defensively because React StrictMode mounts effects twice in dev:
+  // the first run's cleanup stops the tracks while its getUserMedia/play() is
+  // still in flight, so the second run reassigns srcObject underneath the
+  // pending play() and the browser rejects it with AbortError. Without the
+  // `cancelled` guard that lands in the catch below and renders as a bogus
+  // "couldn't access the camera" — even though permission was granted.
   useEffect(() => {
-    startCamera();
-    return stopCamera;
-  }, [startCamera, stopCamera]);
+    let cancelled = false;
+    let stream: MediaStream | null = null;
+
+    const start = async () => {
+      setError(null);
+
+      // Absent entirely (rather than throwing) when the page isn't a secure
+      // context — worth its own message, since the fix is a different URL.
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError(
+          "This browser won't expose the camera here. Camera access needs a secure context — open the site over https:// (run `pnpm dev:lan`), not http://.",
+        );
+        return;
+      }
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: 1280, height: 1280 },
+          audio: false,
+        });
+
+        // Unmounted (or re-run) while we were awaiting: release immediately,
+        // otherwise the camera light stays on with no one holding the stream.
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          stream = null;
+          return;
+        }
+
+        streamRef.current = stream;
+        const video = videoRef.current;
+        if (!video) return;
+
+        video.srcObject = stream;
+        try {
+          await video.play();
+        } catch (err) {
+          // play() rejects with AbortError when the element is torn down or its
+          // source swapped mid-play. Harmless — the next run starts playback.
+          if ((err as Error)?.name !== "AbortError") throw err;
+        }
+      } catch (err) {
+        if (cancelled || (err as Error)?.name === "AbortError") return;
+
+        console.error("[booth] camera error", err);
+        const name = (err as Error)?.name;
+        if (name === "NotAllowedError" || name === "SecurityError") {
+          setError(
+            "Camera permission was blocked. Allow camera access for this site in your browser settings, then tap Try again.",
+          );
+        } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+          setError("No camera found on this device.");
+        } else if (name === "NotReadableError") {
+          setError("The camera is already in use by another app. Close it and tap Try again.");
+        } else {
+          setError(
+            "Couldn't start the camera. Make sure you're on https:// (run `pnpm dev:lan`) and tap Try again.",
+          );
+        }
+      }
+    };
+
+    start();
+
+    return () => {
+      cancelled = true;
+      stream?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    };
+  }, [attempt]);
 
   // Countdown driver.
   useEffect(() => {
@@ -145,8 +198,14 @@ export function SelfCamera({ onExit }: { onExit: () => void }) {
         </AnimatePresence>
 
         {error ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-6 text-center text-sm text-white">
-            {error}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
+            <p className="max-w-sm text-balance">{error}</p>
+            <button
+              onClick={() => setAttempt((n) => n + 1)}
+              className="rounded-full bg-white px-5 py-2 font-medium text-black hover:opacity-90"
+            >
+              Try again
+            </button>
           </div>
         ) : null}
       </div>
