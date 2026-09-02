@@ -97,29 +97,30 @@ export default function Home() {
               icon={<CheckIcon className="h-4 w-4" />}
               className="bg-cream-light"
             >
-              <div className="relative h-44 w-full">
-                {/* Two plain prints, tucked behind and to the left. */}
-                <div aria-hidden className="absolute left-1 top-5 flex items-center">
-                  {[-15, 8].map((deg, i) => (
-                    <div
-                      key={deg}
-                      style={{ rotate: `${deg}deg`, marginLeft: i ? "-1.5rem" : 0 }}
-                      className="flex h-24 w-20 items-end justify-center rounded-md border border-ink/15 bg-white p-2 pb-3.5 shadow-md shadow-ink/10"
-                    >
-                      <PotatoSticker
-                        variant={(["scientist", "party"] as const)[i]}
-                        className="h-14 w-14"
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="relative flex h-44 w-full items-center justify-center">
+                {/* Two prints stacked behind the clip. Same footprint as the
+                    front print but rotated and nudged sideways, so only their
+                    corners show — a photo pile rather than a fan. */}
+                {[
+                  { deg: -6, x: -14 },
+                  { deg: 6, x: 14 },
+                ].map(({ deg, x }) => (
+                  <div
+                    key={deg}
+                    aria-hidden
+                    style={{ rotate: `${deg}deg`, translate: `${x}px` }}
+                    className="absolute flex h-36 w-60 items-center justify-center rounded-md border border-ink/15 bg-white pb-3 shadow-md shadow-ink/10"
+                  >
+                    <PotatoSticker variant="scientist" className="h-14 w-14" />
+                  </div>
+                ))}
 
-                {/* The clip as the front print. This cut ships its own designed
-                    background, so nothing is keyed out — the frame around it is
-                    what makes the video's rectangle read as a photo border. */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 rotate-2 rounded-md border border-ink/15 bg-white p-1.5 pb-4 shadow-lg shadow-ink/20">
+                {/* The clip as the front print, centred on the stack. It ships
+                    its own designed background, so nothing is keyed out — the
+                    frame is what makes the video's rectangle read as a photo. */}
+                <div className="relative rotate-1 rounded-md border border-ink/15 bg-white p-1.5 pb-4 shadow-lg shadow-ink/25">
                   <video
-                    className="motion-video block w-48 rounded-sm"
+                    className="motion-video block w-60 rounded-sm"
                     src="/art/potato-clicking.mp4"
                     poster="/art/potato-clicking-poster.jpg"
                     autoPlay
@@ -134,11 +135,11 @@ export default function Home() {
                     aria-hidden
                     width={400}
                     height={226}
-                    className="motion-still block w-48 rounded-sm"
+                    className="motion-still block w-60 rounded-sm"
                   />
                 </div>
 
-                <span className="absolute bottom-2 left-24 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
+                <span className="absolute bottom-0 left-0 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
                   <GridIcon className="h-6 w-6 text-white" />
                 </span>
               </div>
