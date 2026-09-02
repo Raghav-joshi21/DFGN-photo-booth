@@ -97,25 +97,52 @@ export default function Home() {
               icon={<CheckIcon className="h-4 w-4" />}
               className="bg-cream-light"
             >
-              <div className="relative flex h-44 items-center justify-center">
-                {/* Stack of prints peeking out behind the badge. */}
-                <div aria-hidden className="absolute flex -translate-y-5 translate-x-3 items-center">
-                  {[-16, -5, 10].map((deg, i) => (
+              <div className="relative h-44 w-full">
+                {/* Two plain prints, tucked behind and to the left. */}
+                <div aria-hidden className="absolute left-1 top-5 flex items-center">
+                  {[-15, 8].map((deg, i) => (
                     <div
                       key={deg}
-                      style={{ rotate: `${deg}deg`, marginLeft: i ? "-2.25rem" : 0 }}
-                      className="flex h-28 w-24 items-end justify-center rounded-md border border-ink/15 bg-white p-2 pb-4 shadow-md shadow-ink/10"
+                      style={{ rotate: `${deg}deg`, marginLeft: i ? "-1.5rem" : 0 }}
+                      className="flex h-24 w-20 items-end justify-center rounded-md border border-ink/15 bg-white p-2 pb-3.5 shadow-md shadow-ink/10"
                     >
                       <PotatoSticker
-                        variant={(["scientist", "party", "jumper"] as const)[i]}
-                        className="h-16 w-16"
+                        variant={(["scientist", "party"] as const)[i]}
+                        className="h-14 w-14"
                       />
                     </div>
                   ))}
                 </div>
-                <div className="relative flex h-24 w-24 translate-y-5 -translate-x-6 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
-                  <GridIcon className="h-10 w-10 text-white" />
+
+                {/* The clip as the front print. It is flattened onto white and
+                    framed like the others, so its rectangle reads as a photo
+                    border instead of a stray edge — video has no alpha, and
+                    Chrome colour-manages it separately from CSS colours, so
+                    blending it into the card background is not reliable. */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 rotate-2 rounded-md border border-ink/15 bg-white p-1.5 pb-4 shadow-lg shadow-ink/20">
+                  <video
+                    className="motion-video block w-44 rounded-sm"
+                    src="/art/potato-clicking.mp4"
+                    poster="/art/potato-clicking-poster.jpg"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-hidden
+                  />
+                  <Image
+                    src="/art/potato-clicking-poster.jpg"
+                    alt=""
+                    aria-hidden
+                    width={400}
+                    height={242}
+                    className="motion-still block w-44 rounded-sm"
+                  />
                 </div>
+
+                <span className="absolute bottom-2 left-24 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
+                  <GridIcon className="h-6 w-6 text-white" />
+                </span>
               </div>
             </ChoiceCard>
           </div>
