@@ -40,6 +40,70 @@ Routes:
 > `pnpm` shim in `~/.local/bin`). If `pnpm` isn't found in a fresh shell, use
 > `corepack pnpm <cmd>` or re-create the shim.
 
+## Testing on your phone (HTTPS over LAN)
+
+The self-camera (`/booth`) and the phone upload (`/upload`) both need camera
+access via `getUserMedia`, which browsers only allow in a **secure context**.
+`localhost` counts; a bare LAN IP over `http://` does **not**. So to test from
+your phone you need HTTPS even on the local network.
+
+```bash
+pnpm dev:lan
+```
+
+This runs `next dev` with HTTPS bound to all interfaces and prints a banner with
+the URL to open on your phone, e.g.:
+
+```
+│  Network:  https://192.168.1.42:3000   ← open this on your phone
+│  Booth:    https://192.168.1.42:3000/booth
+│  Upload:   https://192.168.1.42:3000/upload
+│
+│  Cert covers: localhost, 127.0.0.1, 192.168.1.42
+│  Self-signed cert → accept the one-time browser warning.
+```
+
+### About the certificate
+
+`pnpm dev:lan` mints its own cert with `openssl` into `certificates/`
+(gitignored) rather than using Next's built-in cert generation. Two reasons:
+
+1. Next's `--experimental-https` shells out to **mkcert**, whose `-install` step
+   needs your **login password** — it fails in any non-interactive shell.
+2. The cert mkcert produces covers only `localhost 127.0.0.1 ::1 0.0.0.0` — **not
+   your LAN IP**. Your phone dialing `https://192.168.1.42:3000` would get a
+   cert-name mismatch, which some mobile browsers refuse to let you click past.
+
+The generated cert lists every LAN IPv4 on the machine in its SANs, so the name
+always matches. It's regenerated automatically when your IP changes (e.g. you
+join a different Wi-Fi) — the SAN set is tracked in `certificates/sans.json`.
+
+Notes:
+
+- Your phone must be on the **same Wi-Fi** as the laptop.
+- The cert is **self-signed**, so the first visit (on laptop and phone) shows a
+  browser warning ("Not secure" / "Your connection is not private"). This is
+  **expected in dev** — tap _Advanced → Proceed_ to continue. Camera access
+  works once you're past it. You'll see it again after the cert is regenerated.
+- To find your IP manually: macOS `ipconfig getifaddr en0` (Wi-Fi) or
+  System Settings → Wi-Fi → Details; or just read it off the `dev:lan` banner.
+- The `/booth` QR code auto-targets `window.location.origin/upload`, so when you
+  open the booth via the LAN URL the QR already points your phone at the right
+  address — no config needed.
+- `next.config.ts` adds this machine's LAN IPs to `allowedDevOrigins`. Without
+  it Next dev rejects cross-origin requests for `/_next/*` assets, so the page
+  loads from the phone but arrives unstyled and without JS.
+- If `openssl` isn't on `PATH`, the script warns and falls back to
+  `--experimental-https` (localhost only — phone testing won't work).
+
+Dev scripts:
+
+| Script | What it does |
+| --- | --- |
+| `pnpm dev` | Plain `next dev` (http, localhost only) |
+| `pnpm dev:https` | `next dev --experimental-https` (localhost, HTTPS) |
+| `pnpm dev:lan` | HTTPS (LAN-IP cert) + `0.0.0.0` + prints the LAN URL — use this for phone testing |
+
 ## Environment variables
 
 See [`.env.local.example`](./.env.local.example). Summary:
@@ -72,7 +136,11 @@ lib/
     types.ts        Database types — regenerate with `supabase gen types`
   stores/           Zustand stores (e.g. booth-store.ts)
   ar/               AR / face-tracking + game logic (scaffold — see below)
-components/         Shared UI components (e.g. PhotoCard.tsx)
+components/         Shared UI components
+  Polaroid.tsx      Polaroid-framed photo (used by the booth wall)
+  PhotoCard.tsx     Plain square photo tile
+  booth/            Booth-only components: PhotoWall (live grid), SelfCamera
+lib/hooks/          React hooks (use-approved-photos = initial fetch + Realtime)
 types/              Shared, framework-agnostic domain types
 supabase/
   migrations/       SQL migrations (0001_init.sql = photos table)
@@ -95,7 +163,30 @@ RLS is enabled; the anon key can only read `approved` photos. Writes and
 moderation go through the server routes using the service-role key. The table is
 added to the `supabase_realtime` publication so the booth wall can update live.
 
-Apply it with `supabase db push`, or paste it into the Supabase SQL editor.
+### Applying the migration
+
+The migration is **not applied yet** — it needs a live Supabase project. Once
+you've created one:
+
+```bash
+# Option A — Supabase CLI (from the repo root)
+supabase link --project-ref <your-project-ref>
+supabase db push
+
+# Option B — no CLI: open the Supabase dashboard → SQL Editor,
+# paste supabase/migrations/0001_init.sql, and run it.
+```
+
+Then fill in `.env.local` (copy from `.env.local.example`) with the project URL
+and anon key, restart the dev server, and the booth wall switches from
+"Supabase not configured" to the live wall.
+
+Optionally regenerate the DB types so they're derived from the real schema
+instead of the hand-written stand-in:
+
+```bash
+supabase gen types typescript --project-id <ref> --schema public > lib/supabase/types.ts
+```
 
 ## AR games
 
