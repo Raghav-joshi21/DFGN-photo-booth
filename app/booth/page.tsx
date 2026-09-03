@@ -145,8 +145,9 @@ function IdleScreen() {
           </p>
         </div>
 
-        {/* Bottom section (40%) — sustainability, edge to edge. */}
-        <div className="flex h-2/5 min-h-0 flex-col items-center justify-center gap-2 border-t-[3px] border-ink bg-brand-green/10 px-5 py-4">
+        {/* Bottom section — sustainability, edge to edge; fills the remaining
+            height under the QR block. */}
+        <div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-2 border-t-[3px] border-ink bg-brand-green/10 px-5 py-4">
           <Clip
             src={SUS_MASCOT_SRC}
             poster={SUS_MASCOT_POSTER}
