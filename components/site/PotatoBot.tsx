@@ -1,58 +1,58 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+
+import { Clip } from "./Clip";
+import {
+  SUS_MASCOT_H,
+  SUS_MASCOT_POSTER,
+  SUS_MASCOT_SRC,
+  SUS_MASCOT_W,
+  SUSTAINABILITY_FACTS,
+} from "@/lib/sustainability";
 
 /**
  * The potato mascot: sits in the bottom-right corner and animates in place —
  * a steady idle bob, plus a hop each time it speaks. It does not travel.
  *
+ * It plays a looping "recycling" clip and talks up the event's sustainability
+ * story: this is a zero-print, zero-plastic photo booth, and small guest
+ * choices (skip the print, refill the cup, sort the bin) add up.
+ *
  * Notes on the implementation:
- *  - Renders nothing until mounted. The joke is chosen randomly, so rendering
- *    on the server would guarantee a hydration mismatch. A decorative overlay
- *    can afford to appear a tick late.
+ *  - Renders nothing until mounted. The message is chosen randomly, so
+ *    rendering on the server would guarantee a hydration mismatch. A decorative
+ *    overlay can afford to appear a tick late.
  *  - Bob and hop live on separate nested elements; on one element the two
  *    keyframes would contend for `transform` and the later one would win.
+ *  - The mascot art is a transparent-background WebM played through <Clip>,
+ *    which swaps in a still frame under prefers-reduced-motion.
  *  - Anchored bottom-RIGHT deliberately: bottom-left collides with Next's
  *    dev-tools badge in development.
- *  - Honours prefers-reduced-motion: it holds still and still tells jokes, so
- *    the content is never gated behind the animation.
+ *  - Honours prefers-reduced-motion: the bob/hop CSS is disabled via media
+ *    query. It still cycles through the facts, so the content is never gated
+ *    behind the animation.
  */
 
-const JOKES = [
-  "Why did the potato cross the road? It saw a fork ahead! 🍴",
-  "You look absolutely a-peeling today. 😍",
-  "Spud you like to take a photo? 📸",
-  "I'm rooting for you! 🌱",
-  "Chip chip hooray! 🎉",
-  "I yam what I yam. 💪",
-  "Don't be a small fry — smile big! 😁",
-  "I find this whole thing very a-mash-ing. 🥔",
-  "Eyes on me. I've got plenty of them. 👀",
-  "Baked, mashed or fried — I'm flattered either way. 🔥",
-  "Just chilling in my corner. 😎",
-  "Let's get this party star-ch-ed. 🎊",
-  "You're one in a mash-illion. ✨",
-  "No filter needed. I'm naturally this good looking. 💅",
-];
+const FACTS = SUSTAINABILITY_FACTS;
 
-const JOKE_MS = 7500;
-const CYCLE_MS = 15000;
+const FACT_MS = 9000;
+const CYCLE_MS = 17000;
 
 export function PotatoBot() {
   const [mounted, setMounted] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const [joke, setJoke] = useState<number | null>(null);
-  // Bumped on each joke to restart the hop animation (a changing key on the
+  const [fact, setFact] = useState<number | null>(null);
+  // Bumped on each fact to restart the hop animation (a changing key on the
   // class alone won't retrigger it).
   const [hop, setHop] = useState(0);
 
   useEffect(() => setMounted(true), []);
 
   const speak = useCallback(() => {
-    setJoke((current) => {
-      let next = Math.floor(Math.random() * JOKES.length);
-      if (next === current) next = (next + 1) % JOKES.length;
+    setFact((current) => {
+      let next = Math.floor(Math.random() * FACTS.length);
+      if (next === current) next = (next + 1) % FACTS.length;
       return next;
     });
     setHop((n) => n + 1);
@@ -70,7 +70,7 @@ export function PotatoBot() {
 
     const cycle = () => {
       speak();
-      after(JOKE_MS, () => setJoke(null));
+      after(FACT_MS, () => setFact(null));
       after(CYCLE_MS, cycle);
     };
 
@@ -87,14 +87,14 @@ export function PotatoBot() {
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-50 print:hidden">
       <div className="relative">
-        {joke !== null ? (
+        {fact !== null ? (
           <div
             role="status"
             aria-live="polite"
-            className="potato-bot-bubble pointer-events-auto absolute bottom-full right-0 mb-3 w-56 rounded-2xl border-[3px] border-ink bg-cream-light px-3.5 py-2.5 shadow-[4px_4px_0_var(--color-ink)]"
+            className="potato-bot-bubble pointer-events-auto absolute bottom-full right-0 mb-3 w-64 rounded-2xl border-[3px] border-ink bg-cream-light px-3.5 py-2.5 shadow-[4px_4px_0_var(--color-ink)]"
           >
             <p className="font-body text-sm font-semibold leading-snug text-ink">
-              {JOKES[joke]}
+              {FACTS[fact]}
             </p>
             <button
               type="button"
@@ -117,15 +117,15 @@ export function PotatoBot() {
             <button
               type="button"
               onClick={speak}
-              aria-label="Potato bot — tap for a joke"
-              className="pointer-events-auto block rounded-full transition-transform hover:scale-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange"
+              aria-label="Potato bot — tap for a sustainability fact"
+              className="pointer-events-auto block rounded-2xl transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange"
             >
-              <Image
-                src="/art/potato-bot.png"
-                alt=""
-                width={147}
-                height={177}
-                className="h-20 w-auto drop-shadow-md"
+              <Clip
+                src={SUS_MASCOT_SRC}
+                poster={SUS_MASCOT_POSTER}
+                width={SUS_MASCOT_W}
+                height={SUS_MASCOT_H}
+                className="h-36 w-auto drop-shadow-lg sm:h-48"
               />
             </button>
           </div>
