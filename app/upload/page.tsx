@@ -87,11 +87,12 @@ export default function UploadPage() {
         >
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-foreground/15 border-t-foreground" />
           <h1 className="text-2xl font-bold tracking-tight">
-            Your photo is being processed
+            {configured ? "Your photo is being processed" : "Your photo is on its way"}
           </h1>
           <p className="text-sm opacity-60">
-            We&apos;re giving it an AI makeover and a quick safety check. It&apos;ll
-            pop up on the big screen once it&apos;s approved.
+            {configured
+              ? "We're giving it an AI makeover and a quick safety check. It'll pop up on the big screen once it's approved."
+              : "It'll pop up on the big screen in a moment."}
           </p>
         </motion.div>
         <button
