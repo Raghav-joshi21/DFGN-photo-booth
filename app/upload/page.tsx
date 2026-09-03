@@ -11,6 +11,16 @@ import {
 
 type Status = "idle" | "uploading" | "processing" | "error";
 
+/** Read a File as a base64 data URL (for the local, no-Supabase upload path). */
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read the file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 /**
  * Upload route (mobile-facing PWA).
  *
