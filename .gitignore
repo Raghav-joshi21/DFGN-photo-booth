@@ -47,3 +47,12 @@ next-env.d.ts
 # Large design sources (GIF/PSD/AE exports). Keep locally, never commit —
 # a 16MB binary in history bloats every future clone.
 /design-source/
+
+# Stray screenshots / source art dropped in the repo root (only referenced
+# copies under public/art/ are tracked).
+/*.PNG
+/*.png
+/Screenshot *
+/Capture.*
+/*.mp4
+/*.gif
