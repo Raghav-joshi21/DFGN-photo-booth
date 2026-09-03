@@ -102,7 +102,7 @@ function IdleScreen() {
           sustainability story filling the bottom half. */}
       <aside className="hidden h-full w-72 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex">
         {/* Top half — send one from your phone. */}
-        <div className="flex h-1/2 min-h-0 flex-col items-center justify-center gap-4 p-5">
+        <div className="flex h-1/2 min-h-0 flex-col items-center justify-center gap-3 p-5">
           <div>
             <p className="font-display text-2xl font-extrabold uppercase leading-tight tracking-tight text-ink">
               Send one from your phone
@@ -111,6 +111,15 @@ function IdleScreen() {
               No queue, no waiting — it lands on the wall.
             </p>
           </div>
+
+          {/* The potato points down at the code. */}
+          <Clip
+            src="/art/potato-point-qr.webm"
+            poster="/art/potato-point-qr.png"
+            width={300}
+            height={380}
+            className="-mb-3 h-24 w-auto drop-shadow-md"
+          />
 
           <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
             {uploadUrl ? (
