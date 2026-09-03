@@ -51,9 +51,23 @@ export default function UploadPage() {
     setStatus("uploading");
     setErrorMsg(null);
     try {
-      const photo = await uploadGuestPhoto(file);
-      // Fire-and-forget the (stubbed) moderation + AI-edit pipeline.
-      void triggerProcessing(photo);
+      if (configured) {
+        const photo = await uploadGuestPhoto(file);
+        // Fire-and-forget the (stubbed) moderation + AI-edit pipeline.
+        void triggerProcessing(photo);
+      } else {
+        // Local store: send the file straight to the wall's API route.
+        const image = await fileToDataUrl(file);
+        const res = await fetch("/api/photos", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ image, source: "upload" }),
+        });
+        if (!res.ok) {
+          const { error } = await res.json().catch(() => ({ error: null }));
+          throw new Error(error ?? `Upload failed (${res.status}).`);
+        }
+      }
       setStatus("processing");
     } catch (err) {
       console.error("[upload] failed", err);
