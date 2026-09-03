@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import Image from "next/image";
 
 import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
@@ -99,60 +98,49 @@ function IdleScreen() {
         <SelfCamera />
       </section>
 
-      {/* Phone-upload panel — full height of the right side. */}
-      <aside className="hidden h-full w-72 shrink-0 flex-col items-center justify-center gap-5 rounded-[26px] border-[3px] border-ink bg-cream-light p-6 text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex">
-        <Image
-          src="/art/dfgn-logo.png"
-          alt="DFGN"
-          width={447}
-          height={447}
-          className="h-10 w-10"
-        />
+      {/* Right rail — split in two: phone upload on top, the event's
+          sustainability story filling the bottom half. */}
+      <aside className="hidden h-full w-72 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex">
+        {/* Top half — send one from your phone. */}
+        <div className="flex h-1/2 min-h-0 flex-col items-center justify-center gap-4 p-5">
+          <div>
+            <p className="font-display text-2xl font-extrabold uppercase leading-tight tracking-tight text-ink">
+              Send one from your phone
+            </p>
+            <p className="mt-2 text-sm text-ink/60">
+              No queue, no waiting — it lands on the wall.
+            </p>
+          </div>
 
-        <div>
-          <p className="font-display text-2xl font-extrabold uppercase leading-tight tracking-tight text-ink">
-            Send one from your phone
-          </p>
-          <p className="mt-2 text-sm text-ink/60">
-            No queue, no waiting — it lands on the wall.
+          <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
+            {uploadUrl ? (
+              <QRCodeSVG value={uploadUrl} size={150} marginSize={0} />
+            ) : (
+              // Reserve the box so the panel doesn't jump once the URL resolves.
+              <div className="h-[150px] w-[150px]" />
+            )}
+          </div>
+
+          <p className="font-display text-xs font-bold uppercase tracking-wide text-ink/50">
+            Scan to join the wall
           </p>
         </div>
 
-        {/* The potato points down at the code. */}
-        <Clip
-          src="/art/potato-pointing.mp4"
-          poster="/art/potato-pointing-poster.jpg"
-          width={320}
-          height={328}
-          className="w-28"
-        />
-
-        <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
-          {uploadUrl ? (
-            <QRCodeSVG value={uploadUrl} size={160} marginSize={0} />
-          ) : (
-            // Reserve the box so the panel doesn't jump once the URL resolves.
-            <div className="h-[160px] w-[160px]" />
-          )}
-        </div>
-
-        <p className="font-display text-sm font-bold uppercase tracking-wide text-ink/50">
-          Scan to join the wall
-        </p>
-
-        {/* Sustainability: this digital booth is the low-waste choice. */}
-        <div className="flex flex-col items-center gap-2 border-t-2 border-dashed border-ink/15 pt-4">
+        {/* Bottom half — sustainability, big. */}
+        <div className="flex h-1/2 min-h-0 flex-col items-center justify-center gap-3 border-t-[3px] border-ink bg-brand-green/10 p-5">
           <Clip
             src={SUS_MASCOT_SRC}
             poster={SUS_MASCOT_POSTER}
             width={SUS_MASCOT_W}
             height={SUS_MASCOT_H}
-            className="h-24 w-auto drop-shadow-md"
+            className="w-full max-w-[240px] drop-shadow-md"
           />
-          <p className="font-display text-base font-extrabold uppercase leading-tight tracking-tight text-brand-green">
-            Our most sustainable event
+          <p className="font-display text-2xl font-extrabold uppercase leading-none tracking-tight text-brand-green">
+            Our most
+            <br />
+            sustainable event
           </p>
-          <p className="min-h-[3rem] text-xs leading-snug text-ink/60">
+          <p className="text-sm leading-snug text-ink/70">
             {SUSTAINABILITY_FACTS[factIdx]}
           </p>
         </div>
