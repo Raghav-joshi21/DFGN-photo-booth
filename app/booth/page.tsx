@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import Image from "next/image";
 
 import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
@@ -103,12 +104,21 @@ function IdleScreen() {
       <aside className="hidden h-full w-80 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex xl:w-[420px] 2xl:w-[480px]">
         {/* Top section (60%) — send one from your phone; QR sits low, near the
             divider. */}
-        <div className="flex h-3/5 min-h-0 flex-col items-center justify-end gap-4 p-5 pb-7">
+        <div className="flex h-3/5 min-h-0 flex-col items-center justify-end gap-3 p-5 pb-6">
+          <Image
+            src="/art/latvia-idfw26.png"
+            alt="Latvia — IDFW '26"
+            width={205}
+            height={78}
+            priority
+            className="w-48 rounded-lg border-2 border-ink shadow-[3px_3px_0_var(--color-ink)]"
+          />
+
           <div>
             <p className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-ink">
               Send one from your phone
             </p>
-            <p className="mt-2 text-base text-ink/60">
+            <p className="mt-1.5 text-base text-ink/60">
               No queue, no waiting — it lands on the wall.
             </p>
           </div>
@@ -119,15 +129,15 @@ function IdleScreen() {
             poster="/art/potato-point-qr.png"
             width={300}
             height={380}
-            className="-mb-3 h-36 w-auto drop-shadow-md"
+            className="-mb-3 h-28 w-auto drop-shadow-md"
           />
 
           <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
             {uploadUrl ? (
-              <QRCodeSVG value={uploadUrl} size={210} marginSize={0} />
+              <QRCodeSVG value={uploadUrl} size={196} marginSize={0} />
             ) : (
               // Reserve the box so the panel doesn't jump once the URL resolves.
-              <div className="h-[210px] w-[210px]" />
+              <div className="h-[196px] w-[196px]" />
             )}
           </div>
 
