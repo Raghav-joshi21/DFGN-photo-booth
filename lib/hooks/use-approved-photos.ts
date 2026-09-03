@@ -15,33 +15,61 @@ interface UseApprovedPhotos {
   photos: Photo[];
   /** True until the initial fetch resolves. */
   loading: boolean;
-  /** True when Supabase env vars are missing (dev before .env.local). */
+  /**
+   * True only when there is no photo backend at all. With the local filesystem
+   * store (the default) the wall works, so this is `false`.
+   */
   disabled: boolean;
 }
 
+/** How often to re-poll the local store for new photos. */
+const LOCAL_POLL_MS = 2500;
+
 /**
- * Live list of approved photos for the booth wall.
+ * Live list of approved photos for the wall.
  *
- * Does an initial fetch, then subscribes to Realtime Postgres changes on the
- * `photos` table:
- *   - INSERT of an already-approved row (e.g. a booth self-camera capture)
- *   - UPDATE whose new status is 'approved' (a guest upload that just passed
- *     moderation) — this is the common path.
- * Newest photos are prepended so they animate in at the top of the wall.
+ * Two backends, picked by whether Supabase is configured:
+ *  - **Supabase**: initial fetch, then Realtime Postgres changes (INSERT of an
+ *    already-approved row, or UPDATE whose new status is 'approved').
+ *  - **Local store** (no env vars): poll `GET /api/photos` every
+ *    {@link LOCAL_POLL_MS}. The route serves a filesystem-backed, newest-first
+ *    list written by the booth capture and the guest upload.
+ *
+ * Newest photos are first so they animate in at the top of the wall.
  */
 export function useApprovedPhotos(): UseApprovedPhotos {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const disabled = !hasSupabaseEnv();
+  const supabase = hasSupabaseEnv();
 
   useEffect(() => {
-    if (disabled) {
-      setLoading(false);
-      return;
+    let active = true;
+
+    // --- Local filesystem store: poll the API route. ---------------------
+    if (!supabase) {
+      const load = async () => {
+        try {
+          const res = await fetch("/api/photos", { cache: "no-store" });
+          if (!res.ok) return;
+          const { photos: next } = (await res.json()) as { photos: Photo[] };
+          if (active) setPhotos(next);
+        } catch {
+          // Offline or route missing — keep whatever is already on the wall.
+        } finally {
+          if (active) setLoading(false);
+        }
+      };
+
+      load();
+      const timer = window.setInterval(load, LOCAL_POLL_MS);
+      return () => {
+        active = false;
+        window.clearInterval(timer);
+      };
     }
 
-    let active = true;
-    const supabase = createClient();
+    // --- Supabase: initial fetch + Realtime. ----------------------------
+    const client = createClient();
 
     fetchApprovedPhotos()
       .then((initial) => {
@@ -61,7 +89,7 @@ export function useApprovedPhotos(): UseApprovedPhotos {
       });
     };
 
-    const channel = supabase
+    const channel = client
       .channel("approved-photos")
       .on(
         "postgres_changes",
@@ -77,9 +105,9 @@ export function useApprovedPhotos(): UseApprovedPhotos {
 
     return () => {
       active = false;
-      supabase.removeChannel(channel);
+      client.removeChannel(channel);
     };
-  }, [disabled]);
+  }, [supabase]);
 
-  return { photos, loading, disabled };
+  return { photos, loading, disabled: false };
 }
