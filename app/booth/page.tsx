@@ -139,6 +139,9 @@ function IdleScreen() {
           <p className="font-display text-sm font-bold uppercase tracking-wide text-ink/50">
             Scan to join the wall
           </p>
+          <p className="max-w-[15rem] text-xs leading-snug text-ink/45">
+            Anything you capture at the event shows up on the wall.
+          </p>
         </div>
 
         {/* Bottom section (40%) — sustainability, edge to edge. */}
