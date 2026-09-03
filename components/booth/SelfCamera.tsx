@@ -363,15 +363,17 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <>
             <button
               onClick={retake}
-              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
+              disabled={saving}
+              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
             >
               Retake
             </button>
             <button
               onClick={usePhoto}
-              className="rounded-full border-[3px] border-ink bg-brand-orange px-6 py-2.5 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
+              disabled={saving}
+              className="rounded-full border-[3px] border-ink bg-brand-orange px-6 py-2.5 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-60"
             >
-              Use this photo
+              {saving ? "Sending…" : "Use this photo"}
             </button>
           </>
         ) : (
