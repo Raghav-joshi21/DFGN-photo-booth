@@ -109,7 +109,7 @@ export async function addPhoto(input: {
 }
 
 function decodeImage(image: string): { data: Buffer; contentType: string } {
-  const match = /^data:(image\/[a-z0-9.+-]+);base64,(.*)$/is.exec(image.trim());
+  const match = /^data:(image\/[a-z0-9.+-]+);base64,([\s\S]*)$/i.exec(image.trim());
   if (match) {
     return { contentType: match[1].toLowerCase(), data: Buffer.from(match[2], "base64") };
   }
