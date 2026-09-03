@@ -99,10 +99,10 @@ function IdleScreen() {
       </section>
 
       {/* Right rail — split in two: phone upload on top, the event's
-          sustainability story filling the bottom half. */}
-      <aside className="hidden h-full w-72 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex">
-        {/* Top half — send one from your phone. */}
-        <div className="flex h-1/2 min-h-0 flex-col items-center justify-center gap-3 p-5">
+          sustainability story filling the (larger) bottom section. */}
+      <aside className="hidden h-full w-80 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex xl:w-[420px] 2xl:w-[480px]">
+        {/* Top section — send one from your phone. */}
+        <div className="flex h-2/5 min-h-0 flex-col items-center justify-center gap-3 p-5">
           <div>
             <p className="font-display text-2xl font-extrabold uppercase leading-tight tracking-tight text-ink">
               Send one from your phone
@@ -135,21 +135,21 @@ function IdleScreen() {
           </p>
         </div>
 
-        {/* Bottom half — sustainability, big. */}
-        <div className="flex h-1/2 min-h-0 flex-col items-center justify-center gap-3 border-t-[3px] border-ink bg-brand-green/10 p-5">
+        {/* Bottom section — sustainability, deliberately dominant. */}
+        <div className="flex h-3/5 min-h-0 flex-col items-center justify-center gap-3 border-t-[3px] border-ink bg-brand-green/10 px-5 py-6">
           <Clip
             src={SUS_MASCOT_SRC}
             poster={SUS_MASCOT_POSTER}
             width={SUS_MASCOT_W}
             height={SUS_MASCOT_H}
-            className="w-full max-w-[240px] drop-shadow-md"
+            className="-mx-5 w-[calc(100%+2.5rem)] drop-shadow-md"
           />
-          <p className="font-display text-2xl font-extrabold uppercase leading-none tracking-tight text-brand-green">
+          <p className="font-display text-3xl font-extrabold uppercase leading-none tracking-tight text-brand-green xl:text-4xl">
             Our most
             <br />
             sustainable event
           </p>
-          <p className="text-sm leading-snug text-ink/70">
+          <p className="text-base leading-snug text-ink/70">
             {SUSTAINABILITY_FACTS[factIdx]}
           </p>
         </div>
