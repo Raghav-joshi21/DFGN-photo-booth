@@ -244,11 +244,23 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     setPhase("preview");
   };
 
-  const usePhoto = () => {
-    // TODO(booth-capture): upload `captured` to Supabase Storage as a
-    // source:'booth' photo, then play the Polaroid-eject animation as the
-    // print "slides out" onto the wall. Stubbed for now.
-    console.log("[booth] use photo (stub) — captured length:", captured?.length);
+  const usePhoto = async () => {
+    if (captured && !saving) {
+      setSaving(true);
+      try {
+        const res = await fetch("/api/photos", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ image: captured, source: "booth" }),
+        });
+        if (!res.ok) throw new Error(`store responded ${res.status}`);
+      } catch (err) {
+        // Non-fatal: the booth should never get stuck on a failed save.
+        console.error("[booth] could not send capture to the wall", err);
+      } finally {
+        setSaving(false);
+      }
+    }
     if (onExit) onExit();
     else retake(); // Inline: hand the booth straight back to a live preview.
   };
