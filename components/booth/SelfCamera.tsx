@@ -36,6 +36,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [count, setCount] = useState(3);
   const [captured, setCaptured] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Bumping this re-runs the acquire effect (the "Try again" button).
   const [attempt, setAttempt] = useState(0);
