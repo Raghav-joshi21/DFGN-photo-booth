@@ -102,9 +102,10 @@ function IdleScreen() {
       {/* Right rail — split 60/40: phone upload on top, the event's
           sustainability story pinned across the bottom. */}
       <aside className="hidden h-full w-80 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex xl:w-[420px] 2xl:w-[480px]">
-        {/* Top section (60%) — send one from your phone; stack centred
-            horizontally, sitting in the upper-middle of the section. */}
-        <div className="flex h-3/5 min-h-0 flex-col items-center justify-start gap-2 px-5 pb-3 pt-[16%]">
+        {/* Top section — send one from your phone. Sizes to its content (plus
+            the pt- offset that pushes the stack down); the sustainability
+            block below takes whatever height is left. */}
+        <div className="flex shrink-0 flex-col items-center justify-start gap-2 px-5 pb-3 pt-[26%]">
           <Image
             src="/art/latvia-idfw26.png"
             alt="Latvia — IDFW '26"
