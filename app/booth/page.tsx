@@ -124,7 +124,7 @@ function IdleScreen() {
             poster="/art/potato-point-qr.png"
             width={300}
             height={380}
-            className="-mb-3 h-28 w-auto drop-shadow-md"
+            className="-mb-3 h-[7.4rem] w-auto drop-shadow-md"
           />
 
           <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
