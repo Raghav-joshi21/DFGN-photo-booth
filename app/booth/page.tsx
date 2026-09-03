@@ -103,8 +103,8 @@ function IdleScreen() {
           sustainability story pinned across the bottom. */}
       <aside className="hidden h-full w-80 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex xl:w-[420px] 2xl:w-[480px]">
         {/* Top section (60%) — send one from your phone; stack centred
-            horizontally and pulled toward the top of the section. */}
-        <div className="flex h-3/5 min-h-0 flex-col items-center justify-start gap-3 px-5 pb-4 pt-[8%]">
+            horizontally, sitting in the upper-middle of the section. */}
+        <div className="flex h-3/5 min-h-0 flex-col items-center justify-start gap-3 px-5 pb-4 pt-[25%]">
           <Image
             src="/art/latvia-idfw26.png"
             alt="Latvia — IDFW '26"
