@@ -11,16 +11,19 @@
 import type { CameraKitSession, Lens } from "@snap/camera-kit";
 
 /**
- * Only potato-themed lenses are offered. The lens group can hold anything, so
- * this filters by name rather than trusting the group's contents.
+ * Potato-themed lenses lead the strip and one of them is applied by default —
+ * this is a potato booth, so the potato look is the house style, not an option
+ * buried at the end of a scroll. Non-matching lenses are still offered.
  */
 const POTATO_LENS_PATTERN = /potato|spud|tater|tattie|fry|fries|chip|crisp|veg/i;
 
 export interface CameraKitHandle {
   session: CameraKitSession;
-  /** Potato lenses, in group order. "No filter" is handled by the UI. */
+  /** Every lens in the group, potato-themed ones first. "No filter" is UI-side. */
   lenses: Lens[];
-  /** Every lens in the group, for diagnostics when the filter matches none. */
+  /** The lens to apply on start-up — the first potato one, if the group has any. */
+  defaultLens: Lens | null;
+  /** Every lens in the group, for diagnostics when nothing looks potato-ish. */
   totalLenses: number;
   destroy: () => void;
 }
@@ -61,22 +64,25 @@ export async function startCameraKit(
       console.warn("[booth] some lenses failed to load", errors);
     }
 
-    const potato = allLenses.filter((lens) => POTATO_LENS_PATTERN.test(lens.name));
+    const isPotato = (lens: Lens) => POTATO_LENS_PATTERN.test(lens.name);
+    const potato = allLenses.filter(isPotato);
 
-    // An empty picker is worse than an unfiltered one: if the group has lenses
-    // but none look potato-themed, show them all and say why in the console,
-    // rather than silently presenting a filter step that does nothing.
-    const lenses = potato.length > 0 ? potato : allLenses;
+    // Every lens in the group is offered — hiding the rest used to leave the
+    // strip empty whenever the potato lens was named something unexpected.
+    // Potato ones simply sort to the front, where the default selection lands.
+    const lenses = [...potato, ...allLenses.filter((lens) => !isPotato(lens))];
     if (potato.length === 0 && allLenses.length > 0) {
       console.warn(
         `[booth] no lens in group ${groupId} matched ${POTATO_LENS_PATTERN}; ` +
-          `showing all ${allLenses.length}. Rename the lenses or widen the pattern.`,
+          `showing all ${allLenses.length} unsorted, with no filter applied by ` +
+          `default. Rename the potato lens or widen the pattern.`,
       );
     }
 
     return {
       session,
       lenses,
+      defaultLens: potato[0] ?? null,
       totalLenses: allLenses.length,
       destroy: () => {
         try {

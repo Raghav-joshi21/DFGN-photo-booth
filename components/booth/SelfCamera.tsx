@@ -41,8 +41,9 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [attempt, setAttempt] = useState(0);
 
   // --- Snap Camera Kit (optional live filters) ---------------------------
-  // `lens === null` is the always-available "no filter" option, and the
-  // default: a guest who ignores the strip gets a plain photo.
+  // `lens === null` is the always-available "no filter" option. The potato
+  // lens is applied on start-up when the group ships one, so a guest who
+  // ignores the strip still gets the house look.
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const kitRef = useRef<CameraKitHandle | null>(null);
   const [lenses, setLenses] = useState<Lens[]>([]);
@@ -77,7 +78,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1600 }, height: { ideal: 1200 } },
+          video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false,
         });
 
@@ -156,6 +157,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       kitRef.current = result;
       setLenses(result.lenses);
       setKitReady(true);
+
+      // Start on the potato lens. Best-effort like the rest of this layer: a
+      // lens that won't download leaves the plain (unfiltered) session up.
+      if (result.defaultLens) {
+        setActiveLensId(result.defaultLens.id);
+        result.session.applyLens(result.defaultLens).catch((err) => {
+          console.warn("[booth] could not apply the default lens", err);
+          setActiveLensId(null);
+        });
+      }
     });
 
     return () => {
@@ -213,11 +224,10 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // Center-crop to a square and mirror (selfie view).
+    // Center-crop to a square. Not mirrored: the print should match what the
+    // guest saw on screen, and a mirrored frame reverses any lens text with it.
     const sx = (srcW - size) / 2;
     const sy = (srcH - size) / 2;
-    ctx.translate(size, 0);
-    ctx.scale(-1, 1);
     ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     setPhase("captured");
@@ -244,13 +254,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="relative mx-auto aspect-[4/3] w-full max-w-[calc((100vh-19rem)*4/3)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)]">
+      <div className="relative mx-auto aspect-[16/9] w-full max-w-[calc((100vh-13rem)*16/9)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)]">
         {/* Live preview (hidden once we have a capture). */}
         <video
           ref={videoRef}
           playsInline
           muted
-          className="h-full w-full object-cover -scale-x-100"
+          className="h-full w-full object-contain"
           hidden={phase === "captured" || kitReady}
         />
 
@@ -258,7 +268,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             exists before the session boots; only shown once it is live. */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-cover -scale-x-100"
+          className="absolute inset-0 h-full w-full object-contain"
           hidden={!kitReady || phase === "captured"}
         />
 
@@ -268,7 +278,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <img
             src={captured}
             alt="Captured"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         ) : null}
 
@@ -292,7 +302,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         {/* Snap's guidelines require visible attribution whenever a Lens is
             active — see the Camera Kit section of the README. */}
         {kitReady && activeLensId && phase !== "captured" ? (
-          <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
             Powered by Snap
           </span>
         ) : null}
@@ -308,32 +318,32 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             </button>
           </div>
         ) : null}
-      </div>
 
-      {/* Filter picker — only when Camera Kit actually came up. */}
-      {kitReady && lenses.length > 0 && phase !== "captured" ? (
-        <div className="w-full">
-          <p className="mb-2 text-center font-display text-sm font-bold uppercase tracking-wide text-ink/60">
-            Pick a filter
-          </p>
-          <div className="flex w-full snap-x gap-2.5 overflow-x-auto pb-1">
-            <FilterChip
-              label="No filter"
-              active={activeLensId === null}
-              onClick={() => selectLens(null)}
-            />
-            {lenses.map((lens) => (
+        {/* Filter picker — overlaid on the preview so the guest sees the lens
+            and the strip in one place, without the frame giving up any height.
+            Only rendered when Camera Kit actually came up. */}
+        {kitReady && lenses.length > 0 && phase !== "captured" ? (
+          <div className="absolute inset-x-0 bottom-0 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
+            <div className="mx-auto flex w-max snap-x items-center gap-3">
               <FilterChip
-                key={lens.id}
-                label={lens.name}
-                icon={lens.iconUrl}
-                active={activeLensId === lens.id}
-                onClick={() => selectLens(lens)}
+                label="No filter"
+                fallback="🚫"
+                active={activeLensId === null}
+                onClick={() => selectLens(null)}
               />
-            ))}
+              {lenses.map((lens) => (
+                <FilterChip
+                  key={lens.id}
+                  label={lens.name}
+                  icon={lens.iconUrl}
+                  active={activeLensId === lens.id}
+                  onClick={() => selectLens(lens)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
         {phase === "captured" ? (
@@ -376,17 +386,22 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 }
 
 /**
- * One entry in the filter strip. Square thumbnail when the lens ships an icon,
- * otherwise the lens name — a strip of blank tiles would be unusable.
+ * One entry in the filter strip: a small translucent circle sitting on the live
+ * preview. The lens name is the accessible name and the tooltip rather than
+ * visible text — labels under every circle crowd the frame and, with enough
+ * lenses, push the row into a scroll no one at a kiosk will discover.
  */
 function FilterChip({
   label,
   icon,
+  fallback = "🥔",
   active,
   onClick,
 }: {
   label: string;
   icon?: string;
+  /** Shown when the lens ships no icon of its own. */
+  fallback?: string;
   active: boolean;
   onClick: () => void;
 }) {
@@ -396,25 +411,21 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       title={label}
-      className={`flex shrink-0 snap-start flex-col items-center gap-1 rounded-xl border-[3px] px-2 py-1.5 transition-transform hover:-translate-y-0.5 ${
+      aria-label={label}
+      className={`grid h-12 w-12 shrink-0 snap-start place-items-center overflow-hidden rounded-full border-2 backdrop-blur-sm transition-transform hover:scale-105 ${
         active
-          ? "border-ink bg-brand-orange text-white shadow-[3px_3px_0_var(--color-ink)]"
-          : "border-ink/25 bg-cream-light text-ink"
+          ? "border-brand-orange bg-brand-orange/40 scale-110"
+          : "border-white/50 bg-white/15"
       }`}
     >
       {icon ? (
         // Lens icons are served from Snap's CDN; next/image would need each
         // host allow-listed, and these are small decorative thumbnails.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={icon} alt="" className="h-10 w-10 rounded-md object-cover" />
+        <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-ink/10 text-lg">
-          🥔
-        </span>
+        <span className="text-lg leading-none">{fallback}</span>
       )}
-      <span className="max-w-[4.5rem] truncate font-display text-[11px] font-bold">
-        {label}
-      </span>
     </button>
   );
 }
