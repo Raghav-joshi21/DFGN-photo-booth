@@ -48,11 +48,8 @@ next-env.d.ts
 # a 16MB binary in history bloats every future clone.
 /design-source/
 
-# Stray screenshots / source art dropped in the repo root (only referenced
-# copies under public/art/ are tracked).
-/*.PNG
-/*.png
+# Stray screenshots dropped in the repo root (referenced art lives in
+# public/art/ and is tracked there).
 /Screenshot *
 /Capture.*
-/*.mp4
-/*.gif
+/*.PNG
