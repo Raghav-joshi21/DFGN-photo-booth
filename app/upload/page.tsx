@@ -150,20 +150,13 @@ export default function UploadPage() {
         )}
       </button>
 
-      {!configured ? (
-        <p className="text-xs text-amber-600">
-          Supabase isn&apos;t configured yet — add the keys to{" "}
-          <code>.env.local</code> to enable uploads.
-        </p>
-      ) : null}
-
       {errorMsg ? (
         <p className="text-xs text-red-600">{errorMsg}</p>
       ) : null}
 
       <button
         onClick={onSubmit}
-        disabled={!file || !configured || status === "uploading"}
+        disabled={!file || status === "uploading"}
         className="w-full rounded-full bg-foreground px-6 py-3 font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {status === "uploading" ? "Uploading…" : "Upload to the wall"}
