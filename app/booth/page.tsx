@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
 
+import { PotatoCatchGame } from "@/components/booth/PotatoCatchGame";
 import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
 import { Clip } from "@/components/site/Clip";
