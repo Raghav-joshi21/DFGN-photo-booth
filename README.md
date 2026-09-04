@@ -144,10 +144,19 @@ countdown. Set `NEXT_PUBLIC_CAMERA_KIT_API_TOKEN` and
 and a filter strip appears under the preview; the capture is then taken from
 Camera Kit's rendered output, so the lens is baked into the photo.
 
-It is entirely optional. With no credentials — or if the SDK fails to load, the
-token is rejected, or the lens group is empty — the booth falls back to the
+`NEXT_PUBLIC_CAMERA_KIT_LENS_GROUP_ID` accepts a comma-separated list of group
+ids — every group's lenses are loaded into the one strip, de-duplicated by id.
+
+Snap lenses are optional. With no credentials — or if the SDK fails to load, the
+token is rejected, or every lens group is empty — the booth falls back to the
 plain webcam preview and the rest of the capture flow is unchanged. The SDK is
 ~7MB and is imported dynamically, so an unconfigured booth never downloads it.
+
+The strip also carries a set of **built-in colour tints** (B&W, Sepia, Warm,
+Cool, …) defined in [`lib/camera-kit/css-filters.ts`](./lib/camera-kit/css-filters.ts).
+They are plain CSS filters, work with or without Camera Kit, stack on top of an
+active lens, and are re-applied to the capture canvas so the saved photo
+matches the preview.
 
 Only potato-themed lenses are offered: lens names are matched against a
 pattern in [`lib/camera-kit/index.ts`](./lib/camera-kit/index.ts). If a group
