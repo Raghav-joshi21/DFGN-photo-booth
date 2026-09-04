@@ -50,6 +50,7 @@ export default function BoothPage() {
 
 function IdleScreen() {
   const { photos } = useApprovedPhotos();
+  const setScreen = useBoothStore((s) => s.setScreen);
 
   // The QR points guests at THIS host's /upload. When the booth is opened via
   // the LAN URL, window.location.origin is already the right https://<ip>:port.
