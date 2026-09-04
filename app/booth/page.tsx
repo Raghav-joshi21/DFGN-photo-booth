@@ -95,13 +95,6 @@ function IdleScreen() {
           </div>
         </header>
 
-        <button
-          onClick={() => setScreen("game")}
-          className="mb-3 shrink-0 rounded-full border-[3px] border-ink bg-cream-light px-4 py-2 font-display text-sm font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
-        >
-          🥔 Play the catch game
-        </button>
-
         <SelfCamera />
       </section>
 
