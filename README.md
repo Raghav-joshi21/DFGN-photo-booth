@@ -250,52 +250,47 @@ and scaled/rotated to head size and tilt:
 
 | Lens | How it's drawn |
 | --- | --- |
-| 🥔 Potato hat | `public/art/potato-sprite.png`, anchored above the forehead |
+| 🥔 Potato hat | `public/art/potatoes.png` (the project's own mascot art), anchored above the forehead |
 | 🕶️ Shades | Canvas-drawn rounded rects + bridge + temples at the eye line |
 | 👨 Mustache | Layered ellipses (centre bar + curled tips), above the upper lip |
 | 👑 Crown | A gold 3-peak crown with gems, above the forehead |
 | 👀 Googly eyes | Two circles with sinusoidally-wobbling pupils |
 
 The potato hat leads and is auto-applied on start-up, same house-style rule
-as the Snap lens above. All five stack with a Snap lens and a colour tint at
-once, and are composited into the saved photo the same way tints are.
+as the Snap lens above. All five stack with a Snap lens, a colour tint, and
+the catch-game below, all at once — everything is composited into the saved
+photo the same way tints are.
 
 The `FaceLandmarker` (wasm runtime + a ~6MB model, both pulled from a CDN on
 first use rather than bundled) is expensive to boot and cheap to keep warm,
-so `startFaceAr()` caches it as a module-level singleton shared by both the
-self-camera and the AR game below — whichever loads it first, the other
-reuses the same instance instantly. Same "never block the booth" philosophy
-as Camera Kit: if the model can't load (offline, no WebGL, a slow device),
-`startFaceAr()` resolves `null` and the AR chips simply never appear.
-
-> **Asset note:** `public/art/potato-sprite.png` is extracted from a
-> licensed iStock illustration (asset `#1189117812`). It ships here on the
-> basis that the project holds a license covering this use — swap it for
-> original art before reusing this repo under a license that doesn't cover
-> that asset.
+so `startFaceAr()` caches it as a module-level singleton — the self-camera
+lenses and the catch-game below share one instance. Same "never block the
+booth" philosophy as Camera Kit: if the model can't load (offline, no WebGL,
+a slow device), `startFaceAr()` resolves `null` and the AR chips simply never
+appear.
 
 ## AR mini-game — Catch the falling potatoes
 
-`components/booth/PotatoCatchGame.tsx`, reached via the "🥔 Play the catch
-game" button on the booth's idle screen (`screen: "game"` in
-`lib/stores/booth-store.ts`). Uses the same `lib/ar` face-tracking pipeline
-as the self-camera lenses, but owns its own webcam stream — the two screens
-are never mounted at once, so there's no contention.
+`lib/ar/catch-game.ts` (game logic) + a toggle button and a bit of state in
+`components/booth/SelfCamera.tsx` (wiring). Deliberately **not** a separate
+screen or a second camera stream — "🥔 Catch game" just switches on another
+overlay in the exact same preview and detection loop the filters already use,
+reusing the same `NormalizedLandmark[]` already computed that frame.
 
-Rules: green and red potatoes fall from the top of the frame. Open your
-mouth under a green one to eat it and score; a gold ring around your mouth
-shows when it's open enough to catch. Eat a **red** one and it's game over —
-missing potatoes of either colour is free, only eating a red one is punished.
-Spawn rate ramps up slightly as the score climbs.
+Rules: potatoes — the same plain `public/art/potatoes.png` sprite as the
+potato-hat lens, no colour variants — fall from the top of the frame. Open
+your mouth under one to eat it; a gold ring around your mouth shows when it's
+open enough to catch. Score is just an eaten-count shown on the toggle button
+and as a badge on the preview; there's no losing condition, and missed
+potatoes just fall away. Toggling the game off clears the board; "Start over"
+on the review screen resets the score for the next guest.
 
 Mechanically: mouth state comes from the gap between the inner-lip landmarks
 normalized by inter-eye distance (so it's invariant to how close you're
-standing), and the whole game canvas — video, potatoes, and the mouth ring —
-is drawn through one mirrored transform, so reaching for a falling potato
-feels like looking in a mirror rather than fighting a reversed image. The
-potato sprite is tinted green/red once via an offscreen canvas
-(`source-atop` composite) rather than per-frame, so the hot loop is just a
-handful of `drawImage` calls.
+standing). `lib/ar/catch-game.ts` is deliberately pure/stateless — it takes
+the current potatoes + mouth state and returns the next ones — so
+`SelfCamera` can drive it from its existing rAF loop without owning any of
+the physics itself.
 
 ## Environment variables
 
