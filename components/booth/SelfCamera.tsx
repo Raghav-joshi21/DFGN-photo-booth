@@ -254,16 +254,32 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     setPhase("preview");
   };
 
+  /**
+   * "Start over" on the review screen: drop the shot and go back to the live
+   * preview without saving, and reset the filters to the booth's defaults so
+   * the next guest starts clean.
+   */
+  const startOver = () => {
+    retake();
+    setTintId(null);
+    const kit = kitRef.current;
+    if (kit) {
+      const fallback = kit.defaultLens;
+      setActiveLensId(fallback?.id ?? null);
+      (fallback ? kit.session.applyLens(fallback) : kit.session.removeLens()).catch(
+        () => setActiveLensId(null),
+      );
+    }
+  };
+
   const usePhoto = async () => {
     if (captured && !saving) {
       setSaving(true);
       try {
-        const res = await fetch("/api/photos", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ image: captured, source: "booth" }),
-        });
-        if (!res.ok) throw new Error(`store responded ${res.status}`);
+        // data: URL -> Blob, so savePhoto can send the smaller binary to
+        // Storage on the Supabase path and the data URL to the local store.
+        const blob = await (await fetch(captured)).blob();
+        await savePhoto({ blob, dataUrl: captured, source: "booth" });
       } catch (err) {
         // Non-fatal: the booth should never get stuck on a failed save.
         console.error("[booth] could not send capture to the wall", err);
