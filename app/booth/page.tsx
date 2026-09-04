@@ -28,12 +28,11 @@ import {
  * panel. The camera is the middle and the largest — it is what the guest is
  * actually there for.
  *
- * Screen switching is driven by `useBoothStore().screen`; the camera is always
- * live on idle, so there is no separate capture screen.
+ * The camera is always live on idle — there is no separate capture screen,
+ * and the AR mini-game (see SelfCamera's "Catch game" toggle) runs right in
+ * that same preview rather than a screen of its own.
  */
 export default function BoothPage() {
-  const screen = useBoothStore((s) => s.screen);
-
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-cream font-body text-ink">
       <main className="relative flex flex-1 flex-col overflow-hidden">
@@ -41,7 +40,7 @@ export default function BoothPage() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
-        {screen === "game" ? <GameScreen /> : <IdleScreen />}
+        <IdleScreen />
       </main>
     </div>
   );
@@ -49,7 +48,6 @@ export default function BoothPage() {
 
 function IdleScreen() {
   const { photos } = useApprovedPhotos();
-  const setScreen = useBoothStore((s) => s.setScreen);
 
   // The QR points guests at THIS host's /upload. When the booth is opened via
   // the LAN URL, window.location.origin is already the right https://<ip>:port.
