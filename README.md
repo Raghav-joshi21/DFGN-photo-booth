@@ -6,12 +6,11 @@ of event photos, fed by three input paths:
 
 1. **Self-camera** — the booth captures a photo of whoever is standing in
    front of it, with a live filter strip (Snap AR lenses, built-in colour
-   tints, and home-grown face-tracked props) baked into the shot.
+   tints, and home-grown face-tracked props) baked into the shot. A "Catch
+   the falling potatoes" mini-game toggles on right in that same preview —
+   open your mouth to eat the potatoes falling past you and rack up a score.
 2. **Phone upload** — guests scan a QR code, upload a selfie from their
    phone, and it gets AI-stylized before appearing on the booth wall.
-3. **AR mini-game** — "Catch the falling potatoes": open your mouth to eat
-   the green ones for points; eat a red one and it's game over. Played
-   right on the kiosk, face-tracked off the webcam.
 
 ## What's actually working right now
 
