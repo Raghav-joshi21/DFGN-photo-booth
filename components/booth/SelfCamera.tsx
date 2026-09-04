@@ -11,6 +11,8 @@ import {
   type CameraKitHandle,
 } from "@/lib/camera-kit";
 import { CSS_FILTERS } from "@/lib/camera-kit/css-filters";
+import { FACE_LENSES, startFaceAr, type FaceArHandle } from "@/lib/ar";
+import { drawFaceLens } from "@/lib/ar/draw";
 import { savePhoto } from "@/lib/photos/save";
 
 type Phase = "preview" | "counting" | "captured";
