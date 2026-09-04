@@ -1,6 +1,6 @@
 import { createClient } from "./client";
 import type { PhotoRow } from "./types";
-import type { Photo } from "@/types";
+import type { Photo, PhotoSource } from "@/types";
 
 /** Storage bucket that holds raw uploaded/captured photos (see migration). */
 export const PHOTOS_BUCKET = "photos";
@@ -43,91 +43,65 @@ export async function fetchApprovedPhotos(limit = 60): Promise<Photo[]> {
   return (data ?? []).map(mapRow);
 }
 
+/** Extension to use for a stored blob, keyed by MIME type. */
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
 /**
- * Upload a guest selfie: push the raw file to Storage, then insert a matching
- * 'pending' row in `photos` (source 'upload'). Returns the created photo.
+ * Put image bytes in the Storage bucket and return where they landed.
  *
- * Moderation + AI edit happen afterwards via {@link triggerProcessing}; until a
- * server flips the row to 'approved' it will not appear on the booth wall.
+ * Uploads straight from the browser — the anon INSERT policy on the bucket
+ * allows it (see the migration), and it keeps a multi-megabyte body out of the
+ * serverless function that publishes the row.
+ *
+ * Creating the `photos` row is deliberately NOT done here. A client can only
+ * insert 'pending' rows under RLS, so publishing happens server-side in
+ * /api/photos/publish with the service-role key. That split is what lets a
+ * photo be approved instantly without letting any browser approve its own.
  */
-export async function uploadGuestPhoto(file: File): Promise<Photo> {
+export async function uploadToStorage(
+  blob: Blob,
+  source: PhotoSource,
+): Promise<{ storagePath: string; publicUrl: string }> {
   const supabase = createClient();
 
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `upload/${crypto.randomUUID()}.${ext}`;
+  const contentType = blob.type || "image/jpeg";
+  const ext = EXT_BY_TYPE[contentType] ?? "jpg";
+  const storagePath = `${source}/${crypto.randomUUID()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage
+  const { error } = await supabase.storage
     .from(PHOTOS_BUCKET)
-    .upload(path, file, {
-      contentType: file.type || "image/jpeg",
-      upsert: false,
-    });
-  if (uploadError) throw uploadError;
+    .upload(storagePath, blob, { contentType, upsert: false });
+  if (error) throw error;
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(path);
+  } = supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(storagePath);
 
-  // NOTE: deliberately no `.select()` on this insert.
-  //
-  // PostgREST implements `.select()` as a RETURNING clause, and Postgres
-  // enforces the table's SELECT policy on returned rows. Ours only exposes
-  // approved photos, so returning a freshly-inserted 'pending' row is denied —
-  // and Postgres reports that as "new row violates row-level security policy",
-  // which reads like the INSERT was rejected when it actually succeeded.
-  //
-  // Rather than widen the SELECT policy (which would leak unmoderated photos to
-  // anyone with the anon key), we mint the id client-side and build the domain
-  // object locally. No round-trip needed.
-  const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
-
-  const { error: insertError } = await supabase
-    .from("photos")
-    .insert({ id, source: "upload", original_url: publicUrl, status: "pending" });
-  if (insertError) throw insertError;
-
-  return {
-    id,
-    source: "upload",
-    originalUrl: publicUrl,
-    editedUrl: null,
-    status: "pending",
-    createdAt,
-  };
+  return { storagePath, publicUrl };
 }
 
 /**
- * Kick off server-side moderation + AI stylizing for a freshly uploaded photo.
+ * Kick off the AI stylizing pass for a photo that is already on the wall.
  *
- * STUB: the real work lives behind /api/moderate and /api/ai-edit, which need
- * provider API keys that aren't wired up yet. For now this fires the requests
- * (they return 501) so the flow is in place; failures are swallowed on purpose
- * so the guest still sees the "processing" state.
- *
- * TODO: once keys exist, have these routes update `photos.status` /
- * `edited_url`; the booth wall already listens for that via Realtime.
+ * Fire-and-forget on purpose. The photo is published and visible before this
+ * runs; when the edit lands the route writes `edited_url` and the wall picks
+ * the change up over Realtime. A failure here costs the guest a filter, not
+ * their photo, so errors are swallowed rather than surfaced.
  */
 export async function triggerProcessing(
   photo: Pick<Photo, "id" | "originalUrl">,
 ): Promise<void> {
-  const body = JSON.stringify({
-    photoId: photo.id,
-    imageUrl: photo.originalUrl,
-  });
   try {
-    // Moderate first, then stylize. Both are stubs returning 501 today.
-    await fetch("/api/moderate", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body,
-    });
     await fetch("/api/ai-edit", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body,
+      body: JSON.stringify({ photoId: photo.id, imageUrl: photo.originalUrl }),
     });
   } catch {
-    // Non-fatal in dev — see TODO above.
+    // See above: the wall already has the unstyled photo.
   }
 }
