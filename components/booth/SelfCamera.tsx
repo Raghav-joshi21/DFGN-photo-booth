@@ -302,9 +302,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     const sx = (srcW - size) / 2;
     const sy = (srcH - size) / 2;
     ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
+    // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
+    // to the same video frame — composite it in with the same crop and tint
+    // so the print matches what the guest saw.
+    const arCanvas = arCanvasRef.current;
+    if (faceLensId && arCanvas && arCanvas.width > 0) {
+      ctx.drawImage(arCanvas, sx, sy, size, size, 0, 0, size, size);
+    }
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     setPhase("captured");
-  }, [kitReady, tint]);
+  }, [kitReady, tint, faceLensId]);
 
   const startCountdown = () => {
     setCount(3);
