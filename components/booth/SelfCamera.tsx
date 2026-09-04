@@ -340,14 +340,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           ) : null}
         </AnimatePresence>
 
-        {/* Snap's guidelines require visible attribution whenever a Lens is
-            active — see the Camera Kit section of the README. */}
-        {kitReady && activeLensId && phase !== "captured" ? (
-          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
-            Powered by Snap
-          </span>
-        ) : null}
-
         {error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
             <p className="max-w-sm text-balance">{error}</p>
