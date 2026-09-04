@@ -341,15 +341,14 @@ components/
   Polaroid.tsx             Polaroid-framed photo (used by the booth wall)
   PhotoCard.tsx             Plain square photo tile
   booth/
-    SelfCamera.tsx           Countdown capture + the three filter layers
-    PotatoCatchGame.tsx       The AR mini-game
+    SelfCamera.tsx           Countdown capture, the three filter layers, and the catch-game toggle
     ScrollingWall.tsx         The ambient, always-scrolling booth wall
     PotatoFrame.tsx           One framed photo tile in the wall
     PhotoWall.tsx              Grid layout used by /gallery
 types/                    Shared, framework-agnostic domain types
 supabase/
   migrations/              SQL migrations (0001_init.sql = photos table + storage bucket + RLS)
-public/art/                House art: potato mascot clips/stills, the AR game's sprite, branding
+public/art/                House art: potato mascot clips/stills, branding
 design-source/            Large/raw design exports kept locally only (gitignored — never commit)
 ```
 
