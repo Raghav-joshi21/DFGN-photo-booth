@@ -48,23 +48,11 @@ export default function UploadPage() {
     setStatus("uploading");
     setErrorMsg(null);
     try {
-      if (configured) {
-        const photo = await uploadGuestPhoto(file);
-        // Fire-and-forget the (stubbed) moderation + AI-edit pipeline.
-        void triggerProcessing(photo);
-      } else {
-        // Local store: send the file straight to the wall's API route.
-        const image = await fileToDataUrl(file);
-        const res = await fetch("/api/photos", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ image, source: "upload" }),
-        });
-        if (!res.ok) {
-          const { error } = await res.json().catch(() => ({ error: null }));
-          throw new Error(error ?? `Upload failed (${res.status}).`);
-        }
-      }
+      // savePhoto picks the backend: bytes to Supabase Storage + the publish
+      // route when configured, the local filesystem store (which needs the
+      // data URL) otherwise. It also kicks off the AI-edit pass itself.
+      const dataUrl = await fileToDataUrl(file);
+      await savePhoto({ blob: file, dataUrl, source: "upload" });
       setStatus("processing");
     } catch (err) {
       console.error("[upload] failed", err);
