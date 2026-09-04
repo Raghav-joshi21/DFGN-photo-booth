@@ -335,7 +335,8 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const startOver = () => {
     retake();
     setTintId(null);
-    setFaceLensId(null);
+    // Back to the house default, same as the Snap lens below — not "off".
+    setFaceLensId(arReady ? "potato-hat" : null);
     const kit = kitRef.current;
     if (kit) {
       const fallback = kit.defaultLens;
