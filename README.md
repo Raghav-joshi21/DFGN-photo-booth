@@ -315,8 +315,8 @@ that degradation looks like.
 ```
 app/
   page.tsx              Landing / signpost
-  booth/                Kiosk display route: idle photo wall + self-camera,
-                        and the AR game screen
+  booth/                Kiosk display route: idle photo wall + self-camera
+                        (filters and the AR game both live in the preview)
   upload/               Mobile-facing route for the QR-code selfie upload flow
   gallery/               Public read-only view of the same live wall
   api/
