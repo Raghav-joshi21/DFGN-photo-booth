@@ -3,23 +3,9 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-import {
-  hasSupabaseEnv,
-  triggerProcessing,
-  uploadGuestPhoto,
-} from "@/lib/supabase/photos";
+import { savePhoto } from "@/lib/photos/save";
 
 type Status = "idle" | "uploading" | "processing" | "error";
-
-/** Read a File as a base64 data URL (for the local, no-Supabase upload path). */
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error ?? new Error("Could not read the file."));
-    reader.readAsDataURL(file);
-  });
-}
 
 /**
  * Upload route (mobile-facing PWA).
@@ -36,8 +22,6 @@ export default function UploadPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const configured = hasSupabaseEnv();
-
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0] ?? null;
     setFile(picked);
@@ -51,23 +35,9 @@ export default function UploadPage() {
     setStatus("uploading");
     setErrorMsg(null);
     try {
-      if (configured) {
-        const photo = await uploadGuestPhoto(file);
-        // Fire-and-forget the (stubbed) moderation + AI-edit pipeline.
-        void triggerProcessing(photo);
-      } else {
-        // Local store: send the file straight to the wall's API route.
-        const image = await fileToDataUrl(file);
-        const res = await fetch("/api/photos", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ image, source: "upload" }),
-        });
-        if (!res.ok) {
-          const { error } = await res.json().catch(() => ({ error: null }));
-          throw new Error(error ?? `Upload failed (${res.status}).`);
-        }
-      }
+      // Same call the booth makes — one save path, so a phone upload and a
+      // booth capture always land in the same place.
+      await savePhoto(file, "upload");
       setStatus("processing");
     } catch (err) {
       console.error("[upload] failed", err);
@@ -87,12 +57,11 @@ export default function UploadPage() {
         >
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-foreground/15 border-t-foreground" />
           <h1 className="text-2xl font-bold tracking-tight">
-            {configured ? "Your photo is being processed" : "Your photo is on its way"}
+            You&apos;re on the wall!
           </h1>
           <p className="text-sm opacity-60">
-            {configured
-              ? "We're giving it an AI makeover and a quick safety check. It'll pop up on the big screen once it's approved."
-              : "It'll pop up on the big screen in a moment."}
+            Look up — your photo is on the big screen. Its AI makeover lands in
+            a few seconds.
           </p>
         </motion.div>
         <button

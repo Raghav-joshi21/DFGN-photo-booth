@@ -148,6 +148,16 @@ async function stylize(
     }),
   });
 
+  if (res.status === 429) {
+    // The free tier allows ZERO image-model requests (the API reports
+    // `limit: 0`, not a limit you can exhaust), so this is what an
+    // unbilled project gets on every single call. Worth its own message —
+    // the raw quota response is a wall of text that hides the one fix.
+    throw new Error(
+      "gemini image quota is 0 — enable billing on the Google Cloud project " +
+        "behind this API key. Image models have no free tier.",
+    );
+  }
   if (!res.ok) {
     throw new Error(`gemini responded ${res.status}: ${await res.text()}`);
   }

@@ -26,23 +26,19 @@ import type { Photo, PhotoSource } from "@/types";
  * data URL. Fine for a single kiosk; it cannot run on a read-only serverless
  * disk, which is exactly when `hasSupabaseEnv()` is true anyway.
  */
-export async function savePhoto(input: {
-  /** The image bytes. Preferred: it is a third smaller than the data URL. */
-  blob: Blob;
-  /** Same image as a data URL, for the local fallback store. */
-  dataUrl: string;
-  source: PhotoSource;
-}): Promise<Photo> {
+export async function savePhoto(blob: Blob, source: PhotoSource): Promise<Photo> {
+  // Only the local store needs base64, and it inflates the image by a third —
+  // so it is produced on that path alone, not for every upload.
   if (!hasSupabaseEnv()) {
-    return saveToLocalStore(input.dataUrl, input.source);
+    return saveToLocalStore(await blobToDataUrl(blob), source);
   }
 
-  const { storagePath } = await uploadToStorage(input.blob, input.source);
+  const { storagePath } = await uploadToStorage(blob, source);
 
   const res = await fetch("/api/photos/publish", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ storagePath, source: input.source }),
+    body: JSON.stringify({ storagePath, source }),
   });
   if (!res.ok) {
     const { error } = await res.json().catch(() => ({ error: null }));
@@ -57,6 +53,16 @@ export async function savePhoto(input: {
   void triggerProcessing(photo);
 
   return photo;
+}
+
+/** Read a Blob as a base64 data URL — the shape the local store accepts. */
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read the image."));
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** No-Supabase fallback: hand the data URL to the filesystem-backed store. */

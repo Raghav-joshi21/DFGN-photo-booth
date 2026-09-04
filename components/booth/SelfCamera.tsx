@@ -10,6 +10,7 @@ import {
   startCameraKit,
   type CameraKitHandle,
 } from "@/lib/camera-kit";
+import { savePhoto } from "@/lib/photos/save";
 
 type Phase = "preview" | "counting" | "captured";
 
@@ -35,6 +36,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [phase, setPhase] = useState<Phase>("preview");
   const [count, setCount] = useState(3);
   const [captured, setCaptured] = useState<string | null>(null);
+  const capturedBlob = useRef<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -231,6 +233,9 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     const sy = (srcH - size) / 2;
     ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
+    // Also keep the raw bytes: uploading the blob avoids the third that base64
+    // adds to every frame on its way to Storage.
+    canvas.toBlob((blob) => (capturedBlob.current = blob), "image/jpeg", 0.92);
     setPhase("captured");
   }, [kitReady]);
 
@@ -241,19 +246,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   const retake = () => {
     setCaptured(null);
+    capturedBlob.current = null;
     setPhase("preview");
   };
 
   const usePhoto = async () => {
-    if (captured && !saving) {
+    const blob = capturedBlob.current;
+    if (captured && blob && !saving) {
       setSaving(true);
       try {
-        const res = await fetch("/api/photos", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ image: captured, source: "booth" }),
-        });
-        if (!res.ok) throw new Error(`store responded ${res.status}`);
+        await savePhoto(blob, "booth");
       } catch (err) {
         // Non-fatal: the booth should never get stuck on a failed save.
         console.error("[booth] could not send capture to the wall", err);
