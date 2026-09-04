@@ -458,6 +458,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           hidden={phase === "captured"}
         />
 
+        {/* Catch-game score, while it's on. */}
+        {gameOn && phase !== "captured" ? (
+          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm">
+            🥔 Eaten: {eaten}
+          </span>
+        ) : null}
+
         {/* Captured still. */}
         {captured ? (
           // eslint-disable-next-line @next/next/no-img-element
