@@ -383,6 +383,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           hidden={!kitReady || phase === "captured"}
         />
 
+        {/* Face-tracked AR props (ours — see lib/ar), painted on a transparent
+            overlay above whichever preview layer is showing. Sized to the
+            video's own resolution so its landmark coordinates line up. */}
+        <canvas
+          ref={arCanvasRef}
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          style={{ filter: tint?.css }}
+          hidden={phase === "captured"}
+        />
+
         {/* Captured still. */}
         {captured ? (
           // eslint-disable-next-line @next/next/no-img-element
