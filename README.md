@@ -23,8 +23,8 @@ of event photos, fed by three input paths:
 - ✅ Three independent, stackable filter layers on the self-camera preview —
   see [Filters on the self-camera](#filters-on-the-self-camera) — all baked
   into the saved photo, not just the live view.
-- ✅ The "Catch the falling potatoes" AR mini-game, reachable from the
-  booth's idle screen.
+- ✅ The "Catch the falling potatoes" AR mini-game — a toggle on the
+  self-camera itself, no separate screen or camera stream.
 - ✅ Dual photo backend: Supabase (Postgres + Storage + Realtime) when
   configured, or a zero-config local filesystem store for development — see
   [Photo storage](#photo-storage-two-backends).
