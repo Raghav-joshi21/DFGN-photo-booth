@@ -264,13 +264,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           const dt = lastFrameRef.current ? now - lastFrameRef.current : 16;
           lastFrameRef.current = now;
           const landmarks = ar.detect(video, now);
+          const mouth =
+            gameOnRef.current && landmarks
+              ? computeMouth(landmarks, canvas.width, canvas.height)
+              : null;
 
           // Catch-game step: reuses the same landmarks already detected above
           // for the face lens — no extra detection call needed.
           if (gameOnRef.current && phaseRef.current !== "captured") {
-            const mouth = landmarks
-              ? computeMouth(landmarks, canvas.width, canvas.height)
-              : null;
             spawnAccRef.current += dt;
             if (spawnAccRef.current > 900) {
               spawnAccRef.current = 0;
@@ -292,9 +293,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             }
             if (gameOnRef.current) {
               for (const p of potatoesRef.current) drawFallingPotato(ctx, p);
-              const mouth = landmarks
-                ? computeMouth(landmarks, canvas.width, canvas.height)
-                : null;
               if (mouth) drawMouthRing(ctx, mouth);
             }
           }
