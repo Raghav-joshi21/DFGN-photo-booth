@@ -259,6 +259,18 @@ function ensurePotatoImg() {
   img.src = "/art/potatoes.png";
 }
 
+/**
+ * The same cached potato art the hat lens uses (`/art/potatoes.png` — the
+ * project's own mascot, not the licensed iStock sprite). Exported so the
+ * catch-game overlay can draw falling potatoes without a second image load.
+ * Triggers the lazy load as a side effect; returns `null` while it's in
+ * flight or hasn't been requested yet.
+ */
+export function getPotatoImage(): HTMLImageElement | null {
+  ensurePotatoImg();
+  return potatoImg;
+}
+
 function drawPotatoHat(ctx: CanvasRenderingContext2D, g: FaceGeometry) {
   ensurePotatoImg();
   if (!potatoImg) return; // still loading — skip this frame, try again next one
