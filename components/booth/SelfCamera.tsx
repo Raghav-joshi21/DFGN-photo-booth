@@ -435,7 +435,8 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         {/* Filter picker — overlaid on the preview so the guest sees the lens
             and the strip in one place, without the frame giving up any height.
             Snap lenses (when Camera Kit is up) sit first, then a divider, then
-            the always-available colour tints. */}
+            the always-available colour tints, then a divider and our own
+            face-tracked AR props (when the model finished loading). */}
         {phase !== "captured" ? (
           <div className="absolute inset-x-0 bottom-0 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
             <div className="mx-auto flex w-max snap-x items-center gap-3">
@@ -473,6 +474,25 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                   }
                 />
               ))}
+              {arReady ? (
+                <>
+                  <span
+                    aria-hidden
+                    className="mx-1 h-8 w-px shrink-0 rounded bg-white/25"
+                  />
+                  {FACE_LENSES.map((f) => (
+                    <FilterChip
+                      key={f.id}
+                      label={f.name}
+                      fallback={f.emoji}
+                      active={faceLensId === f.id}
+                      onClick={() =>
+                        setFaceLensId((cur) => (cur === f.id ? null : f.id))
+                      }
+                    />
+                  ))}
+                </>
+              ) : null}
             </div>
           </div>
         ) : null}
