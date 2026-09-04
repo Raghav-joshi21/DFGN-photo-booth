@@ -362,23 +362,43 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
         {/* Filter picker — overlaid on the preview so the guest sees the lens
             and the strip in one place, without the frame giving up any height.
-            Only rendered when Camera Kit actually came up. */}
-        {kitReady && lenses.length > 0 && phase !== "captured" ? (
+            Snap lenses (when Camera Kit is up) sit first, then a divider, then
+            the always-available colour tints. */}
+        {phase !== "captured" ? (
           <div className="absolute inset-x-0 bottom-0 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
             <div className="mx-auto flex w-max snap-x items-center gap-3">
-              <FilterChip
-                label="No filter"
-                fallback="🚫"
-                active={activeLensId === null}
-                onClick={() => selectLens(null)}
-              />
-              {lenses.map((lens) => (
+              {kitReady && lenses.length > 0 ? (
+                <>
+                  <FilterChip
+                    label="No filter"
+                    fallback="🚫"
+                    active={activeLensId === null}
+                    onClick={() => selectLens(null)}
+                  />
+                  {lenses.map((lens) => (
+                    <FilterChip
+                      key={lens.id}
+                      label={lens.name}
+                      icon={lens.iconUrl}
+                      active={activeLensId === lens.id}
+                      onClick={() => selectLens(lens)}
+                    />
+                  ))}
+                  <span
+                    aria-hidden
+                    className="mx-1 h-8 w-px shrink-0 rounded bg-white/25"
+                  />
+                </>
+              ) : null}
+              {CSS_FILTERS.map((f) => (
                 <FilterChip
-                  key={lens.id}
-                  label={lens.name}
-                  icon={lens.iconUrl}
-                  active={activeLensId === lens.id}
-                  onClick={() => selectLens(lens)}
+                  key={f.id}
+                  label={f.name}
+                  fallback={f.emoji}
+                  active={tintId === f.id}
+                  onClick={() =>
+                    setTintId((cur) => (cur === f.id ? null : f.id))
+                  }
                 />
               ))}
             </div>
