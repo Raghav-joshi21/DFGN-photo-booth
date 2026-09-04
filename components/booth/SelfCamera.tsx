@@ -52,6 +52,11 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [lenses, setLenses] = useState<Lens[]>([]);
   const [activeLensId, setActiveLensId] = useState<string | null>(null);
   const [kitReady, setKitReady] = useState(false);
+
+  // Built-in colour tint, applied on top of whatever lens is active (and on
+  // its own when Camera Kit is off). `null` is "no tint". See css-filters.ts.
+  const [tintId, setTintId] = useState<string | null>(null);
+  const tint = CSS_FILTERS.find((f) => f.id === tintId) ?? null;
   // Set once the stream exists, so the Camera Kit effect can wait for it.
   const [streamReady, setStreamReady] = useState(false);
 
