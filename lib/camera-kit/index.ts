@@ -66,22 +66,30 @@ export async function startCameraKit(
     await session.setSource(stream);
     await session.play();
 
-    const groupId = process.env.NEXT_PUBLIC_CAMERA_KIT_LENS_GROUP_ID!;
-    const { lenses: allLenses, errors } = await cameraKit.lensRepository.loadLensGroups([groupId]);
-    if (errors?.length) {
-      console.warn("[booth] some lenses failed to load", errors);
+    const groupIds = lensGroupIds();
+    const loaded = await cameraKit.lensRepository.loadLensGroups(groupIds);
+    if (loaded.errors?.length) {
+      console.warn("[booth] some lenses failed to load", loaded.errors);
     }
+
+    // A lens can appear in more than one group, and a group can be listed
+    // twice by mistake — collapse to one entry per id so the strip has no
+    // duplicate chips.
+    const seen = new Set<string>();
+    const allLenses = loaded.lenses.filter((lens) =>
+      seen.has(lens.id) ? false : (seen.add(lens.id), true),
+    );
 
     const isPotato = (lens: Lens) => POTATO_LENS_PATTERN.test(lens.name);
     const potato = allLenses.filter(isPotato);
 
-    // Every lens in the group is offered — hiding the rest used to leave the
-    // strip empty whenever the potato lens was named something unexpected.
-    // Potato ones simply sort to the front, where the default selection lands.
+    // Every lens is offered — hiding the rest used to leave the strip empty
+    // whenever the potato lens was named something unexpected. Potato ones
+    // simply sort to the front, where the default selection lands.
     const lenses = [...potato, ...allLenses.filter((lens) => !isPotato(lens))];
     if (potato.length === 0 && allLenses.length > 0) {
       console.warn(
-        `[booth] no lens in group ${groupId} matched ${POTATO_LENS_PATTERN}; ` +
+        `[booth] no lens in groups [${groupIds.join(", ")}] matched ${POTATO_LENS_PATTERN}; ` +
           `showing all ${allLenses.length} unsorted, with no filter applied by ` +
           `default. Rename the potato lens or widen the pattern.`,
       );
