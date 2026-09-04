@@ -164,11 +164,11 @@ contains lenses but none match, all of them are shown and a warning is logged �
 an empty filter strip would be worse than an unfiltered one.
 
 > **Snap branding requirement.** Snap's guidelines require visible attribution
-> whenever a Lens is active. The booth renders a small "Powered by Snap"
-> watermark over the preview while a lens is applied. Snap's requirements change,
-> so check the current wording and placement rules at
-> <https://developers.snap.com/camera-kit> before running this at an event —
-> and note the watermark is on the *preview*, not burned into the saved photo.
+> (a "Powered by Snap" mark or equivalent) whenever a Lens is active. That
+> watermark has been **removed** from the preview at the operator's request —
+> re-add it, or arrange attribution elsewhere on the kiosk, before running this
+> with real Snap lenses at an event. Check the current wording and placement
+> rules at <https://developers.snap.com/camera-kit>.
 
 ## Environment variables
 
