@@ -8,7 +8,6 @@ import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
 import { Clip } from "@/components/site/Clip";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
-import { useBoothStore } from "@/lib/stores/booth-store";
 import {
   SUS_MASCOT_H,
   SUS_MASCOT_POSTER,
