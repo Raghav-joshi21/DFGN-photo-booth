@@ -232,6 +232,9 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // Bake the colour tint into the pixels: a CSS filter on the preview element
+    // does not travel through drawImage, so it has to be re-applied here.
+    if (tint) ctx.filter = tint.css;
     // Center-crop to a square. Not mirrored: the print should match what the
     // guest saw on screen, and a mirrored frame reverses any lens text with it.
     const sx = (srcW - size) / 2;
@@ -239,7 +242,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     setPhase("captured");
-  }, [kitReady]);
+  }, [kitReady, tint]);
 
   const startCountdown = () => {
     setCount(3);
