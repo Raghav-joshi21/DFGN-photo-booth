@@ -62,6 +62,20 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // Set once the stream exists, so the Camera Kit effect can wait for it.
   const [streamReady, setStreamReady] = useState(false);
 
+  // --- Face-tracked AR lenses (ours, no Snap account) ---------------------
+  // Runs off the raw <video> regardless of Camera Kit, drawing onto its own
+  // transparent overlay canvas painted on top of whichever preview is showing.
+  // See lib/ar. `arReady` gates whether the AR chips even appear.
+  const arCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [arReady, setArReady] = useState(false);
+  const [faceLensId, setFaceLensId] = useState<string | null>(null);
+  // The rAF loop below reads the selection through a ref so picking a new
+  // lens doesn't need to tear down and restart the detection loop.
+  const faceLensIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    faceLensIdRef.current = faceLensId;
+  }, [faceLensId]);
+
   // Acquire the camera on mount, release it on unmount.
   //
   // Written defensively because React StrictMode mounts effects twice in dev:
