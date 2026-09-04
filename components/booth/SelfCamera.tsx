@@ -300,6 +300,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           playsInline
           muted
           className="h-full w-full object-contain"
+          style={{ filter: tint?.css }}
           hidden={phase === "captured" || kitReady}
         />
 
@@ -308,6 +309,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         <canvas
           ref={canvasRef}
           className="absolute inset-0 h-full w-full object-contain"
+          style={{ filter: tint?.css }}
           hidden={!kitReady || phase === "captured"}
         />
 
