@@ -216,6 +216,10 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     startFaceAr().then((ar: FaceArHandle | null) => {
       if (cancelled || !ar) return;
       setArReady(true);
+      // House style: the potato hat leads, same as the potato Snap lens
+      // above. Only sets it the first time — doesn't clobber a guest's own
+      // pick across a "Try again" re-run.
+      setFaceLensId((cur) => cur ?? "potato-hat");
 
       const loop = () => {
         if (cancelled) return;
