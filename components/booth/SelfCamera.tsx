@@ -606,6 +606,15 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
               </button>
             ) : null}
             <button
+              onClick={() => setGameOn((v) => !v)}
+              disabled={phase === "counting"}
+              className={`rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-bold shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40 ${
+                gameOn ? "bg-brand-green text-white" : "bg-cream-light text-ink"
+              }`}
+            >
+              🥔 Catch game{gameOn ? `: ${eaten}` : ""}
+            </button>
+            <button
               onClick={startCountdown}
               disabled={phase === "counting" || !!error}
               className="rounded-full border-[3px] border-ink bg-brand-orange px-8 py-2.5 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
