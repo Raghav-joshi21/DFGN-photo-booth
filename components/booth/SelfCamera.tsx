@@ -410,6 +410,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         {phase === "captured" ? (
           <>
             <button
+              onClick={startOver}
+              disabled={saving}
+              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
+            >
+              Start over
+            </button>
+            <button
               onClick={retake}
               disabled={saving}
               className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
