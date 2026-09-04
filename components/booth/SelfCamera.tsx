@@ -12,6 +12,14 @@ import {
 } from "@/lib/camera-kit";
 import { CSS_FILTERS } from "@/lib/camera-kit/css-filters";
 import { FACE_LENSES, startFaceAr, type FaceArHandle } from "@/lib/ar";
+import {
+  computeMouth,
+  drawFallingPotato,
+  drawMouthRing,
+  spawnPotato,
+  stepPotatoes,
+  type FallingPotato,
+} from "@/lib/ar/catch-game";
 import { drawFaceLens } from "@/lib/ar/draw";
 import { savePhoto } from "@/lib/photos/save";
 
