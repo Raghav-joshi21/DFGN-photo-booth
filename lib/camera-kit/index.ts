@@ -19,21 +19,29 @@ const POTATO_LENS_PATTERN = /potato|spud|tater|tattie|fry|fries|chip|crisp|veg/i
 
 export interface CameraKitHandle {
   session: CameraKitSession;
-  /** Every lens in the group, potato-themed ones first. "No filter" is UI-side. */
+  /** Every lens across all groups, potato-themed ones first. "No filter" is UI-side. */
   lenses: Lens[];
-  /** The lens to apply on start-up — the first potato one, if the group has any. */
+  /** The lens to apply on start-up — the first potato one, if any group has one. */
   defaultLens: Lens | null;
-  /** Every lens in the group, for diagnostics when nothing looks potato-ish. */
+  /** Total lenses loaded, for diagnostics when nothing looks potato-ish. */
   totalLenses: number;
   destroy: () => void;
 }
 
-/** True when both Snap credentials are configured. */
+/**
+ * Lens group id(s). `NEXT_PUBLIC_CAMERA_KIT_LENS_GROUP_ID` may hold a single id
+ * or a comma-separated list — every listed group's lenses end up in one strip.
+ */
+export function lensGroupIds(): string[] {
+  return (process.env.NEXT_PUBLIC_CAMERA_KIT_LENS_GROUP_ID ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+/** True when the API token and at least one lens group id are configured. */
 export function hasCameraKitEnv(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_CAMERA_KIT_API_TOKEN &&
-      process.env.NEXT_PUBLIC_CAMERA_KIT_LENS_GROUP_ID,
-  );
+  return Boolean(process.env.NEXT_PUBLIC_CAMERA_KIT_API_TOKEN) && lensGroupIds().length > 0;
 }
 
 /**
