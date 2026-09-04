@@ -3,11 +3,8 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-import {
-  hasSupabaseEnv,
-  triggerProcessing,
-  uploadGuestPhoto,
-} from "@/lib/supabase/photos";
+import { hasSupabaseEnv } from "@/lib/supabase/photos";
+import { savePhoto } from "@/lib/photos/save";
 
 type Status = "idle" | "uploading" | "processing" | "error";
 
