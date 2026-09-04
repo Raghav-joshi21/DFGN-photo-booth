@@ -324,6 +324,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const startOver = () => {
     retake();
     setTintId(null);
+    setFaceLensId(null);
     const kit = kitRef.current;
     if (kit) {
       const fallback = kit.defaultLens;
