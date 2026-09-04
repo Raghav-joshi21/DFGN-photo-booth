@@ -203,6 +203,52 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     };
   }, [streamReady, attempt]);
 
+  // Face-tracked AR: independent of Camera Kit, runs off the raw <video> and
+  // paints onto its own overlay canvas every animation frame. Also entirely
+  // optional — if the model can't load, `startFaceAr` resolves null and the
+  // AR chips just never appear.
+  useEffect(() => {
+    if (!streamReady) return;
+
+    let cancelled = false;
+    let rafId = 0;
+
+    startFaceAr().then((ar: FaceArHandle | null) => {
+      if (cancelled || !ar) return;
+      setArReady(true);
+
+      const loop = () => {
+        if (cancelled) return;
+        const video = videoRef.current;
+        const canvas = arCanvasRef.current;
+        if (video && canvas && video.readyState >= 2) {
+          if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+          }
+          const ctx = canvas.getContext("2d");
+          const now = performance.now();
+          const landmarks = ar.detect(video, now);
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const lensId = faceLensIdRef.current;
+            if (landmarks && lensId) {
+              drawFaceLens(ctx, landmarks, lensId, canvas.width, canvas.height, now);
+            }
+          }
+        }
+        rafId = requestAnimationFrame(loop);
+      };
+      rafId = requestAnimationFrame(loop);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      setArReady(false);
+    };
+  }, [streamReady, attempt]);
+
   /** Swap the live lens. `null` removes it (the "no filter" option). */
   const selectLens = useCallback(async (lens: Lens | null) => {
     const kit = kitRef.current;
