@@ -333,7 +333,8 @@ lib/
   local-store/            Filesystem-backed photo store (the no-Supabase fallback)
   photos/save.ts          savePhoto() — the one path both capture flows use to publish a photo
   camera-kit/             Snap Camera Kit wrapper (index.ts) + built-in CSS tints (css-filters.ts)
-  ar/                     Face-tracked AR: FaceLandmarker wrapper (index.ts) + prop rendering (draw.ts)
+  ar/                     Face-tracked AR: FaceLandmarker wrapper (index.ts), prop rendering
+                          (draw.ts), and the catch-game's logic (catch-game.ts)
   stores/                 Zustand stores (e.g. booth-store.ts)
   hooks/                  React hooks (use-approved-photos = initial fetch + Realtime/poll)
 components/
