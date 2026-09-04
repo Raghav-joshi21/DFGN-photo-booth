@@ -165,12 +165,3 @@ function IdleScreen() {
     </div>
   );
 }
-
-function GameScreen() {
-  const setScreen = useBoothStore((s) => s.setScreen);
-  return (
-    <div className="relative mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-5 px-5 py-8">
-      <PotatoCatchGame onExit={() => setScreen("idle")} />
-    </div>
-  );
-}
