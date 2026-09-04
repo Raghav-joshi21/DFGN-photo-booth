@@ -179,21 +179,8 @@ function IdleScreen() {
 function GameScreen() {
   const setScreen = useBoothStore((s) => s.setScreen);
   return (
-    <div className="relative mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-5 px-5 py-8 text-center">
-      <h2 className="text-shadow-brand font-display text-4xl font-extrabold uppercase tracking-tight text-ink">
-        AR game
-      </h2>
-      <p className="text-base text-ink/70">
-        Placeholder. The face-tracking &ldquo;catch the falling potatoes&rdquo;
-        game mounts here — its logic lives in{" "}
-        <code className="font-mono text-sm">lib/ar</code>.
-      </p>
-      <button
-        onClick={() => setScreen("idle")}
-        className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
-      >
-        Back
-      </button>
+    <div className="relative mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-5 px-5 py-8">
+      <PotatoCatchGame onExit={() => setScreen("idle")} />
     </div>
   );
 }
