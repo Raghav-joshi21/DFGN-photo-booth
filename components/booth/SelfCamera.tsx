@@ -366,12 +366,12 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     // to the same video frame — composite it in with the same crop and tint
     // so the print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
-    if (faceLensId && arCanvas && arCanvas.width > 0) {
+    if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
       ctx.drawImage(arCanvas, sx, sy, size, size, 0, 0, size, size);
     }
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     setPhase("captured");
-  }, [kitReady, tint, faceLensId]);
+  }, [kitReady, tint, faceLensId, gameOn]);
 
   const startCountdown = () => {
     setCount(3);
