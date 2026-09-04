@@ -84,6 +84,27 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     faceLensIdRef.current = faceLensId;
   }, [faceLensId]);
 
+  // --- "Catch the falling potatoes" mode ----------------------------------
+  // Runs right inside this same preview and the same detection loop below —
+  // no separate screen, no second camera stream. Plain potatoes only (no
+  // colour variants): open your mouth under one to eat it and score.
+  const [gameOn, setGameOn] = useState(false);
+  const [eaten, setEaten] = useState(0);
+  const gameOnRef = useRef(false);
+  const eatenRef = useRef(0);
+  const potatoesRef = useRef<FallingPotato[]>([]);
+  const spawnAccRef = useRef(0);
+  const lastFrameRef = useRef(0);
+  useEffect(() => {
+    gameOnRef.current = gameOn;
+    if (!gameOn) potatoesRef.current = []; // clear the board when switched off
+  }, [gameOn]);
+  // The loop only steps/spawns while the guest can actually see it.
+  const phaseRef = useRef<Phase>("preview");
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
   // Acquire the camera on mount, release it on unmount.
   //
   // Written defensively because React StrictMode mounts effects twice in dev:
