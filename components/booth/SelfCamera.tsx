@@ -27,6 +27,9 @@ type Phase = "preview" | "counting" | "captured";
 /** Below Tailwind's `sm`, where the preview is portrait. Keep in step with the
  *  `aspect-[2/3] sm:aspect-[16/9]` classes on the frame element. */
 const FRAME_PORTRAIT_QUERY = "(max-width: 639px)";
+/** The two shapes the booth shoots in: 9:16 on a phone, 16:9 everywhere else. */
+const PORTRAIT_ASPECT = 9 / 16;
+const LANDSCAPE_ASPECT = 16 / 9;
 const IDFW_FRAME_PORTRAIT = "/art/idfw-frame-portrait.webp";
 const IDFW_FRAME_LANDSCAPE = "/art/idfw-frame-landscape.webp";
 
@@ -66,11 +69,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // the crowd); a laptop generally has one camera and no switch is offered.
   const [facing, setFacing] = useState<"user" | "environment">("user");
 
-  // The preview box takes the camera's OWN aspect ratio rather than a fixed
-  // one. A fixed shape forces a choice between cropping the view or padding it
-  // with black bars; matching the source needs neither. Null until the first
-  // frame arrives, when the CSS fallbacks below apply.
-  const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [hasTwoCameras, setHasTwoCameras] = useState(false);
 
   // --- Snap Camera Kit (optional live filters) ---------------------------
@@ -107,8 +105,11 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         const supportsFacing =
           "getSupportedConstraints" in navigator.mediaDevices &&
           !!navigator.mediaDevices.getSupportedConstraints().facingMode;
+        // Touch input is the gate, not the camera count: a desktop with a
+        // second webcam has no "front" and "rear" to flip between, and the
+        // booth screen should not offer a control nobody there can use.
         const coarse = window.matchMedia("(pointer: coarse)").matches;
-        setHasTwoCameras(cams.length > 1 || (supportsFacing && coarse));
+        setHasTwoCameras(coarse && (cams.length > 1 || supportsFacing));
       })
       .catch(() => setHasTwoCameras(false));
     return () => {
@@ -140,13 +141,12 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // exactly those, so the border lands on the edges with nothing cropped.
   const [frameOn, setFrameOn] = useState(false);
   const frameImgRef = useRef<HTMLImageElement>(null);
-  // Which artwork to use before the camera has reported its shape. Once it
-  // has, `videoAspect` decides instead — the border follows the photo's
-  // orientation, not the window's.
+  // Which artwork to use — the same breakpoint that decides the shape being
+  // shot, so the border always matches it.
   const [framePortrait, setFramePortrait] = useState(false);
   useEffect(() => {
-    // Must track the same breakpoint the fallback aspect classes use, or the
-    // border would be drawn at the wrong shape for that one first frame.
+    // Must track the same breakpoint the aspect classes use, or the border
+    // would be drawn at the wrong shape.
     const mq = window.matchMedia(FRAME_PORTRAIT_QUERY);
     const sync = () => setFramePortrait(mq.matches);
     sync();
@@ -206,14 +206,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       }
 
       try {
-        // No width/height ideals on purpose. Asking for a particular shape
-        // makes the browser pick a mode that matches it, which on a phone
-        // means a cropped-in sensor read — the selfie comes out tighter than
-        // what the camera can actually see. Asking only for a facing mode
-        // gets the camera's own widest view, and nothing here crops it:
-        // the preview and the capture both fit it whole into the frame.
+        // Ask for the shape the booth shoots in, so the camera picks a mode
+        // close to it and the crop below has almost nothing left to take. It
+        // is an `ideal`, not an `exact`: a camera that cannot oblige still
+        // works, it is just trimmed a little more.
+        const wantPortrait = window.matchMedia(FRAME_PORTRAIT_QUERY).matches;
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facing } },
+          video: {
+            facingMode: { ideal: facing },
+            aspectRatio: { ideal: wantPortrait ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT },
+          },
           audio: false,
         });
 
@@ -231,14 +233,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         if (!video) return;
 
         video.srcObject = stream;
-        const readAspect = () => {
-          if (video.videoWidth && video.videoHeight) {
-            setVideoAspect(video.videoWidth / video.videoHeight);
-          }
-        };
-        video.addEventListener("loadedmetadata", readAspect);
-        video.addEventListener("resize", readAspect);
-        readAspect();
         try {
           await video.play();
         } catch (err) {
@@ -468,27 +462,36 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
     if (!srcW || !srcH) return;
 
-    // The whole camera frame at its own size: no crop, and no letterbox
-    // either, because the preview box is this same shape.
+    // Crop to the shape the guest is looking at — 9:16 on a phone, 16:9 on a
+    // booth screen — read off the rendered box so the print is exactly the
+    // preview. Cover semantics, matching object-cover: fill the shape and trim
+    // the overflowing axis, centred. The stream was requested at this ratio,
+    // so in practice there is little to trim.
+    const box = frameRef.current?.getBoundingClientRect();
+    const targetAspect = box && box.height > 0 ? box.width / box.height : srcW / srcH;
+
+    let cropW = srcW;
+    let cropH = srcH;
+    if (srcW / srcH > targetAspect) cropW = srcH * targetAspect;
+    else cropH = srcW / targetAspect;
+    const sx = (srcW - cropW) / 2;
+    const sy = (srcH - cropH) / 2;
+
     const canvas = document.createElement("canvas");
-    canvas.width = srcW;
-    canvas.height = srcH;
-    const dx = 0;
-    const dy = 0;
-    const drawW = srcW;
-    const drawH = srcH;
+    canvas.width = Math.round(cropW);
+    canvas.height = Math.round(cropH);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     // Not mirrored: the print should match what the guest saw on screen, and a
     // mirrored frame reverses any lens text along with it.
-    ctx.drawImage(source, dx, dy, drawW, drawH);
+    ctx.drawImage(source, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
     // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
     // to the same video frame — composite it in with the same crop so the
     // print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
     if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
-      ctx.drawImage(arCanvas, dx, dy, drawW, drawH);
+      ctx.drawImage(arCanvas, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
     }
     // The event frame goes on last so it sits above everything, and is drawn
     // across the whole canvas rather than cropped: the canvas already has the
@@ -575,18 +578,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
         <div
           ref={frameRef}
-          // The aspect classes are the pre-camera fallback; once the stream
-          // reports its size the inline style takes over and the box becomes
-          // exactly the camera's shape.
-          style={
-            videoAspect
-              ? {
-                  aspectRatio: String(videoAspect),
-                  maxWidth: `calc(100cqh * ${videoAspect})`,
-                }
-              : undefined
-          }
-          className="relative mx-auto aspect-[2/3] max-h-full w-full max-w-[calc(100cqh*2/3)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
+          className="relative mx-auto aspect-[9/16] max-h-full w-full max-w-[calc(100cqh*9/16)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
         >
         {/* Live preview (hidden once we have a capture). */}
         <video
@@ -663,7 +655,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <img
             ref={frameImgRef}
             src={
-              (videoAspect ? videoAspect < 1 : framePortrait)
+              framePortrait
                 ? IDFW_FRAME_PORTRAIT
                 : IDFW_FRAME_LANDSCAPE
             }
@@ -723,7 +715,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             model finished loading). */}
         {phase !== "captured" ? (
           <div className="absolute inset-x-0 bottom-0 z-20 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
-            <div className="mx-auto flex w-max snap-x items-center gap-3">
+            <div className="mr-auto flex w-max snap-x items-center gap-3">
               {kitReady && lenses.length > 0 ? (
                 <>
                   <FilterChip
@@ -749,7 +741,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
               ) : null}
               <FilterChip
                 label="IDFW frame"
-                icon="/art/latvia-idfw26.png"
+                fallback="IDFW"
                 active={frameOn}
                 onClick={() => setFrameOn((on) => !on)}
               />
@@ -851,7 +843,11 @@ function FilterChip({
 }: {
   label: string;
   icon?: string;
-  /** Shown when the lens ships no icon of its own. */
+  /**
+   * Shown when the lens ships no icon of its own. A single emoji, or a short
+   * word — anything longer than two characters is set as small bold text
+   * instead of emoji-sized, so it fits the circle.
+   */
   fallback?: string;
   active: boolean;
   onClick: () => void;
@@ -875,7 +871,15 @@ function FilterChip({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
-        <span className="text-lg leading-none">{fallback}</span>
+        <span
+          className={
+            fallback.length > 2
+              ? "font-display text-[11px] font-extrabold uppercase leading-none tracking-tight text-white"
+              : "text-lg leading-none"
+          }
+        >
+          {fallback}
+        </span>
       )}
     </button>
   );
