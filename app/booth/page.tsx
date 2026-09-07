@@ -66,16 +66,16 @@ function IdleScreen() {
   }, []);
 
   return (
-    <div className="relative flex h-full w-full gap-6 p-6">
+    <div className="relative flex h-full min-h-0 w-full gap-[clamp(0.75rem,1.4vw,1.5rem)] p-[clamp(0.75rem,1.4vw,1.5rem)]">
       {/* Wall — ambient, wordless, always moving. */}
-      <section className="hidden h-full w-56 shrink-0 xl:block 2xl:w-64">
+      <section className="hidden h-full w-[clamp(9rem,13vw,17rem)] shrink-0 lg:block">
         <ScrollingWall photos={photos} />
       </section>
 
       {/* Camera — the main event. */}
-      <section className="flex min-w-0 flex-1 flex-col items-center justify-center">
-        <header className="mb-4 flex items-center gap-3">
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center">
+        <header className="mb-[clamp(0.5rem,1.2vh,1rem)] flex shrink-0 items-center gap-3">
+          <div className="h-[clamp(2.25rem,4vh,3rem)] w-[clamp(2.25rem,4vh,3rem)] shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
             <Clip
               src="/art/potato-booth.mp4"
               poster="/art/potato-booth-poster.jpg"
@@ -85,10 +85,10 @@ function IdleScreen() {
             />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-ink">
+            <h1 className="font-display text-[clamp(1.15rem,2.4vh,1.875rem)] font-extrabold uppercase leading-tight tracking-tight text-ink">
               Step up &amp; smile
             </h1>
-            <p className="text-sm text-ink/60">
+            <p className="text-[clamp(0.7rem,1.4vh,0.875rem)] text-ink/60">
               Pick a filter, then hit the countdown.
             </p>
           </div>
@@ -99,21 +99,21 @@ function IdleScreen() {
 
       {/* Right rail — split 60/40: phone upload on top, the event's
           sustainability story pinned across the bottom. */}
-      <aside className="hidden h-full w-80 shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex xl:w-[420px] 2xl:w-[480px]">
+      <aside className="hidden h-full w-[clamp(15rem,23vw,30rem)] shrink-0 flex-col overflow-hidden rounded-[26px] border-[3px] border-ink bg-cream-light text-center shadow-[6px_6px_0_var(--color-ink)] lg:flex">
         {/* Top section — send one from your phone. Sizes to its content (plus
             the pt- offset that pushes the stack down); the sustainability
             block below takes whatever height is left. */}
-        <div className="flex shrink-0 flex-col items-center justify-start gap-2 px-5 pb-3 pt-[26%]">
+        <div className="flex shrink-0 flex-col items-center justify-start gap-[clamp(0.25rem,1vh,0.5rem)] px-[clamp(0.75rem,1.5vw,1.25rem)] pb-3 pt-[clamp(1rem,6vh,4rem)]">
           <Image
             src="/art/latvia-idfw26.png"
             alt="Latvia — IDFW '26"
             width={205}
             height={78}
             priority
-            className="w-48 rounded-lg border-2 border-ink shadow-[3px_3px_0_var(--color-ink)]"
+            className="w-[clamp(7rem,55%,12rem)] rounded-lg border-2 border-ink shadow-[3px_3px_0_var(--color-ink)]"
           />
 
-          <p className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-ink">
+          <p className="font-display text-[clamp(1rem,2.6vh,1.875rem)] font-extrabold uppercase leading-tight tracking-tight text-ink">
             Send one from your phone
           </p>
 
@@ -123,40 +123,47 @@ function IdleScreen() {
             poster="/art/potato-point-qr.png"
             width={300}
             height={380}
-            className="-mb-3 h-[7.4rem] w-auto drop-shadow-md"
+            className="-mb-3 h-[clamp(3.5rem,13vh,7.4rem)] w-auto drop-shadow-md"
           />
 
-          <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
+          <div className="w-[clamp(6.5rem,60%,13rem)] rounded-2xl border-[3px] border-ink bg-white p-[clamp(0.4rem,0.8vw,0.75rem)]">
             {uploadUrl ? (
-              <QRCodeSVG value={uploadUrl} size={196} marginSize={0} />
+              <QRCodeSVG
+                value={uploadUrl}
+                size={196}
+                marginSize={0}
+                // Rendered at a fixed 196 and scaled by CSS: the SVG stays
+                // crisp at any size, and the box never jumps.
+                className="h-auto w-full"
+              />
             ) : (
-              // Reserve the box so the panel doesn't jump once the URL resolves.
-              <div className="h-[196px] w-[196px]" />
+              // Reserve the square so the panel doesn't jump once it resolves.
+              <div className="aspect-square w-full" />
             )}
           </div>
 
-          <p className="font-display text-sm font-bold uppercase tracking-wide text-ink/50">
+          <p className="font-display text-[clamp(0.65rem,1.4vh,0.875rem)] font-bold uppercase tracking-wide text-ink/50">
             Scan to join the wall
           </p>
-          <p className="max-w-[15rem] text-xs leading-snug text-ink/45">
+          <p className="hidden max-w-[15rem] text-xs leading-snug text-ink/45 sm:[@media(min-height:800px)]:block">
             Anything you capture at the event shows up on the wall.
           </p>
         </div>
 
         {/* Bottom section — sustainability, edge to edge; fills the remaining
             height under the QR block. */}
-        <div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-2 border-t-[3px] border-ink bg-brand-green/10 px-5 py-4">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden border-t-[3px] border-ink bg-brand-green/10 px-5 py-4">
           <Clip
             src={SUS_MASCOT_SRC}
             poster={SUS_MASCOT_POSTER}
             width={SUS_MASCOT_W}
             height={SUS_MASCOT_H}
-            className="-mx-5 w-[calc(100%+2.5rem)] drop-shadow-md"
+            className="-mx-5 min-h-0 w-[calc(100%+2.5rem)] flex-shrink object-contain drop-shadow-md"
           />
-          <p className="font-display text-2xl font-extrabold uppercase leading-none tracking-tight text-brand-green xl:text-3xl">
+          <p className="shrink-0 font-display text-[clamp(0.95rem,2.2vh,1.875rem)] font-extrabold uppercase leading-none tracking-tight text-brand-green">
             Our most sustainable event
           </p>
-          <p className="text-sm leading-snug text-ink/70">
+          <p className="line-clamp-3 shrink-0 text-[clamp(0.7rem,1.5vh,0.875rem)] leading-snug text-ink/70">
             {SUSTAINABILITY_FACTS[factIdx]}
           </p>
         </div>

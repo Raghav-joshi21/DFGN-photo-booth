@@ -430,8 +430,19 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-4">
-      <div className="relative mx-auto aspect-[16/9] w-full max-w-[calc((100vh-13rem)*16/9)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)]">
+    <div className="flex h-full min-h-0 w-full flex-col items-center gap-3">
+      {/* Sizing the frame off the viewport (the old `100vh - 13rem`) meant
+          guessing how tall the header and buttons were, so the camera came out
+          a different size on every screen shape. This box is a size container
+          instead, and `100cqh` below is the height actually left over after its
+          siblings — no guess, and correct in any window.
+
+          It must be `container-type: size`, not Tailwind's `@container`
+          (inline-size): cqh only resolves under size containment, and without
+          it the max-width is dropped and max-height squashes the frame off
+          16:9. */}
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
+        <div className="relative mx-auto aspect-[16/9] max-h-full w-full max-w-[calc(100cqh*16/9)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)]">
         {/* Live preview (hidden once we have a capture). */}
         <video
           ref={videoRef}
@@ -569,11 +580,12 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                 </>
               ) : null}
             </div>
-          </div>
-        ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-center gap-2.5 pb-1">
         {phase === "captured" ? (
           <>
             <button

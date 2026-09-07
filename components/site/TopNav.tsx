@@ -25,7 +25,7 @@ export function TopNav() {
 
   return (
     <header className="relative z-20 border-b-2 border-ink bg-gradient-to-r from-cream-light via-cream-light to-cream">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-5">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-6 sm:px-5">
         {/* Wordmark */}
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image
@@ -45,7 +45,7 @@ export function TopNav() {
         </Link>
 
         {/* Primary nav */}
-        <nav className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0 md:flex-1 md:justify-center">
+        <nav className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-2 md:ml-0 md:flex-1 md:justify-center">
           {LINKS.map(({ href, label }) => {
             const active =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -54,7 +54,7 @@ export function TopNav() {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-full px-3 py-1.5 font-body text-sm font-bold transition-colors sm:text-base ${
+                className={`shrink-0 rounded-full px-2 py-1.5 font-body text-[0.8125rem] font-bold transition-colors sm:px-3 sm:text-base ${
                   active
                     ? "text-brand-orange"
                     : "text-ink/75 hover:bg-ink/5 hover:text-ink"
@@ -82,7 +82,7 @@ export function TopNav() {
             <div
               role="dialog"
               aria-label="How it works"
-              className="absolute right-0 top-11 w-72 rounded-2xl border-2 border-ink bg-cream-light p-4 text-left shadow-[4px_4px_0_var(--color-ink)]"
+              className="absolute right-0 top-11 w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border-2 border-ink bg-cream-light p-4 text-left shadow-[4px_4px_0_var(--color-ink)]"
             >
               <p className="font-display text-base font-extrabold text-ink">
                 How it works
