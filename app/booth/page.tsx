@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
@@ -67,13 +68,32 @@ function IdleScreen() {
 
   return (
     <div className="relative flex h-full min-h-0 w-full gap-[clamp(0.75rem,1.4vw,1.5rem)] p-[clamp(0.75rem,1.4vw,1.5rem)]">
+      <Link
+        href="/"
+        aria-label="Back to home"
+        className="absolute left-3 top-3 z-30 flex items-center gap-1.5 rounded-full border-[3px] border-ink bg-cream-light/90 px-3 py-1.5 font-display text-sm font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] backdrop-blur-sm transition-transform hover:-translate-y-0.5"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden>
+          <path
+            d="M15 5l-7 7 7 7"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Back
+      </Link>
+
       {/* Wall — ambient, wordless, always moving. */}
       <section className="hidden h-full w-[clamp(9rem,13vw,17rem)] shrink-0 lg:block">
         <ScrollingWall photos={photos} />
       </section>
 
       {/* Camera — the main event. */}
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center">
+      {/* pt on small screens clears the Back button, which sits over this
+          column once the wall and rail are hidden. */}
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center pt-11 sm:pt-0">
         <header className="mb-[clamp(0.5rem,1.2vh,1rem)] flex shrink-0 items-center gap-3">
           <div className="h-[clamp(2.25rem,4vh,3rem)] w-[clamp(2.25rem,4vh,3rem)] shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
             <Clip

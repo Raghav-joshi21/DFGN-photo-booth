@@ -48,6 +48,9 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [count, setCount] = useState(3);
   const [captured, setCaptured] = useState<string | null>(null);
   const capturedBlob = useRef<Blob | null>(null);
+  // The frame is portrait on a phone and 16:9 on a booth screen, so the crop
+  // has to be read from the rendered box rather than hard-coded.
+  const frameRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -131,8 +134,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       }
 
       try {
+        // Ask for a stream shaped like the frame it will fill: portrait on a
+        // phone, landscape on a booth screen. These are `ideal`, so a camera
+        // that cannot oblige still works — the capture just crops more.
+        const portrait = window.matchMedia("(max-width: 639px)").matches;
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } },
+          video: {
+            facingMode: "user",
+            width: { ideal: portrait ? 1080 : 1920 },
+            height: { ideal: portrait ? 1440 : 1080 },
+          },
           audio: false,
         });
 
@@ -349,26 +360,40 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     const srcW = kitCanvas ? kitCanvas.width : video.videoWidth;
     const srcH = kitCanvas ? kitCanvas.height : video.videoHeight;
 
-    const size = Math.min(srcW, srcH) || 720;
+    if (!srcW || !srcH) return;
+
+    // Crop to whatever shape the frame is actually showing — portrait on a
+    // phone, 16:9 on a booth screen. Reading it off the rendered box keeps the
+    // print identical to the preview instead of always producing a square.
+    const box = frameRef.current?.getBoundingClientRect();
+    const targetAspect = box && box.height > 0 ? box.width / box.height : srcW / srcH;
+
+    // Cover semantics, matching the preview's object-cover: fill the frame and
+    // trim the overflowing axis, centred.
+    let cropW = srcW;
+    let cropH = srcH;
+    if (srcW / srcH > targetAspect) cropW = srcH * targetAspect;
+    else cropH = srcW / targetAspect;
+    const sx = (srcW - cropW) / 2;
+    const sy = (srcH - cropH) / 2;
+
     const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = Math.round(cropW);
+    canvas.height = Math.round(cropH);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     // Bake the colour tint into the pixels: a CSS filter on the preview element
     // does not travel through drawImage, so it has to be re-applied here.
     if (tint) ctx.filter = tint.css;
-    // Center-crop to a square. Not mirrored: the print should match what the
-    // guest saw on screen, and a mirrored frame reverses any lens text with it.
-    const sx = (srcW - size) / 2;
-    const sy = (srcH - size) / 2;
-    ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
+    // Not mirrored: the print should match what the guest saw on screen, and a
+    // mirrored frame reverses any lens text along with it.
+    ctx.drawImage(source, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
     // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
     // to the same video frame — composite it in with the same crop and tint
     // so the print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
     if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
-      ctx.drawImage(arCanvas, sx, sy, size, size, 0, 0, size, size);
+      ctx.drawImage(arCanvas, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
     }
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     // Also keep the raw bytes: uploading the blob avoids the third that base64
@@ -442,13 +467,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           it the max-width is dropped and max-height squashes the frame off
           16:9. */}
       <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
-        <div className="relative mx-auto aspect-[16/9] max-h-full w-full max-w-[calc(100cqh*16/9)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)]">
+        <div
+          ref={frameRef}
+          className="relative mx-auto aspect-[3/4] max-h-full w-full max-w-[calc(100cqh*3/4)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
+        >
         {/* Live preview (hidden once we have a capture). */}
         <video
           ref={videoRef}
           playsInline
           muted
-          className="h-full w-full object-contain"
+          className="h-full w-full object-cover"
           style={{ filter: tint?.css }}
           hidden={phase === "captured" || kitReady}
         />
@@ -457,7 +485,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             exists before the session boots; only shown once it is live. */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-contain"
+          className="absolute inset-0 h-full w-full object-cover"
           style={{ filter: tint?.css }}
           hidden={!kitReady || phase === "captured"}
         />
@@ -467,7 +495,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             video's own resolution so its landmark coordinates line up. */}
         <canvas
           ref={arCanvasRef}
-          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           style={{ filter: tint?.css }}
           hidden={phase === "captured"}
         />
@@ -485,7 +513,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <img
             src={captured}
             alt="Captured"
-            className="absolute inset-0 h-full w-full object-contain"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
 
