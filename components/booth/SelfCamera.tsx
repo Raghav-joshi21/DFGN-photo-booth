@@ -10,7 +10,6 @@ import {
   startCameraKit,
   type CameraKitHandle,
 } from "@/lib/camera-kit";
-import { CSS_FILTERS } from "@/lib/camera-kit/css-filters";
 import { FACE_LENSES, startFaceAr, type FaceArHandle } from "@/lib/ar";
 import {
   computeMouth,
@@ -24,6 +23,12 @@ import { drawFaceLens } from "@/lib/ar/draw";
 import { savePhoto } from "@/lib/photos/save";
 
 type Phase = "preview" | "counting" | "captured";
+
+/** Below Tailwind's `sm`, where the preview is portrait. Keep in step with the
+ *  `aspect-[2/3] sm:aspect-[16/9]` classes on the frame element. */
+const FRAME_PORTRAIT_QUERY = "(max-width: 639px)";
+const IDFW_FRAME_PORTRAIT = "/art/idfw-frame-portrait.webp";
+const IDFW_FRAME_LANDSCAPE = "/art/idfw-frame-landscape.webp";
 
 /**
  * Self-camera capture screen for the booth.
@@ -67,10 +72,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [activeLensId, setActiveLensId] = useState<string | null>(null);
   const [kitReady, setKitReady] = useState(false);
 
-  // Built-in colour tint, applied on top of whatever lens is active (and on
-  // its own when Camera Kit is off). `null` is "no tint". See css-filters.ts.
-  const [tintId, setTintId] = useState<string | null>(null);
-  const tint = CSS_FILTERS.find((f) => f.id === tintId) ?? null;
   // Set once the stream exists, so the Camera Kit effect can wait for it.
   const [streamReady, setStreamReady] = useState(false);
 
@@ -81,6 +82,24 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const arCanvasRef = useRef<HTMLCanvasElement>(null);
   const [arReady, setArReady] = useState(false);
   const [faceLensId, setFaceLensId] = useState<string | null>(null);
+
+  // --- IDFW event frame ---------------------------------------------------
+  // A branded border laid over the shot and baked into the capture. Two
+  // artworks: a 2:3 portrait one and a 16:9 landscape one, matching the two
+  // shapes the preview takes — which is why the preview's aspect ratios are
+  // exactly those, so the border lands on the edges with nothing cropped.
+  const [frameOn, setFrameOn] = useState(false);
+  const frameImgRef = useRef<HTMLImageElement>(null);
+  const [framePortrait, setFramePortrait] = useState(false);
+  useEffect(() => {
+    // Must track the same breakpoint the aspect classes below use, or the
+    // border would be drawn at the wrong shape.
+    const mq = window.matchMedia(FRAME_PORTRAIT_QUERY);
+    const sync = () => setFramePortrait(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
   // The rAF loop below reads the selection through a ref so picking a new
   // lens doesn't need to tear down and restart the detection loop.
   const faceLensIdRef = useRef<string | null>(null);
@@ -275,11 +294,11 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           const now = performance.now();
           const dt = lastFrameRef.current ? now - lastFrameRef.current : 16;
           lastFrameRef.current = now;
-          const landmarks = ar.detect(video, now);
-          const mouth =
-            gameOnRef.current && landmarks
-              ? computeMouth(landmarks, canvas.width, canvas.height)
-              : null;
+          const faces = ar.detect(video, now);
+          // One mouth per face: in the catch game everybody in frame plays.
+          const mouths = gameOnRef.current
+            ? faces.map((lm) => computeMouth(lm, canvas.width, canvas.height))
+            : [];
 
           // Catch-game step: reuses the same landmarks already detected above
           // for the face lens — no extra detection call needed.
@@ -289,7 +308,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
               spawnAccRef.current = 0;
               spawnPotato(potatoesRef.current, canvas.width);
             }
-            const result = stepPotatoes(potatoesRef.current, dt, canvas.height, mouth);
+            const result = stepPotatoes(potatoesRef.current, dt, canvas.height, mouths);
             potatoesRef.current = result.potatoes;
             if (result.eaten > 0) {
               eatenRef.current += result.eaten;
@@ -300,12 +319,15 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const lensId = faceLensIdRef.current;
-            if (landmarks && lensId) {
-              drawFaceLens(ctx, landmarks, lensId, canvas.width, canvas.height, now);
+            if (lensId) {
+              // Every face in frame gets the prop, so a group shot works.
+              for (const lm of faces) {
+                drawFaceLens(ctx, lm, lensId, canvas.width, canvas.height, now);
+              }
             }
             if (gameOnRef.current) {
               for (const p of potatoesRef.current) drawFallingPotato(ctx, p);
-              if (mouth) drawMouthRing(ctx, mouth);
+              for (const m of mouths) drawMouthRing(ctx, m);
             }
           }
         }
@@ -382,25 +404,29 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     canvas.height = Math.round(cropH);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // Bake the colour tint into the pixels: a CSS filter on the preview element
-    // does not travel through drawImage, so it has to be re-applied here.
-    if (tint) ctx.filter = tint.css;
     // Not mirrored: the print should match what the guest saw on screen, and a
     // mirrored frame reverses any lens text along with it.
     ctx.drawImage(source, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
     // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
-    // to the same video frame — composite it in with the same crop and tint
-    // so the print matches what the guest saw.
+    // to the same video frame — composite it in with the same crop so the
+    // print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
     if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
       ctx.drawImage(arCanvas, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
+    }
+    // The event frame goes on last so it sits above everything, and is drawn
+    // across the whole canvas rather than cropped: the canvas already has the
+    // artwork's aspect ratio, so this is a straight scale.
+    const frameImg = frameImgRef.current;
+    if (frameOn && frameImg?.complete && frameImg.naturalWidth > 0) {
+      ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
     }
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     // Also keep the raw bytes: uploading the blob avoids the third that base64
     // adds to every frame on its way to Storage.
     canvas.toBlob((blob) => (capturedBlob.current = blob), "image/jpeg", 0.92);
     setPhase("captured");
-  }, [kitReady, tint, faceLensId, gameOn]);
+  }, [kitReady, faceLensId, gameOn, frameOn]);
 
   const startCountdown = () => {
     setCount(3);
@@ -420,7 +446,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
    */
   const startOver = () => {
     retake();
-    setTintId(null);
+    setFrameOn(false);
     // Back to the house default, same as the Snap lens below — not "off".
     setFaceLensId(arReady ? "potato-hat" : null);
     setGameOn(false);
@@ -469,7 +495,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
         <div
           ref={frameRef}
-          className="relative mx-auto aspect-[3/4] max-h-full w-full max-w-[calc(100cqh*3/4)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
+          className="relative mx-auto aspect-[2/3] max-h-full w-full max-w-[calc(100cqh*2/3)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
         >
         {/* Live preview (hidden once we have a capture). */}
         <video
@@ -477,7 +503,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           playsInline
           muted
           className="h-full w-full object-cover"
-          style={{ filter: tint?.css }}
           hidden={phase === "captured" || kitReady}
         />
 
@@ -486,7 +511,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         <canvas
           ref={canvasRef}
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ filter: tint?.css }}
           hidden={!kitReady || phase === "captured"}
         />
 
@@ -496,15 +520,30 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         <canvas
           ref={arCanvasRef}
           className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-          style={{ filter: tint?.css }}
           hidden={phase === "captured"}
         />
 
         {/* Catch-game score, while it's on. */}
         {gameOn && phase !== "captured" ? (
-          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm">
+          <span className="absolute left-3 top-3 z-20 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm">
             🥔 Eaten: {eaten}
           </span>
+        ) : null}
+
+        {/* Event frame, over the live preview. Mounted whenever it is on (not
+            gated on phase) so the element is decoded and ready for the capture
+            to draw. `next/image` is skipped deliberately: the capture needs the
+            raw element and its natural size. */}
+        {frameOn ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            ref={frameImgRef}
+            src={framePortrait ? IDFW_FRAME_PORTRAIT : IDFW_FRAME_LANDSCAPE}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+            hidden={phase === "captured"}
+          />
         ) : null}
 
         {/* Captured still. */}
@@ -525,7 +564,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
               initial={{ scale: 0.4, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 1.6, opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 z-20 flex items-center justify-center"
             >
               <span className="font-display text-[9rem] font-extrabold text-white drop-shadow-lg">
                 {count}
@@ -535,7 +574,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         </AnimatePresence>
 
         {error ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
             <p className="max-w-sm text-balance">{error}</p>
             <button
               onClick={() => setAttempt((n) => n + 1)}
@@ -548,11 +587,11 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
         {/* Filter picker — overlaid on the preview so the guest sees the lens
             and the strip in one place, without the frame giving up any height.
-            Snap lenses (when Camera Kit is up) sit first, then a divider, then
-            the always-available colour tints, then a divider and our own
-            face-tracked AR props (when the model finished loading). */}
+            Snap lenses (when Camera Kit is up) sit first, then the IDFW event
+            frame, then a divider and our own face-tracked AR props (when the
+            model finished loading). */}
         {phase !== "captured" ? (
-          <div className="absolute inset-x-0 bottom-0 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
+          <div className="absolute inset-x-0 bottom-0 z-20 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
             <div className="mx-auto flex w-max snap-x items-center gap-3">
               {kitReady && lenses.length > 0 ? (
                 <>
@@ -577,17 +616,12 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                   />
                 </>
               ) : null}
-              {CSS_FILTERS.map((f) => (
-                <FilterChip
-                  key={f.id}
-                  label={f.name}
-                  fallback={f.emoji}
-                  active={tintId === f.id}
-                  onClick={() =>
-                    setTintId((cur) => (cur === f.id ? null : f.id))
-                  }
-                />
-              ))}
+              <FilterChip
+                label="IDFW frame"
+                icon="/art/latvia-idfw26.png"
+                active={frameOn}
+                onClick={() => setFrameOn((on) => !on)}
+              />
               {arReady ? (
                 <>
                   <span

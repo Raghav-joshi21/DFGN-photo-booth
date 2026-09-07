@@ -85,11 +85,18 @@ export function spawnPotato(potatoes: FallingPotato[], canvasWidth: number): voi
  * bottom, and — when the mouth is open — eat any potato it reaches. Mutates
  * and returns the same array (filtered), plus how many were eaten this tick.
  */
+/**
+ * Advance the potatoes and let any open mouth eat them.
+ *
+ * Takes every mouth in frame, not one: the booth tracks a group, so a whole
+ * huddle can play at once. A potato is removed on the first mouth that catches
+ * it, so two people lunging at the same one cannot both score it.
+ */
 export function stepPotatoes(
   potatoes: FallingPotato[],
   dt: number,
   canvasHeight: number,
-  mouth: MouthState | null,
+  mouths: MouthState[],
 ): { potatoes: FallingPotato[]; eaten: number } {
   for (const p of potatoes) {
     p.y += p.vy * dt;
@@ -99,16 +106,18 @@ export function stepPotatoes(
   let next = potatoes.filter((p) => p.y - p.r < canvasHeight + 60);
   let eaten = 0;
 
-  if (mouth?.open) {
+  for (const mouth of mouths) {
+    if (!mouth.open) continue;
     for (const p of next) {
+      if (p.eaten) continue;
       const d = Math.hypot(p.x - mouth.x, p.y - mouth.y);
       if (d < p.r + mouth.catchRadius) {
         p.eaten = true;
         eaten++;
       }
     }
-    next = next.filter((p) => !p.eaten);
   }
+  if (eaten > 0) next = next.filter((p) => !p.eaten);
 
   return { potatoes: next, eaten };
 }

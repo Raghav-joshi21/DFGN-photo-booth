@@ -3,7 +3,7 @@
  *
  * Runs MediaPipe's `FaceLandmarker` entirely client-side against the booth's
  * own webcam feed (`@mediapipe/tasks-vision`) and hands back the raw 478-point
- * face mesh every animation frame. `SelfCamera` draws the selected prop from
+ * face mesh for every face in view, each animation frame. `SelfCamera` draws the selected prop from
  * those points onto its own overlay canvas — see `drawFaceLens` in
  * [`./draw`](./draw.ts). This module only does detection; it knows nothing
  * about React or the booth's filter strip.
@@ -45,14 +45,20 @@ export const FACE_LENSES: FaceLens[] = [
   { id: "googly-eyes", name: "Googly eyes", emoji: "👀" },
 ];
 
+/** How many faces the booth tracks at once — see MAX_FACES below. */
+export const MAX_FACES = 5;
+
 export interface FaceArHandle {
   /**
-   * Run detection against the current video frame. Returns the first face's
-   * 478 normalized landmarks, or `null` when no face is in frame (or the same
-   * video timestamp was already processed — call this at most once per
-   * animation frame).
+   * Run detection against the current video frame. Returns one array of 478
+   * normalized landmarks per face in view (empty when nobody is), newest
+   * detection each call.
+   *
+   * Returns `[]` rather than `null` for the same video timestamp twice — the
+   * underlying task requires strictly increasing timestamps, so call this at
+   * most once per animation frame.
    */
-  detect: (video: HTMLVideoElement, nowMs: number) => NormalizedLandmark[] | null;
+  detect: (video: HTMLVideoElement, nowMs: number) => NormalizedLandmark[][];
 }
 
 const WASM_BASE = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm";
@@ -76,7 +82,11 @@ async function boot(): Promise<FaceArHandle | null> {
       FaceLandmarker.createFromOptions(fileset, {
         baseOptions: { modelAssetPath: MODEL_URL, delegate },
         runningMode: "VIDEO",
-        numFaces: 1,
+        // Group shots are the point of a photo booth — friends pile in and all
+        // of them should get the hat. Each extra face costs detection time, so
+        // this is a cap rather than an open limit: five covers the huddle that
+        // actually fits in frame without dropping the preview's frame rate.
+        numFaces: MAX_FACES,
       });
 
     // GPU is faster but not available everywhere (some virtual displays /
@@ -88,11 +98,10 @@ async function boot(): Promise<FaceArHandle | null> {
     return {
       detect(video, nowMs) {
         // detectForVideo requires a strictly increasing timestamp per call.
-        if (nowMs <= lastTimestamp) return null;
+        if (nowMs <= lastTimestamp) return [];
         lastTimestamp = nowMs;
-        if (video.readyState < 2) return null; // < HAVE_CURRENT_DATA: no frame yet
-        const result = landmarker.detectForVideo(video, nowMs);
-        return result.faceLandmarks[0] ?? null;
+        if (video.readyState < 2) return []; // < HAVE_CURRENT_DATA: no frame yet
+        return landmarker.detectForVideo(video, nowMs).faceLandmarks ?? [];
       },
     };
   } catch (err) {
