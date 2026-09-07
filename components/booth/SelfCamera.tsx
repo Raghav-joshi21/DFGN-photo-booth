@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Lens } from "@snap/camera-kit";
 
@@ -13,6 +12,7 @@ import {
 import { FACE_LENSES, startFaceAr, type FaceArHandle } from "@/lib/ar";
 import {
   computeMouth,
+  playCatchSound,
   drawFallingPotato,
   drawMouthRing,
   spawnPotato,
@@ -22,7 +22,17 @@ import {
 import { drawFaceLens } from "@/lib/ar/draw";
 import { savePhoto } from "@/lib/photos/save";
 
-type Phase = "preview" | "counting" | "captured";
+type Phase = "preview" | "captured";
+
+/** One entry in the filter carousel. */
+interface CarouselItem {
+  key: string;
+  label: string;
+  /** Lens-supplied thumbnail, when there is one. */
+  icon?: string;
+  /** Emoji or short word, when there is not. */
+  fallback?: string;
+}
 
 /** Below Tailwind's `sm`, where the preview is portrait. Keep in step with the
  *  `aspect-[2/3] sm:aspect-[16/9]` classes on the frame element. */
@@ -36,7 +46,7 @@ const IDFW_FRAME_LANDSCAPE = "/art/idfw-frame-landscape.webp";
 /**
  * Self-camera capture screen for the booth.
  *
- * Live webcam preview → 3-2-1 countdown → capture a frame to a canvas → show
+ * Live webcam preview → tap to capture a frame to a canvas → show
  * the result. This is a placeholder: capturing works for real, but "Use this
  * photo" is stubbed (that's where the Polaroid-eject animation + upload of a
  * source:'booth' photo will go — see TODO below).
@@ -53,7 +63,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const streamRef = useRef<MediaStream | null>(null);
 
   const [phase, setPhase] = useState<Phase>("preview");
-  const [count, setCount] = useState(3);
   const [captured, setCaptured] = useState<string | null>(null);
   const capturedBlob = useRef<Blob | null>(null);
   // The frame is portrait on a phone and 16:9 on a booth screen, so the crop
@@ -373,6 +382,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             if (result.eaten > 0) {
               eatenRef.current += result.eaten;
               setEaten(eatenRef.current);
+              playCatchSound();
             }
           }
 
@@ -402,52 +412,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       setArReady(false);
     };
   }, [streamReady, attempt]);
-
-  /** Swap the live lens. `null` removes it (the "no filter" option). */
-  const selectLens = useCallback(async (lens: Lens | null) => {
-    const kit = kitRef.current;
-    if (!kit) return;
-    // Optimistic: the strip should respond immediately, not after the lens
-    // finishes downloading.
-    setActiveLensId(lens?.id ?? null);
-    // Takes over from any face-tracked prop — and "No filter" means none of
-    // either, not "no Snap lens but keep the hat".
-    setFaceLensId(null);
-    try {
-      if (lens) await kit.session.applyLens(lens);
-      else await kit.session.removeLens();
-    } catch (err) {
-      console.warn("[booth] could not apply lens", err);
-      setActiveLensId(null);
-    }
-  }, []);
-
-  /**
-   * Pick a face-tracked prop, or tap the active one again to turn it off.
-   * Removes any Snap lens for the same reason `selectLens` clears this one.
-   */
-  const selectFaceLens = useCallback((id: string) => {
-    setFaceLensId((cur) => (cur === id ? null : id));
-    const kit = kitRef.current;
-    if (kit && activeLensIdRef.current) {
-      setActiveLensId(null);
-      kit.session.removeLens().catch((err) => {
-        console.warn("[booth] could not remove lens", err);
-      });
-    }
-  }, []);
-
-  // Countdown driver.
-  useEffect(() => {
-    if (phase !== "counting") return;
-    if (count <= 0) {
-      capture();
-      return;
-    }
-    const t = setTimeout(() => setCount((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, count]);
 
   const capture = useCallback(() => {
     const video = videoRef.current;
@@ -507,10 +471,104 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     setPhase("captured");
   }, [kitReady, faceLensId, gameOn, frameOn]);
 
-  const startCountdown = () => {
-    setCount(3);
-    setPhase("counting");
-  };
+  // --- Filter carousel -----------------------------------------------------
+  // Every effect the booth offers, as one list, because the carousel has one
+  // selection: whichever chip is sitting in the middle. That subsumes the
+  // separate Snap / face-prop / frame pickers, which is also why the IDFW
+  // frame is no longer an independent toggle.
+  const carousel = useMemo<CarouselItem[]>(() => {
+    const items: CarouselItem[] = [];
+    // The potato leads. It is the house look, and the carousel starts on its
+    // first entry, so whatever sits here is what the booth opens wearing.
+    if (arReady) {
+      for (const f of FACE_LENSES) {
+        items.push({ key: `face:${f.id}`, label: f.name, fallback: f.emoji });
+      }
+    }
+    items.push({ key: "frame", label: "IDFW frame", fallback: "IDFW" });
+    if (kitReady) {
+      for (const lens of lenses) {
+        items.push({ key: `snap:${lens.id}`, label: lens.name, icon: lens.iconUrl });
+      }
+    }
+    // Last, not first: "off" should not be what a guest lands on.
+    items.push({ key: "none", label: "No filter", fallback: "🚫" });
+    return items;
+  }, [kitReady, lenses, arReady]);
+
+  const [selectedKey, setSelectedKey] = useState("none");
+  const stripRef = useRef<HTMLDivElement>(null);
+  const chipRefs = useRef(new Map<string, HTMLButtonElement>());
+  // Guards the scroll handler while a click-to-centre animation is in flight,
+  // so the intermediate positions do not each count as a selection.
+  const scrollingTo = useRef<string | null>(null);
+
+  /** Put one effect on screen and take every other one off. */
+  const applySelection = useCallback(
+    (key: string) => {
+      setSelectedKey(key);
+      setFrameOn(key === "frame");
+      setFaceLensId(key.startsWith("face:") ? key.slice(5) : null);
+
+      const kit = kitRef.current;
+      if (!kit) return;
+      const wantSnap = key.startsWith("snap:") ? key.slice(5) : null;
+      if (activeLensIdRef.current === wantSnap) return;
+      setActiveLensId(wantSnap);
+      const lens = wantSnap ? lenses.find((l) => l.id === wantSnap) : null;
+      (lens ? kit.session.applyLens(lens) : kit.session.removeLens()).catch((err) => {
+        console.warn("[booth] could not switch lens", err);
+      });
+    },
+    [lenses],
+  );
+
+  /** Slide a chip into the middle; the scroll handler then selects it. */
+  const centreChip = useCallback((key: string) => {
+    const strip = stripRef.current;
+    const chip = chipRefs.current.get(key);
+    if (!strip || !chip) return;
+    scrollingTo.current = key;
+    strip.scrollTo({
+      left: chip.offsetLeft - strip.clientWidth / 2 + chip.clientWidth / 2,
+      behavior: "smooth",
+    });
+  }, []);
+
+  // Whichever chip is nearest the middle is the selected one — the carousel
+  // reads like Instagram's and Snapchat's, where scrolling *is* choosing.
+  const onStripScroll = useCallback(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const middle = strip.scrollLeft + strip.clientWidth / 2;
+    let bestKey: string | null = null;
+    let bestDist = Infinity;
+    for (const [key, el] of chipRefs.current) {
+      const d = Math.abs(el.offsetLeft + el.clientWidth / 2 - middle);
+      if (d < bestDist) {
+        bestDist = d;
+        bestKey = key;
+      }
+    }
+    if (!bestKey) return;
+    if (scrollingTo.current && scrollingTo.current !== bestKey) return;
+    scrollingTo.current = null;
+    if (bestKey !== selectedKey) applySelection(bestKey);
+  }, [selectedKey, applySelection]);
+
+  // Land on the first entry once the list exists, and keep it centred.
+  //
+  // Once only: the list grows as Camera Kit and the face model finish loading,
+  // and re-running would yank a guest who had already chosen "No filter" back
+  // onto the potato.
+  const autoSelected = useRef(false);
+  useEffect(() => {
+    const first = carousel[0];
+    if (autoSelected.current || !first || carousel.length < 2) return;
+    autoSelected.current = true;
+    applySelection(first.key);
+    centreChip(first.key);
+  }, [carousel, applySelection, centreChip]);
 
   const retake = () => {
     setCaptured(null);
@@ -679,23 +737,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           />
         ) : null}
 
-        {/* Countdown overlay. */}
-        <AnimatePresence>
-          {phase === "counting" && count > 0 ? (
-            <motion.div
-              key={count}
-              initial={{ scale: 0.4, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 1.6, opacity: 0 }}
-              className="absolute inset-0 z-20 flex items-center justify-center"
-            >
-              <span className="font-display text-[9rem] font-extrabold text-white drop-shadow-lg">
-                {count}
-              </span>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-
         {error ? (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
             <p className="max-w-sm text-balance">{error}</p>
@@ -708,65 +749,66 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           </div>
         ) : null}
 
-        {/* Filter picker — overlaid on the preview so the guest sees the lens
-            and the strip in one place, without the frame giving up any height.
-            Snap lenses (when Camera Kit is up) sit first, then the IDFW event
-            frame, then a divider and our own face-tracked AR props (when the
-            model finished loading). */}
+        {/* Filter carousel — overlaid on the preview, and the shutter.
+            Whichever chip is in the middle is the selected effect, the way
+            Instagram's and Snapchat's lens pickers work: scrolling is
+            choosing. Tapping an off-centre chip brings it in; tapping the one
+            already centred takes the photo. */}
         {phase !== "captured" ? (
-          <div className="absolute inset-x-0 bottom-0 z-20 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
-            <div className="mr-auto flex w-max snap-x items-center gap-3">
-              {kitReady && lenses.length > 0 ? (
-                <>
-                  <FilterChip
-                    label="No filter"
-                    fallback="🚫"
-                    active={activeLensId === null}
-                    onClick={() => selectLens(null)}
-                  />
-                  {lenses.map((lens) => (
-                    <FilterChip
-                      key={lens.id}
-                      label={lens.name}
-                      icon={lens.iconUrl}
-                      active={activeLensId === lens.id}
-                      onClick={() => selectLens(lens)}
-                    />
-                  ))}
-                  <span
-                    aria-hidden
-                    className="mx-1 h-8 w-px shrink-0 rounded bg-white/25"
-                  />
-                </>
-              ) : null}
-              <FilterChip
-                label="IDFW frame"
-                fallback="IDFW"
-                active={frameOn}
-                onClick={() => setFrameOn((on) => !on)}
-              />
-              {arReady ? (
-                <>
-                  <span
-                    aria-hidden
-                    className="mx-1 h-8 w-px shrink-0 rounded bg-white/25"
-                  />
-                  {FACE_LENSES.map((f) => (
-                    <FilterChip
-                      key={f.id}
-                      label={f.name}
-                      fallback={f.emoji}
-                      active={faceLensId === f.id}
-                      onClick={() =>
-                        selectFaceLens(f.id)
-                      }
-                    />
-                  ))}
-                </>
-              ) : null}
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/60 to-transparent pb-3 pt-10">
+            <div
+              ref={stripRef}
+              onScroll={onStripScroll}
+              // The end padding is half the strip minus half a chip, so the
+              // first and last entries can still reach the middle.
+              className="no-scrollbar flex snap-x snap-mandatory items-center gap-4 overflow-x-auto px-[calc(50%-1.75rem)] py-1"
+            >
+              {carousel.map((item) => {
+                const centred = item.key === selectedKey;
+                return (
+                  <button
+                    key={item.key}
+                    ref={(el) => {
+                      if (el) chipRefs.current.set(item.key, el);
+                      else chipRefs.current.delete(item.key);
+                    }}
+                    type="button"
+                    onClick={() => (centred ? capture() : centreChip(item.key))}
+                    aria-pressed={centred}
+                    aria-label={centred ? `Take a photo with ${item.label}` : item.label}
+                    title={item.label}
+                    className={`grid shrink-0 snap-center place-items-center overflow-hidden rounded-full border-2 transition-all duration-200 ${
+                      centred
+                        ? "h-14 w-14 border-white bg-white/25 opacity-100 shadow-[0_0_0_3px_rgba(255,255,255,0.35)]"
+                        : "h-11 w-11 border-white/40 bg-white/10 opacity-45 hover:opacity-70"
+                    }`}
+                  >
+                    {item.icon ? (
+                      // Lens icons come from Snap's CDN; next/image would need
+                      // every host allow-listed for a decorative thumbnail.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.icon} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span
+                        className={
+                          (item.fallback ?? "").length > 2
+                            ? "font-display text-[11px] font-extrabold uppercase leading-none tracking-tight text-white"
+                            : "text-lg leading-none"
+                        }
+                      >
+                        {item.fallback}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            </div>
-          ) : null}
+
+            <p className="mt-1 text-center font-body text-[11px] text-white/70">
+              Tap the centre filter to take the photo
+            </p>
+          </div>
+        ) : null}
         </div>
       </div>
 
@@ -805,82 +847,19 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                 Back
               </button>
             ) : null}
+            {/* Catch game is a booth-screen amusement: on a phone it eats the
+                preview and there is no crowd around it. */}
             <button
               onClick={() => setGameOn((v) => !v)}
-              disabled={phase === "counting"}
-              className={`rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-bold shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40 ${
+              className={`hidden rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-bold shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 sm:inline-flex ${
                 gameOn ? "bg-brand-green text-white" : "bg-cream-light text-ink"
               }`}
             >
               🥔 Catch game{gameOn ? `: ${eaten}` : ""}
             </button>
-            <button
-              onClick={startCountdown}
-              disabled={phase === "counting" || !!error}
-              className="rounded-full border-[3px] border-ink bg-brand-orange px-8 py-2.5 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
-            >
-              {phase === "counting" ? "Smile!" : "Start countdown"}
-            </button>
           </>
         )}
       </div>
     </div>
-  );
-}
-
-/**
- * One entry in the filter strip: a small translucent circle sitting on the live
- * preview. The lens name is the accessible name and the tooltip rather than
- * visible text — labels under every circle crowd the frame and, with enough
- * lenses, push the row into a scroll no one at a kiosk will discover.
- */
-function FilterChip({
-  label,
-  icon,
-  fallback = "🥔",
-  active,
-  onClick,
-}: {
-  label: string;
-  icon?: string;
-  /**
-   * Shown when the lens ships no icon of its own. A single emoji, or a short
-   * word — anything longer than two characters is set as small bold text
-   * instead of emoji-sized, so it fits the circle.
-   */
-  fallback?: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      title={label}
-      aria-label={label}
-      className={`grid h-12 w-12 shrink-0 snap-start place-items-center overflow-hidden rounded-full border-2 backdrop-blur-sm transition-transform hover:scale-105 ${
-        active
-          ? "border-brand-orange bg-brand-orange/40 scale-110"
-          : "border-white/50 bg-white/15"
-      }`}
-    >
-      {icon ? (
-        // Lens icons are served from Snap's CDN; next/image would need each
-        // host allow-listed, and these are small decorative thumbnails.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={icon} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <span
-          className={
-            fallback.length > 2
-              ? "font-display text-[11px] font-extrabold uppercase leading-none tracking-tight text-white"
-              : "text-lg leading-none"
-          }
-        >
-          {fallback}
-        </span>
-      )}
-    </button>
   );
 }

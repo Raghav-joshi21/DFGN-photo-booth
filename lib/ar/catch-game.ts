@@ -148,3 +148,43 @@ export function drawMouthRing(ctx: CanvasRenderingContext2D, mouth: MouthState):
   ctx.stroke();
   ctx.restore();
 }
+
+/**
+ * A short "pop" when a potato is caught.
+ *
+ * Synthesised rather than loaded from a file: it is two hundred milliseconds
+ * of tone, and a booth that already pulls a 6MB face model does not need
+ * another asset for it. The context is created on first use, which is always
+ * inside a tap (the game is switched on by one), so autoplay policy is happy.
+ *
+ * Best-effort throughout — a booth with no audio output should still play the
+ * game, so every failure here is swallowed.
+ */
+let audio: AudioContext | null = null;
+
+export function playCatchSound(): void {
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+
+    const t = audio.currentTime;
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+
+    // A quick rise reads as "got it" rather than as an error beep.
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(520, t);
+    osc.frequency.exponentialRampToValueAtTime(920, t + 0.09);
+
+    // Ramps to a small non-zero value: exponential ramps cannot reach 0.
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.22, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+
+    osc.connect(gain).connect(audio.destination);
+    osc.start(t);
+    osc.stop(t + 0.2);
+  } catch {
+    // No audio output, or a context the browser refused to start.
+  }
+}

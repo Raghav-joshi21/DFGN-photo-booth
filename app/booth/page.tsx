@@ -110,7 +110,7 @@ function IdleScreen() {
               Step up &amp; smile
             </h1>
             <p className="text-[clamp(0.7rem,1.4vh,0.875rem)] text-ink/60">
-              Pick a filter, then hit the countdown.
+              Scroll the filters, tap the middle one to shoot.
             </p>
           </div>
         </header>

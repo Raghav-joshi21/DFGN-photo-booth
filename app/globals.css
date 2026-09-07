@@ -225,3 +225,16 @@ body {
     animation: none;
   }
 }
+
+/* --- Scrollers without the bar --------------------------------------------
+   Used by the booth's filter carousel: it scrolls, but a track drawn across
+   the bottom of the preview reads as browser chrome on a kiosk. */
+
+.no-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* old Edge */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;                  /* WebKit and Blink */
+}

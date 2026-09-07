@@ -20,6 +20,11 @@ function lanHosts(): string[] {
 const nextConfig: NextConfig = {
   allowedDevOrigins: lanHosts(),
 
+  // No dev-tools badge. The booth is shown on a kiosk screen and demoed from
+  // phones straight off this dev server, where a floating Next logo in the
+  // corner is just something for a guest to poke at.
+  devIndicators: false,
+
   // The landing page lives at /home; `/` is just its front door. Handled here
   // rather than with a placeholder app/page.tsx so there is no second file to
   // keep in step, and the redirect happens before any rendering.
