@@ -8,7 +8,6 @@ import { ScrollingWall } from "@/components/booth/ScrollingWall";
 import { SelfCamera } from "@/components/booth/SelfCamera";
 import { Clip } from "@/components/site/Clip";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
-import { useBoothStore } from "@/lib/stores/booth-store";
 import {
   SUS_MASCOT_H,
   SUS_MASCOT_POSTER,
@@ -28,12 +27,11 @@ import {
  * panel. The camera is the middle and the largest — it is what the guest is
  * actually there for.
  *
- * Screen switching is driven by `useBoothStore().screen`; the camera is always
- * live on idle, so there is no separate capture screen.
+ * The camera is always live on idle — there is no separate capture screen,
+ * and the AR mini-game (see SelfCamera's "Catch game" toggle) runs right in
+ * that same preview rather than a screen of its own.
  */
 export default function BoothPage() {
-  const screen = useBoothStore((s) => s.screen);
-
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-cream font-body text-ink">
       <main className="relative flex flex-1 flex-col overflow-hidden">
@@ -41,7 +39,7 @@ export default function BoothPage() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
-        {screen === "game" ? <GameScreen /> : <IdleScreen />}
+        <IdleScreen />
       </main>
     </div>
   );
@@ -163,28 +161,6 @@ function IdleScreen() {
           </p>
         </div>
       </aside>
-    </div>
-  );
-}
-
-function GameScreen() {
-  const setScreen = useBoothStore((s) => s.setScreen);
-  return (
-    <div className="relative mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-5 px-5 py-8 text-center">
-      <h2 className="text-shadow-brand font-display text-4xl font-extrabold uppercase tracking-tight text-ink">
-        AR game
-      </h2>
-      <p className="text-base text-ink/70">
-        Placeholder. The face-tracking &ldquo;catch the falling potatoes&rdquo;
-        game mounts here — its logic lives in{" "}
-        <code className="font-mono text-sm">lib/ar</code>.
-      </p>
-      <button
-        onClick={() => setScreen("idle")}
-        className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
-      >
-        Back
-      </button>
     </div>
   );
 }

@@ -12,6 +12,7 @@
     "check:supabase": "node scripts/check-supabase.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@snap/camera-kit": "^1.20.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.45.4",

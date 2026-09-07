@@ -10,6 +10,17 @@ import {
   startCameraKit,
   type CameraKitHandle,
 } from "@/lib/camera-kit";
+import { CSS_FILTERS } from "@/lib/camera-kit/css-filters";
+import { FACE_LENSES, startFaceAr, type FaceArHandle } from "@/lib/ar";
+import {
+  computeMouth,
+  drawFallingPotato,
+  drawMouthRing,
+  spawnPotato,
+  stepPotatoes,
+  type FallingPotato,
+} from "@/lib/ar/catch-game";
+import { drawFaceLens } from "@/lib/ar/draw";
 import { savePhoto } from "@/lib/photos/save";
 
 type Phase = "preview" | "counting" | "captured";
@@ -52,8 +63,48 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [lenses, setLenses] = useState<Lens[]>([]);
   const [activeLensId, setActiveLensId] = useState<string | null>(null);
   const [kitReady, setKitReady] = useState(false);
+
+  // Built-in colour tint, applied on top of whatever lens is active (and on
+  // its own when Camera Kit is off). `null` is "no tint". See css-filters.ts.
+  const [tintId, setTintId] = useState<string | null>(null);
+  const tint = CSS_FILTERS.find((f) => f.id === tintId) ?? null;
   // Set once the stream exists, so the Camera Kit effect can wait for it.
   const [streamReady, setStreamReady] = useState(false);
+
+  // --- Face-tracked AR lenses (ours, no Snap account) ---------------------
+  // Runs off the raw <video> regardless of Camera Kit, drawing onto its own
+  // transparent overlay canvas painted on top of whichever preview is showing.
+  // See lib/ar. `arReady` gates whether the AR chips even appear.
+  const arCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [arReady, setArReady] = useState(false);
+  const [faceLensId, setFaceLensId] = useState<string | null>(null);
+  // The rAF loop below reads the selection through a ref so picking a new
+  // lens doesn't need to tear down and restart the detection loop.
+  const faceLensIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    faceLensIdRef.current = faceLensId;
+  }, [faceLensId]);
+
+  // --- "Catch the falling potatoes" mode ----------------------------------
+  // Runs right inside this same preview and the same detection loop below —
+  // no separate screen, no second camera stream. Plain potatoes only (no
+  // colour variants): open your mouth under one to eat it and score.
+  const [gameOn, setGameOn] = useState(false);
+  const [eaten, setEaten] = useState(0);
+  const gameOnRef = useRef(false);
+  const eatenRef = useRef(0);
+  const potatoesRef = useRef<FallingPotato[]>([]);
+  const spawnAccRef = useRef(0);
+  const lastFrameRef = useRef(0);
+  useEffect(() => {
+    gameOnRef.current = gameOn;
+    if (!gameOn) potatoesRef.current = []; // clear the board when switched off
+  }, [gameOn]);
+  // The loop only steps/spawns while the guest can actually see it.
+  const phaseRef = useRef<Phase>("preview");
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   // Acquire the camera on mount, release it on unmount.
   //
@@ -182,6 +233,83 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     };
   }, [streamReady, attempt]);
 
+  // Face-tracked AR: independent of Camera Kit, runs off the raw <video> and
+  // paints onto its own overlay canvas every animation frame. Also entirely
+  // optional — if the model can't load, `startFaceAr` resolves null and the
+  // AR chips just never appear.
+  useEffect(() => {
+    if (!streamReady) return;
+
+    let cancelled = false;
+    let rafId = 0;
+
+    startFaceAr().then((ar: FaceArHandle | null) => {
+      if (cancelled || !ar) return;
+      setArReady(true);
+      // House style: the potato hat leads, same as the potato Snap lens
+      // above. Only sets it the first time — doesn't clobber a guest's own
+      // pick across a "Try again" re-run.
+      setFaceLensId((cur) => cur ?? "potato-hat");
+
+      const loop = () => {
+        if (cancelled) return;
+        const video = videoRef.current;
+        const canvas = arCanvasRef.current;
+        if (video && canvas && video.readyState >= 2) {
+          if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+          }
+          const ctx = canvas.getContext("2d");
+          const now = performance.now();
+          const dt = lastFrameRef.current ? now - lastFrameRef.current : 16;
+          lastFrameRef.current = now;
+          const landmarks = ar.detect(video, now);
+          const mouth =
+            gameOnRef.current && landmarks
+              ? computeMouth(landmarks, canvas.width, canvas.height)
+              : null;
+
+          // Catch-game step: reuses the same landmarks already detected above
+          // for the face lens — no extra detection call needed.
+          if (gameOnRef.current && phaseRef.current !== "captured") {
+            spawnAccRef.current += dt;
+            if (spawnAccRef.current > 900) {
+              spawnAccRef.current = 0;
+              spawnPotato(potatoesRef.current, canvas.width);
+            }
+            const result = stepPotatoes(potatoesRef.current, dt, canvas.height, mouth);
+            potatoesRef.current = result.potatoes;
+            if (result.eaten > 0) {
+              eatenRef.current += result.eaten;
+              setEaten(eatenRef.current);
+            }
+          }
+
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const lensId = faceLensIdRef.current;
+            if (landmarks && lensId) {
+              drawFaceLens(ctx, landmarks, lensId, canvas.width, canvas.height, now);
+            }
+            if (gameOnRef.current) {
+              for (const p of potatoesRef.current) drawFallingPotato(ctx, p);
+              if (mouth) drawMouthRing(ctx, mouth);
+            }
+          }
+        }
+        rafId = requestAnimationFrame(loop);
+      };
+      rafId = requestAnimationFrame(loop);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      setArReady(false);
+    };
+  }, [streamReady, attempt]);
+
   /** Swap the live lens. `null` removes it (the "no filter" option). */
   const selectLens = useCallback(async (lens: Lens | null) => {
     const kit = kitRef.current;
@@ -227,17 +355,27 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // Bake the colour tint into the pixels: a CSS filter on the preview element
+    // does not travel through drawImage, so it has to be re-applied here.
+    if (tint) ctx.filter = tint.css;
     // Center-crop to a square. Not mirrored: the print should match what the
     // guest saw on screen, and a mirrored frame reverses any lens text with it.
     const sx = (srcW - size) / 2;
     const sy = (srcH - size) / 2;
     ctx.drawImage(source, sx, sy, size, size, 0, 0, size, size);
+    // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
+    // to the same video frame — composite it in with the same crop and tint
+    // so the print matches what the guest saw.
+    const arCanvas = arCanvasRef.current;
+    if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
+      ctx.drawImage(arCanvas, sx, sy, size, size, 0, 0, size, size);
+    }
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     // Also keep the raw bytes: uploading the blob avoids the third that base64
     // adds to every frame on its way to Storage.
     canvas.toBlob((blob) => (capturedBlob.current = blob), "image/jpeg", 0.92);
     setPhase("captured");
-  }, [kitReady]);
+  }, [kitReady, tint, faceLensId, gameOn]);
 
   const startCountdown = () => {
     setCount(3);
@@ -248,6 +386,30 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     setCaptured(null);
     capturedBlob.current = null;
     setPhase("preview");
+  };
+
+  /**
+   * "Start over" on the review screen: drop the shot and go back to the live
+   * preview without saving, and reset the filters to the booth's defaults so
+   * the next guest starts clean.
+   */
+  const startOver = () => {
+    retake();
+    setTintId(null);
+    // Back to the house default, same as the Snap lens below — not "off".
+    setFaceLensId(arReady ? "potato-hat" : null);
+    setGameOn(false);
+    setEaten(0);
+    eatenRef.current = 0;
+    potatoesRef.current = [];
+    const kit = kitRef.current;
+    if (kit) {
+      const fallback = kit.defaultLens;
+      setActiveLensId(fallback?.id ?? null);
+      (fallback ? kit.session.applyLens(fallback) : kit.session.removeLens()).catch(
+        () => setActiveLensId(null),
+      );
+    }
   };
 
   const usePhoto = async () => {
@@ -276,6 +438,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           playsInline
           muted
           className="h-full w-full object-contain"
+          style={{ filter: tint?.css }}
           hidden={phase === "captured" || kitReady}
         />
 
@@ -284,8 +447,26 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         <canvas
           ref={canvasRef}
           className="absolute inset-0 h-full w-full object-contain"
+          style={{ filter: tint?.css }}
           hidden={!kitReady || phase === "captured"}
         />
+
+        {/* Face-tracked AR props (ours — see lib/ar), painted on a transparent
+            overlay above whichever preview layer is showing. Sized to the
+            video's own resolution so its landmark coordinates line up. */}
+        <canvas
+          ref={arCanvasRef}
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          style={{ filter: tint?.css }}
+          hidden={phase === "captured"}
+        />
+
+        {/* Catch-game score, while it's on. */}
+        {gameOn && phase !== "captured" ? (
+          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm">
+            🥔 Eaten: {eaten}
+          </span>
+        ) : null}
 
         {/* Captured still. */}
         {captured ? (
@@ -314,14 +495,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           ) : null}
         </AnimatePresence>
 
-        {/* Snap's guidelines require visible attribution whenever a Lens is
-            active — see the Camera Kit section of the README. */}
-        {kitReady && activeLensId && phase !== "captured" ? (
-          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
-            Powered by Snap
-          </span>
-        ) : null}
-
         {error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-sm text-white">
             <p className="max-w-sm text-balance">{error}</p>
@@ -336,25 +509,65 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
         {/* Filter picker — overlaid on the preview so the guest sees the lens
             and the strip in one place, without the frame giving up any height.
-            Only rendered when Camera Kit actually came up. */}
-        {kitReady && lenses.length > 0 && phase !== "captured" ? (
+            Snap lenses (when Camera Kit is up) sit first, then a divider, then
+            the always-available colour tints, then a divider and our own
+            face-tracked AR props (when the model finished loading). */}
+        {phase !== "captured" ? (
           <div className="absolute inset-x-0 bottom-0 overflow-x-auto bg-gradient-to-t from-black/55 to-transparent px-4 pb-3 pt-8">
             <div className="mx-auto flex w-max snap-x items-center gap-3">
-              <FilterChip
-                label="No filter"
-                fallback="🚫"
-                active={activeLensId === null}
-                onClick={() => selectLens(null)}
-              />
-              {lenses.map((lens) => (
+              {kitReady && lenses.length > 0 ? (
+                <>
+                  <FilterChip
+                    label="No filter"
+                    fallback="🚫"
+                    active={activeLensId === null}
+                    onClick={() => selectLens(null)}
+                  />
+                  {lenses.map((lens) => (
+                    <FilterChip
+                      key={lens.id}
+                      label={lens.name}
+                      icon={lens.iconUrl}
+                      active={activeLensId === lens.id}
+                      onClick={() => selectLens(lens)}
+                    />
+                  ))}
+                  <span
+                    aria-hidden
+                    className="mx-1 h-8 w-px shrink-0 rounded bg-white/25"
+                  />
+                </>
+              ) : null}
+              {CSS_FILTERS.map((f) => (
                 <FilterChip
-                  key={lens.id}
-                  label={lens.name}
-                  icon={lens.iconUrl}
-                  active={activeLensId === lens.id}
-                  onClick={() => selectLens(lens)}
+                  key={f.id}
+                  label={f.name}
+                  fallback={f.emoji}
+                  active={tintId === f.id}
+                  onClick={() =>
+                    setTintId((cur) => (cur === f.id ? null : f.id))
+                  }
                 />
               ))}
+              {arReady ? (
+                <>
+                  <span
+                    aria-hidden
+                    className="mx-1 h-8 w-px shrink-0 rounded bg-white/25"
+                  />
+                  {FACE_LENSES.map((f) => (
+                    <FilterChip
+                      key={f.id}
+                      label={f.name}
+                      fallback={f.emoji}
+                      active={faceLensId === f.id}
+                      onClick={() =>
+                        setFaceLensId((cur) => (cur === f.id ? null : f.id))
+                      }
+                    />
+                  ))}
+                </>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -363,6 +576,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       <div className="flex flex-wrap items-center justify-center gap-3">
         {phase === "captured" ? (
           <>
+            <button
+              onClick={startOver}
+              disabled={saving}
+              className="rounded-full border-[3px] border-ink bg-cream-light px-6 py-2.5 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40"
+            >
+              Start over
+            </button>
             <button
               onClick={retake}
               disabled={saving}
@@ -388,6 +608,15 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                 Back
               </button>
             ) : null}
+            <button
+              onClick={() => setGameOn((v) => !v)}
+              disabled={phase === "counting"}
+              className={`rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-bold shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 disabled:opacity-40 ${
+                gameOn ? "bg-brand-green text-white" : "bg-cream-light text-ink"
+              }`}
+            >
+              🥔 Catch game{gameOn ? `: ${eaten}` : ""}
+            </button>
             <button
               onClick={startCountdown}
               disabled={phase === "counting" || !!error}
