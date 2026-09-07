@@ -38,8 +38,27 @@ export interface FaceLens {
 
 /** The face-tracked props on offer, in strip order. See `draw.ts` for how each renders. */
 export const FACE_LENSES: FaceLens[] = [
+  // The potato leads: it is the house look, and the carousel opens on its
+  // first entry. The rest are ordered roughly by how much they change a face,
+  // so scrolling goes from small additions to full costumes.
   { id: "potato-hat", name: "Potato hat", emoji: "🥔" },
+  { id: "shades", name: "Shades", emoji: "🕶️" },
   { id: "googly-eyes", name: "Googly eyes", emoji: "👀" },
+  { id: "heart-eyes", name: "Heart eyes", emoji: "😍" },
+  { id: "star-eyes", name: "Star eyes", emoji: "🤩" },
+  { id: "laser-eyes", name: "Laser eyes", emoji: "😎" },
+  { id: "dog", name: "Dog", emoji: "🐶" },
+  { id: "cat", name: "Cat", emoji: "🐱" },
+  { id: "bunny", name: "Bunny", emoji: "🐰" },
+  { id: "crown", name: "Crown", emoji: "👑" },
+  { id: "flower-crown", name: "Flower crown", emoji: "🌸" },
+  { id: "halo", name: "Halo", emoji: "😇" },
+  { id: "devil", name: "Devil horns", emoji: "😈" },
+  { id: "butterflies", name: "Butterflies", emoji: "🦋" },
+  { id: "sparkles", name: "Sparkles", emoji: "✨" },
+  { id: "clown", name: "Clown", emoji: "🤡" },
+  { id: "gentleman", name: "Gentleman", emoji: "🎩" },
+  { id: "snorkel", name: "Snorkel", emoji: "🤿" },
 ];
 
 /** How many faces the booth tracks at once — see MAX_FACES below. */
