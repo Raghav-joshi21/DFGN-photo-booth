@@ -233,18 +233,16 @@ function Lightbox({
             onClick={(e) => e.stopPropagation()}
             className="flex min-h-0 w-full max-w-3xl flex-col items-center gap-3"
           >
-            {/* Swipe area. Deliberately NOT wrapped in AnimatePresence: an
-                exiting copy and a dragging copy fight over the same gesture,
-                and the outgoing images were left mounted and stacking up. One
-                element, re-keyed per photo, animates in from the side it was
-                pulled from and is the only image on screen. */}
+            {/* Swipe area.
+                The drag sits on the wrapper and the entrance on the image so
+                the two never share a transform, and the entrance is a CSS
+                animation rather than a JS one: its resting state is the
+                element's normal state, so the worst a failed animation can do
+                is skip the slide — it cannot leave a photo stuck invisible.
+                There is deliberately no exit animation; one image is mounted
+                at a time, which keeps the swipe gesture unambiguous. */}
             <div className="relative flex w-full items-center justify-center">
-              <motion.img
-                key={photo.id}
-                src={photo.editedUrl ?? photo.originalUrl}
-                alt="Photo from the wall"
-                // Chrome's native image drag would pre-empt the gesture.
-                draggable={false}
+              <motion.div
                 drag={photos.length > 1 ? "x" : false}
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.18}
@@ -256,11 +254,23 @@ function Lightbox({
                   // Dragging left pulls the next photo in from the right.
                   go(info.offset.x < 0 ? 1 : -1);
                 }}
-                initial={{ opacity: 0, x: direction * 110 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ type: "spring", stiffness: 320, damping: 34 }}
-                className="max-h-[70vh] w-auto max-w-full cursor-grab touch-pan-y rounded-xl border-[3px] border-cream-light object-contain shadow-2xl active:cursor-grabbing"
-              />
+                className="flex cursor-grab touch-pan-y items-center justify-center active:cursor-grabbing"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  key={photo.id}
+                  src={photo.editedUrl ?? photo.originalUrl}
+                  alt="Photo from the wall"
+                  // Chrome's native image drag would pre-empt the gesture.
+                  draggable={false}
+                  style={
+                    {
+                      "--photo-swap-from": `${direction * 40}px`,
+                    } as React.CSSProperties
+                  }
+                  className="photo-swap max-h-[70vh] w-auto max-w-full rounded-xl border-[3px] border-cream-light object-contain shadow-2xl"
+                />
+              </motion.div>
 
               {photos.length > 1 ? (
                 <>
