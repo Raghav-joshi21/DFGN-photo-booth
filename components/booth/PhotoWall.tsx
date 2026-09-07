@@ -6,12 +6,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PotatoFrame } from "@/components/booth/PotatoFrame";
 import type { Photo } from "@/types";
 
-/** Deterministic small tilt per photo so the wall looks hand-pinned but stable. */
+/**
+ * Deterministic small tilt per photo so the wall looks hand-pinned but stable.
+ *
+ * Kept to a few degrees: a rotated print sticks out sideways beyond its column,
+ * and at two columns on a phone the old +/-6 was enough to push the page into a
+ * horizontal scroll.
+ */
 function tiltFor(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  // Range roughly [-6, 6] degrees.
-  return ((Math.abs(hash) % 1300) / 100) - 6;
+  // Range roughly [-2.5, 2.5] degrees.
+  return ((Math.abs(hash) % 500) / 100) - 2.5;
 }
 
 /** Best filename we can offer for a saved photo. */
@@ -67,7 +73,7 @@ export function PhotoWall({
 
   return (
     <>
-      <div className="columns-2 gap-5 sm:columns-3 lg:columns-4 xl:columns-5">
+      <div className="columns-2 gap-5 overflow-x-clip px-1 sm:columns-3 lg:columns-4 xl:columns-5">
         <AnimatePresence initial={false}>
           {photos.map((photo) => (
             <motion.div

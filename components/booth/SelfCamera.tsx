@@ -65,6 +65,12 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // Which camera to use. Phones have a rear one worth reaching for (the room,
   // the crowd); a laptop generally has one camera and no switch is offered.
   const [facing, setFacing] = useState<"user" | "environment">("user");
+
+  // The preview box takes the camera's OWN aspect ratio rather than a fixed
+  // one. A fixed shape forces a choice between cropping the view or padding it
+  // with black bars; matching the source needs neither. Null until the first
+  // frame arrives, when the CSS fallbacks below apply.
+  const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [hasTwoCameras, setHasTwoCameras] = useState(false);
   useEffect(() => {
     // Labels stay blank until permission is granted, but the *count* does not,
@@ -113,10 +119,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // exactly those, so the border lands on the edges with nothing cropped.
   const [frameOn, setFrameOn] = useState(false);
   const frameImgRef = useRef<HTMLImageElement>(null);
+  // Which artwork to use before the camera has reported its shape. Once it
+  // has, `videoAspect` decides instead — the border follows the photo's
+  // orientation, not the window's.
   const [framePortrait, setFramePortrait] = useState(false);
   useEffect(() => {
-    // Must track the same breakpoint the aspect classes below use, or the
-    // border would be drawn at the wrong shape.
+    // Must track the same breakpoint the fallback aspect classes use, or the
+    // border would be drawn at the wrong shape for that one first frame.
     const mq = window.matchMedia(FRAME_PORTRAIT_QUERY);
     const sync = () => setFramePortrait(mq.matches);
     sync();
@@ -201,6 +210,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         if (!video) return;
 
         video.srcObject = stream;
+        const readAspect = () => {
+          if (video.videoWidth && video.videoHeight) {
+            setVideoAspect(video.videoWidth / video.videoHeight);
+          }
+        };
+        video.addEventListener("loadedmetadata", readAspect);
+        video.addEventListener("resize", readAspect);
+        readAspect();
         try {
           await video.play();
         } catch (err) {
@@ -430,36 +447,18 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
     if (!srcW || !srcH) return;
 
-    // Crop to whatever shape the frame is actually showing — portrait on a
-    // phone, 16:9 on a booth screen. Reading it off the rendered box keeps the
-    // print identical to the preview instead of always producing a square.
-    const box = frameRef.current?.getBoundingClientRect();
-    const targetAspect = box && box.height > 0 ? box.width / box.height : srcW / srcH;
-
-    // Contain semantics, matching the preview's object-contain: the entire
-    // camera view is kept and letterboxed into the frame's shape. Nothing is
-    // cropped — a selfie should show everything the lens saw, and the IDFW
-    // border still lands on the canvas edges because the canvas keeps the
-    // frame's aspect ratio.
+    // The whole camera frame at its own size: no crop, and no letterbox
+    // either, because the preview box is this same shape.
     const canvas = document.createElement("canvas");
-    if (srcW / srcH > targetAspect) {
-      canvas.width = Math.round(srcW);
-      canvas.height = Math.round(srcW / targetAspect);
-    } else {
-      canvas.height = Math.round(srcH);
-      canvas.width = Math.round(srcH * targetAspect);
-    }
+    canvas.width = srcW;
+    canvas.height = srcH;
+    const dx = 0;
+    const dy = 0;
     const drawW = srcW;
     const drawH = srcH;
-    const dx = (canvas.width - drawW) / 2;
-    const dy = (canvas.height - drawH) / 2;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // The letterbox bars are part of the photo, so give them the booth's own
-    // black rather than leaving them transparent.
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     // Not mirrored: the print should match what the guest saw on screen, and a
     // mirrored frame reverses any lens text along with it.
     ctx.drawImage(source, dx, dy, drawW, drawH);
@@ -555,6 +554,17 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
         <div
           ref={frameRef}
+          // The aspect classes are the pre-camera fallback; once the stream
+          // reports its size the inline style takes over and the box becomes
+          // exactly the camera's shape.
+          style={
+            videoAspect
+              ? {
+                  aspectRatio: String(videoAspect),
+                  maxWidth: `calc(100cqh * ${videoAspect})`,
+                }
+              : undefined
+          }
           className="relative mx-auto aspect-[2/3] max-h-full w-full max-w-[calc(100cqh*2/3)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
         >
         {/* Live preview (hidden once we have a capture). */}
@@ -562,7 +572,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           ref={videoRef}
           playsInline
           muted
-          className="h-full w-full object-contain"
+          className="h-full w-full object-cover"
           hidden={phase === "captured" || kitReady}
         />
 
@@ -570,7 +580,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             exists before the session boots; only shown once it is live. */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-contain"
+          className="absolute inset-0 h-full w-full object-cover"
           hidden={!kitReady || phase === "captured"}
         />
 
@@ -579,7 +589,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             video's own resolution so its landmark coordinates line up. */}
         <canvas
           ref={arCanvasRef}
-          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           hidden={phase === "captured"}
         />
 
@@ -631,9 +641,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             ref={frameImgRef}
-            src={framePortrait ? IDFW_FRAME_PORTRAIT : IDFW_FRAME_LANDSCAPE}
+            src={
+              (videoAspect ? videoAspect < 1 : framePortrait)
+                ? IDFW_FRAME_PORTRAIT
+                : IDFW_FRAME_LANDSCAPE
+            }
             alt=""
             aria-hidden
+            // Stretched to the box (which is the camera's own shape), so
+            // the border always meets the edges. The two artworks are close
+            // enough to real camera ratios that the give is imperceptible.
             className="pointer-events-none absolute inset-0 z-10 h-full w-full"
             hidden={phase === "captured"}
           />
@@ -645,7 +662,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <img
             src={captured}
             alt="Captured"
-            className="absolute inset-0 h-full w-full object-contain"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
 
@@ -835,7 +852,7 @@ function FilterChip({
         // Lens icons are served from Snap's CDN; next/image would need each
         // host allow-listed, and these are small decorative thumbnails.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={icon} alt="" className="h-full w-full object-contain" />
+        <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
         <span className="text-lg leading-none">{fallback}</span>
       )}
