@@ -47,7 +47,7 @@ export function PhotoWall({
   loading: boolean;
   disabled: boolean;
 }) {
-  const [preview, setPreview] = useState<Photo | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   if (disabled) {
     return (
@@ -89,7 +89,7 @@ export function PhotoWall({
             >
               <button
                 type="button"
-                onClick={() => setPreview(photo)}
+                onClick={() => setPreviewId(photo.id)}
                 aria-label="Open this photo"
                 className="block w-full rounded-lg transition-transform hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange"
               >
@@ -100,25 +100,69 @@ export function PhotoWall({
         </AnimatePresence>
       </div>
 
-      <Lightbox photo={preview} onClose={() => setPreview(null)} />
+      <Lightbox
+        photos={photos}
+        openId={previewId}
+        onOpenId={setPreviewId}
+        onClose={() => setPreviewId(null)}
+      />
     </>
   );
 }
 
+/** How far, or how fast, a drag has to go before it counts as a swipe. */
+const SWIPE_DISTANCE = 60;
+const SWIPE_VELOCITY = 400;
+
 /**
- * Full-screen view of one photo, with a save button.
+ * Full-screen view of one photo: swipe or arrow through the wall, and save the
+ * one you are looking at.
+ *
+ * Addressed by photo id rather than list index. The wall grows live from the
+ * Realtime hook, and every arriving photo prepends — with an index the viewer
+ * would be silently moved to a different picture mid-look.
  *
  * Rendered outside the columns so it is not clipped by them, and closed by
  * Escape or a click on the backdrop as well as the button — on a phone the
  * backdrop is the biggest target there is.
  */
-function Lightbox({ photo, onClose }: { photo: Photo | null; onClose: () => void }) {
+function Lightbox({
+  photos,
+  openId,
+  onOpenId,
+  onClose,
+}: {
+  photos: Photo[];
+  openId: string | null;
+  onOpenId: (id: string) => void;
+  onClose: () => void;
+}) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // +1 when moving forward, -1 back: the photo slides in from the side it
+  // came from, so the direction of travel is legible.
+  const [direction, setDirection] = useState(1);
+
+  const index = openId ? photos.findIndex((p) => p.id === openId) : -1;
+  const photo = index >= 0 ? photos[index] : null;
+
+  const go = useCallback(
+    (delta: number) => {
+      if (index < 0 || photos.length < 2) return;
+      setDirection(delta);
+      // Wraps, so neither end of the wall is a dead stop.
+      onOpenId(photos[(index + delta + photos.length) % photos.length].id);
+    },
+    [index, photos, onOpenId],
+  );
 
   useEffect(() => {
     if (!photo) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight") go(1);
+      else if (e.key === "ArrowLeft") go(-1);
+    };
     window.addEventListener("keydown", onKey);
     // The page behind must not scroll under the overlay.
     const prev = document.body.style.overflow;
@@ -127,9 +171,14 @@ function Lightbox({ photo, onClose }: { photo: Photo | null; onClose: () => void
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [photo, onClose]);
+  }, [photo, onClose, go]);
 
-  useEffect(() => setSaveError(null), [photo]);
+  // The open photo was removed from the wall underneath us.
+  useEffect(() => {
+    if (openId && index < 0) onClose();
+  }, [openId, index, onClose]);
+
+  useEffect(() => setSaveError(null), [openId]);
 
   const save = useCallback(async () => {
     if (!photo) return;
@@ -184,12 +233,42 @@ function Lightbox({ photo, onClose }: { photo: Photo | null; onClose: () => void
             onClick={(e) => e.stopPropagation()}
             className="flex min-h-0 w-full max-w-3xl flex-col items-center gap-3"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={photo.editedUrl ?? photo.originalUrl}
-              alt="Photo from the wall"
-              className="max-h-[70vh] w-auto max-w-full rounded-xl border-[3px] border-cream-light object-contain shadow-2xl"
-            />
+            {/* Swipe area. Deliberately NOT wrapped in AnimatePresence: an
+                exiting copy and a dragging copy fight over the same gesture,
+                and the outgoing images were left mounted and stacking up. One
+                element, re-keyed per photo, animates in from the side it was
+                pulled from and is the only image on screen. */}
+            <div className="relative flex w-full items-center justify-center">
+              <motion.img
+                key={photo.id}
+                src={photo.editedUrl ?? photo.originalUrl}
+                alt="Photo from the wall"
+                // Chrome's native image drag would pre-empt the gesture.
+                draggable={false}
+                drag={photos.length > 1 ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.18}
+                dragMomentum={false}
+                onDragEnd={(_, info) => {
+                  const far = Math.abs(info.offset.x) > SWIPE_DISTANCE;
+                  const fast = Math.abs(info.velocity.x) > SWIPE_VELOCITY;
+                  if (!far && !fast) return;
+                  // Dragging left pulls the next photo in from the right.
+                  go(info.offset.x < 0 ? 1 : -1);
+                }}
+                initial={{ opacity: 0, x: direction * 110 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 34 }}
+                className="max-h-[70vh] w-auto max-w-full cursor-grab touch-pan-y rounded-xl border-[3px] border-cream-light object-contain shadow-2xl active:cursor-grabbing"
+              />
+
+              {photos.length > 1 ? (
+                <>
+                  <ArrowButton side="left" onClick={() => go(-1)} />
+                  <ArrowButton side="right" onClick={() => go(1)} />
+                </>
+              ) : null}
+            </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
               <button
@@ -210,6 +289,15 @@ function Lightbox({ photo, onClose }: { photo: Photo | null; onClose: () => void
               </button>
             </div>
 
+            {photos.length > 1 ? (
+              <p className="font-display text-xs font-bold uppercase tracking-wide text-cream-light/60">
+                {index + 1} / {photos.length}
+                <span className="ml-2 font-body normal-case tracking-normal opacity-70">
+                  swipe or use ← →
+                </span>
+              </p>
+            ) : null}
+
             {saveError ? (
               <p className="text-center text-sm text-cream-light/90">{saveError}</p>
             ) : null}
@@ -217,6 +305,30 @@ function Lightbox({ photo, onClose }: { photo: Photo | null; onClose: () => void
         </motion.div>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+/** Prev/next control, sitting just inside the photo's edge. */
+function ArrowButton({ side, onClick }: { side: "left" | "right"; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={side === "left" ? "Previous photo" : "Next photo"}
+      className={`absolute top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/40 bg-black/45 text-white backdrop-blur-sm transition-transform hover:scale-105 sm:flex ${
+        side === "left" ? "left-2" : "right-2"
+      }`}
+    >
+      <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden>
+        <path
+          d={side === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"}
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
   );
 }
 
