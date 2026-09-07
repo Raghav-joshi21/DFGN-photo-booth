@@ -16,7 +16,7 @@ export default function GalleryPage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-cream font-body text-ink">
-      <TopNav />
+      <TopNav hideBot />
 
       <main className="relative flex-1">
         <div
@@ -24,7 +24,7 @@ export default function GalleryPage() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
 
-        <div className="relative mx-auto w-full max-w-6xl px-5 py-10 sm:py-14">
+        <div className="relative mx-auto w-full max-w-[112rem] px-3 py-8 sm:px-8 sm:py-12">
           <header className="mb-8 text-center">
             <h1 className="text-shadow-brand font-display text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
               IDFW Gallery

@@ -114,7 +114,7 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
         </div>
       </div>
 
-      <PotatoBot />
+      {hideBot ? null : <PotatoBot />}
     </header>
   );
 }
