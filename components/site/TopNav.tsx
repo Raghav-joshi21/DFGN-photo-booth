@@ -18,8 +18,12 @@ const LINKS = [
  *
  * The active link is derived from the pathname rather than passed in, so this
  * drops into any route without configuration.
+ *
+ * `hideBot` drops the corner sustainability mascot — the gallery is a wall of
+ * photos meant to be looked at, and a talking potato hopping over the corner
+ * competes with it.
  */
-export function TopNav() {
+export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
   const pathname = usePathname();
   const [helpOpen, setHelpOpen] = useState(false);
 
