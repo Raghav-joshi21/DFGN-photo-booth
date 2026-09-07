@@ -6,15 +6,20 @@ import type { Photo } from "@/types";
  * A photo in the booth's house frame: a chunky print with the DFGN mark on the
  * caption strip and a potato peeking over the corner.
  *
- * Landscape 4:3 to match what the booth captures — a square frame would crop
- * the sides back off every photo.
+ * The booth wall fixes the print at 4:3 so the marquee's rows are predictable.
+ * The gallery passes `natural`, which lets each print take the shape of the
+ * photo inside it — a landscape shot stays landscape instead of being squared
+ * off, which is the whole point of shooting one.
  */
 export function PotatoFrame({
   photo,
   rotation = 0,
+  natural = false,
 }: {
   photo?: Photo;
   rotation?: number;
+  /** Size the print to the photo's own aspect instead of a fixed 4:3. */
+  natural?: boolean;
 }) {
   const src = photo ? (photo.editedUrl ?? photo.originalUrl) : null;
 
@@ -23,8 +28,18 @@ export function PotatoFrame({
       className="relative w-full rounded-lg border-[3px] border-ink bg-white p-2 pb-7 shadow-[5px_5px_0_var(--color-ink)]"
       style={{ rotate: `${rotation}deg` }}
     >
-      <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-sage">
-        {src ? (
+      <div
+        className={`relative overflow-hidden rounded-sm bg-sage ${
+          natural ? "" : "aspect-[4/3]"
+        }`}
+      >
+        {src && natural ? (
+          // Intrinsic sizing, so the box grows to the photo's own ratio. A
+          // plain <img> rather than next/image: `fill` needs a parent of known
+          // height, which is exactly what this mode does not have.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt="" aria-hidden className="block h-auto w-full" />
+        ) : src ? (
           <Image
             src={src}
             alt=""

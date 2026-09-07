@@ -62,6 +62,20 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // Bumping this re-runs the acquire effect (the "Try again" button).
   const [attempt, setAttempt] = useState(0);
 
+  // Which camera to use. Phones have a rear one worth reaching for (the room,
+  // the crowd); a laptop generally has one camera and no switch is offered.
+  const [facing, setFacing] = useState<"user" | "environment">("user");
+  const [hasTwoCameras, setHasTwoCameras] = useState(false);
+  useEffect(() => {
+    // Labels stay blank until permission is granted, but the *count* does not,
+    // so this is enough to decide whether to offer the switch. Re-run per
+    // acquire, since the list is fuller once permission has been given.
+    navigator.mediaDevices
+      ?.enumerateDevices?.()
+      .then((ds) => setHasTwoCameras(ds.filter((d) => d.kind === "videoinput").length > 1))
+      .catch(() => setHasTwoCameras(false));
+  }, [attempt, facing]);
+
   // --- Snap Camera Kit (optional live filters) ---------------------------
   // `lens === null` is the always-available "no filter" option. The potato
   // lens is applied on start-up when the group ships one, so a guest who
@@ -162,16 +176,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       }
 
       try {
-        // Ask for a stream shaped like the frame it will fill: portrait on a
-        // phone, landscape on a booth screen. These are `ideal`, so a camera
-        // that cannot oblige still works — the capture just crops more.
-        const portrait = window.matchMedia("(max-width: 639px)").matches;
+        // No width/height ideals on purpose. Asking for a particular shape
+        // makes the browser pick a mode that matches it, which on a phone
+        // means a cropped-in sensor read — the selfie comes out tighter than
+        // what the camera can actually see. Asking only for a facing mode
+        // gets the camera's own widest view, and nothing here crops it:
+        // the preview and the capture both fit it whole into the frame.
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "user",
-            width: { ideal: portrait ? 1080 : 1920 },
-            height: { ideal: portrait ? 1440 : 1080 },
-          },
+          video: { facingMode: { ideal: facing } },
           audio: false,
         });
 
@@ -226,7 +238,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
-  }, [attempt]);
+  }, [attempt, facing]);
 
   // Bring up Camera Kit on top of the live stream. Entirely optional: if it
   // never becomes ready the plain <video> preview stays on screen and the rest
@@ -424,29 +436,39 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     const box = frameRef.current?.getBoundingClientRect();
     const targetAspect = box && box.height > 0 ? box.width / box.height : srcW / srcH;
 
-    // Cover semantics, matching the preview's object-cover: fill the frame and
-    // trim the overflowing axis, centred.
-    let cropW = srcW;
-    let cropH = srcH;
-    if (srcW / srcH > targetAspect) cropW = srcH * targetAspect;
-    else cropH = srcW / targetAspect;
-    const sx = (srcW - cropW) / 2;
-    const sy = (srcH - cropH) / 2;
-
+    // Contain semantics, matching the preview's object-contain: the entire
+    // camera view is kept and letterboxed into the frame's shape. Nothing is
+    // cropped — a selfie should show everything the lens saw, and the IDFW
+    // border still lands on the canvas edges because the canvas keeps the
+    // frame's aspect ratio.
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(cropW);
-    canvas.height = Math.round(cropH);
+    if (srcW / srcH > targetAspect) {
+      canvas.width = Math.round(srcW);
+      canvas.height = Math.round(srcW / targetAspect);
+    } else {
+      canvas.height = Math.round(srcH);
+      canvas.width = Math.round(srcH * targetAspect);
+    }
+    const drawW = srcW;
+    const drawH = srcH;
+    const dx = (canvas.width - drawW) / 2;
+    const dy = (canvas.height - drawH) / 2;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // The letterbox bars are part of the photo, so give them the booth's own
+    // black rather than leaving them transparent.
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     // Not mirrored: the print should match what the guest saw on screen, and a
     // mirrored frame reverses any lens text along with it.
-    ctx.drawImage(source, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(source, dx, dy, drawW, drawH);
     // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
     // to the same video frame — composite it in with the same crop so the
     // print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
     if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
-      ctx.drawImage(arCanvas, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(arCanvas, dx, dy, drawW, drawH);
     }
     // The event frame goes on last so it sits above everything, and is drawn
     // across the whole canvas rather than cropped: the canvas already has the
@@ -540,7 +562,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           ref={videoRef}
           playsInline
           muted
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain"
           hidden={phase === "captured" || kitReady}
         />
 
@@ -548,7 +570,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             exists before the session boots; only shown once it is live. */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain"
           hidden={!kitReady || phase === "captured"}
         />
 
@@ -557,7 +579,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             video's own resolution so its landmark coordinates line up. */}
         <canvas
           ref={arCanvasRef}
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
           hidden={phase === "captured"}
         />
 
@@ -566,6 +588,39 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <span className="absolute left-3 top-3 z-20 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm">
             🥔 Eaten: {eaten}
           </span>
+        ) : null}
+
+        {/* Flip between the front and rear camera. Only when the device
+            actually has both, which keeps it off single-camera booth screens
+            without hard-coding "phones only". Sits opposite Snap's badge. */}
+        {hasTwoCameras && phase === "preview" ? (
+          <button
+            type="button"
+            onClick={() =>
+              setFacing((f) => (f === "user" ? "environment" : "user"))
+            }
+            aria-label={
+              facing === "user" ? "Switch to the rear camera" : "Switch to the front camera"
+            }
+            title={facing === "user" ? "Rear camera" : "Front camera"}
+            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/50 bg-black/45 text-white backdrop-blur-sm transition-transform hover:scale-105 active:scale-95"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+              <path
+                d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.4l1-1.6h6.2l1 1.6h1.4A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M9.8 12.4a2.6 2.6 0 0 1 4.4-1.7m0 0h-1.7m1.7 0v-1.7M14.2 13a2.6 2.6 0 0 1-4.4 1.7m0 0h1.7m-1.7 0v1.7"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         ) : null}
 
         {/* Event frame, over the live preview. Mounted whenever it is on (not
@@ -590,7 +645,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           <img
             src={captured}
             alt="Captured"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         ) : null}
 
@@ -780,7 +835,7 @@ function FilterChip({
         // Lens icons are served from Snap's CDN; next/image would need each
         // host allow-listed, and these are small decorative thumbnails.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={icon} alt="" className="h-full w-full object-cover" />
+        <img src={icon} alt="" className="h-full w-full object-contain" />
       ) : (
         <span className="text-lg leading-none">{fallback}</span>
       )}
