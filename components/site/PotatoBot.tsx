@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Clip } from "./Clip";
 import {
   SUS_MASCOT_H,
+  SUS_MASCOT_MP4,
   SUS_MASCOT_POSTER,
   SUS_MASCOT_SRC,
   SUS_MASCOT_W,
@@ -29,6 +30,10 @@ import {
  *    which swaps in a still frame under prefers-reduced-motion.
  *  - Anchored bottom-RIGHT deliberately: bottom-left collides with Next's
  *    dev-tools badge in development.
+ *  - Large screens only. On a phone a fixed corner mascot this size covers the
+ *    content it is sitting on, and there is no room to move it. Gated on a
+ *    media query rather than `hidden lg:block` so a phone never downloads the
+ *    clip at all — most guests reach this on mobile data.
  *  - Honours prefers-reduced-motion: the bob/hop CSS is disabled via media
  *    query. It still cycles through the facts, so the content is never gated
  *    behind the animation.
@@ -38,6 +43,8 @@ const FACTS = SUSTAINABILITY_FACTS;
 
 const FACT_MS = 9000;
 const CYCLE_MS = 17000;
+/** Matches Tailwind's `lg` — the width at which the corner is spare room. */
+const WIDE_ENOUGH = "(min-width: 1024px)";
 
 export function PotatoBot() {
   const [mounted, setMounted] = useState(false);
@@ -46,8 +53,19 @@ export function PotatoBot() {
   // Bumped on each fact to restart the hop animation (a changing key on the
   // class alone won't retrigger it).
   const [hop, setHop] = useState(0);
+  const [wideEnough, setWideEnough] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  // Tracked live rather than read once, so rotating a tablet or resizing a
+  // window puts the mascot away (or brings it back) instead of stranding it.
+  useEffect(() => {
+    const mq = window.matchMedia(WIDE_ENOUGH);
+    const sync = () => setWideEnough(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const speak = useCallback(() => {
     setFact((current) => {
@@ -60,7 +78,7 @@ export function PotatoBot() {
 
   // Autonomous loop: speak, hold the bubble, go quiet, repeat.
   useEffect(() => {
-    if (!mounted || dismissed) return;
+    if (!mounted || dismissed || !wideEnough) return;
 
     let cancelled = false;
     const timers: number[] = [];
@@ -80,9 +98,9 @@ export function PotatoBot() {
       cancelled = true;
       timers.forEach((t) => window.clearTimeout(t));
     };
-  }, [mounted, dismissed, speak]);
+  }, [mounted, dismissed, wideEnough, speak]);
 
-  if (!mounted || dismissed) return null;
+  if (!mounted || dismissed || !wideEnough) return null;
 
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-50 print:hidden">
@@ -122,10 +140,11 @@ export function PotatoBot() {
             >
               <Clip
                 src={SUS_MASCOT_SRC}
+                mp4Alpha={SUS_MASCOT_MP4}
                 poster={SUS_MASCOT_POSTER}
                 width={SUS_MASCOT_W}
                 height={SUS_MASCOT_H}
-                className="h-36 w-auto drop-shadow-lg sm:h-48"
+                className="h-48 w-auto drop-shadow-lg"
               />
             </button>
           </div>
