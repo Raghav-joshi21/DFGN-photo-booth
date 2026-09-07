@@ -6,10 +6,11 @@ import { PotatoSticker } from "@/components/site/PotatoSticker";
 import { TopNav } from "@/components/site/TopNav";
 
 /**
- * Landing page — the DFGN UnBoxed 2026 front door.
+ * Landing page (/home) — the DFGN UnBoxed 2026 front door.
  *
  * Two routes out: the kiosk capture flow and the live gallery wall. Guests
- * arriving by QR code skip this and land straight on /upload.
+ * arriving by QR code skip this and land straight on /upload. `/` redirects
+ * here (see next.config.ts), so the front door has one address.
  */
 export default function Home() {
   return (

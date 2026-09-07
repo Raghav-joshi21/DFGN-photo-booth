@@ -19,6 +19,13 @@ function lanHosts(): string[] {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: lanHosts(),
+
+  // The landing page lives at /home; `/` is just its front door. Handled here
+  // rather than with a placeholder app/page.tsx so there is no second file to
+  // keep in step, and the redirect happens before any rendering.
+  async redirects() {
+    return [{ source: "/", destination: "/home", permanent: false }];
+  },
 };
 
 export default nextConfig;

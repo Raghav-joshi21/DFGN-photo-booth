@@ -69,7 +69,7 @@ function IdleScreen() {
   return (
     <div className="relative flex h-full min-h-0 w-full gap-[clamp(0.75rem,1.4vw,1.5rem)] p-[clamp(0.75rem,1.4vw,1.5rem)]">
       <Link
-        href="/"
+        href="/home"
         aria-label="Back to home"
         className="absolute left-3 top-3 z-30 flex items-center gap-1.5 rounded-full border-[3px] border-ink bg-cream-light/90 px-3 py-1.5 font-display text-sm font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] backdrop-blur-sm transition-transform hover:-translate-y-0.5"
       >

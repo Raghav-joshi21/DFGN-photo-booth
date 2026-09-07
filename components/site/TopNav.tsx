@@ -8,7 +8,7 @@ import { useState } from "react";
 import { PotatoBot } from "./PotatoBot";
 
 const LINKS = [
-  { href: "/", label: "Home" },
+  { href: "/home", label: "Home" },
   { href: "/booth", label: "Capture" },
   { href: "/gallery", label: "Gallery" },
 ];
@@ -27,7 +27,7 @@ export function TopNav() {
     <header className="relative z-20 border-b-2 border-ink bg-gradient-to-r from-cream-light via-cream-light to-cream">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-6 sm:px-5">
         {/* Wordmark */}
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <Link href="/home" className="flex shrink-0 items-center gap-2.5">
           <Image
             src="/art/dfgn-logo.png"
             alt="DFGN"
@@ -47,8 +47,9 @@ export function TopNav() {
         {/* Primary nav */}
         <nav className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-2 md:ml-0 md:flex-1 md:justify-center">
           {LINKS.map(({ href, label }) => {
-            const active =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            // Every link is a distinct top-level path now, so a prefix match
+            // is enough — no "/" special case to get wrong.
+            const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}
