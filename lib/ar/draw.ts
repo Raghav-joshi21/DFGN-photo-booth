@@ -276,12 +276,12 @@ function drawCat(ctx: CanvasRenderingContext2D, g: FaceGeometry) {
   const u = g.eyeDist;
   for (const side of [-1, 1]) {
     onFace(ctx, g.forehead, g.roll, () => {
-      ctx.translate(side * u * 0.6, u * 0.1);
-      earPath(ctx, u * 0.6, u * 0.85, side * 0.25);
+      ctx.translate(side * u * 0.56, u * 0.3);
+      earPath(ctx, u * 0.62, u * 0.8, side * 0.25);
       outlined(ctx, "#4a4a4a", u * 0.07);
       ctx.save();
       ctx.scale(0.55, 0.6);
-      earPath(ctx, u * 0.6, u * 0.85, side * 0.25);
+      earPath(ctx, u * 0.62, u * 0.8, side * 0.25);
       ctx.fillStyle = "#f0a9b8";
       ctx.fill();
       ctx.restore();
@@ -378,7 +378,7 @@ function drawHalo(ctx: CanvasRenderingContext2D, g: FaceGeometry, nowMs: number)
   const u = g.eyeDist;
   const bob = Math.sin(nowMs / 420) * u * 0.06;
   onFace(ctx, g.forehead, g.roll, () => {
-    ctx.translate(0, -u * 0.75 + bob);
+    ctx.translate(0, -u * 0.45 + bob);
     ctx.save();
     ctx.scale(1, 0.34);
     ctx.beginPath();
@@ -396,7 +396,7 @@ function drawDevil(ctx: CanvasRenderingContext2D, g: FaceGeometry) {
   const u = g.eyeDist;
   for (const side of [-1, 1]) {
     onFace(ctx, g.forehead, g.roll, () => {
-      ctx.translate(side * u * 0.62, u * 0.02);
+      ctx.translate(side * u * 0.6, u * 0.24);
       ctx.beginPath();
       ctx.moveTo(-u * 0.16, 0);
       ctx.quadraticCurveTo(side * u * 0.1, -u * 0.5, side * u * 0.34, -u * 0.72);
@@ -598,15 +598,17 @@ function drawLaserEyes(ctx: CanvasRenderingContext2D, g: FaceGeometry, nowMs: nu
   ctx.globalCompositeOperation = "lighter";
   for (const eye of [g.eyeCenterA, g.eyeCenterB]) {
     onFace(ctx, eye, g.roll, () => {
-      const grad = ctx.createLinearGradient(0, 0, 0, u * 6);
-      grad.addColorStop(0, `rgba(255,90,60,${0.95 * flicker})`);
-      grad.addColorStop(1, "rgba(255,0,0,0)");
+      const len = u * 2.6;
+      const grad = ctx.createLinearGradient(0, 0, 0, len);
+      grad.addColorStop(0, `rgba(255,240,220,${0.95 * flicker})`);
+      grad.addColorStop(0.25, `rgba(255,120,60,${0.8 * flicker})`);
+      grad.addColorStop(1, "rgba(255,40,0,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(-u * 0.16, 0);
-      ctx.lineTo(u * 0.16, 0);
-      ctx.lineTo(u * 0.7, u * 6);
-      ctx.lineTo(-u * 0.7, u * 6);
+      ctx.moveTo(-u * 0.11, 0);
+      ctx.lineTo(u * 0.11, 0);
+      ctx.lineTo(u * 0.3, len);
+      ctx.lineTo(-u * 0.3, len);
       ctx.closePath();
       ctx.fill();
       ctx.beginPath();
@@ -622,8 +624,8 @@ function drawSnorkel(ctx: CanvasRenderingContext2D, g: FaceGeometry) {
   const u = g.eyeDist;
   onFace(ctx, g.eyeMid, g.roll, () => {
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(-u * 1.0, -u * 0.45, u * 2.0, u * 0.95, u * 0.3);
-    else ctx.rect(-u * 1.0, -u * 0.45, u * 2.0, u * 0.95);
+    if (ctx.roundRect) ctx.roundRect(-u * 0.85, -u * 0.4, u * 1.7, u * 0.8, u * 0.26);
+    else ctx.rect(-u * 0.85, -u * 0.4, u * 1.7, u * 0.8);
     ctx.fillStyle = "rgba(150,220,255,0.35)";
     ctx.fill();
     ctx.strokeStyle = "#e04a4a";
@@ -640,8 +642,8 @@ function drawSnorkel(ctx: CanvasRenderingContext2D, g: FaceGeometry) {
     ctx.lineWidth = u * 0.14;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(u * 1.0, u * 0.1);
-    ctx.quadraticCurveTo(u * 1.35, -u * 0.4, u * 1.25, -u * 1.2);
+    ctx.moveTo(u * 0.85, u * 0.05);
+    ctx.quadraticCurveTo(u * 1.2, -u * 0.45, u * 1.1, -u * 1.15);
     ctx.stroke();
   });
 }
@@ -691,7 +693,7 @@ function drawClown(ctx: CanvasRenderingContext2D, g: FaceGeometry) {
   // Tufts of hair.
   for (const side of [-1, 1]) {
     onFace(ctx, g.forehead, g.roll, () => {
-      ctx.translate(side * u * 0.95, u * 0.2);
+      ctx.translate(side * u * 0.86, u * 0.62);
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
         ctx.arc(side * i * u * 0.16, -i * u * 0.16, u * 0.26, 0, Math.PI * 2);
