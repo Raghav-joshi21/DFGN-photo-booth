@@ -11,6 +11,7 @@ import { Clip } from "@/components/site/Clip";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
 import {
   SUS_MASCOT_H,
+  SUS_MASCOT_MP4,
   SUS_MASCOT_POSTER,
   SUS_MASCOT_SRC,
   SUS_MASCOT_W,
@@ -140,6 +141,7 @@ function IdleScreen() {
           {/* The potato points down at the code. */}
           <Clip
             src="/art/potato-point-qr.webm"
+            mp4Alpha="/art/potato-point-qr.mp4"
             poster="/art/potato-point-qr.png"
             width={300}
             height={380}
@@ -175,10 +177,11 @@ function IdleScreen() {
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden border-t-[3px] border-ink bg-brand-green/10 px-5 py-4">
           <Clip
             src={SUS_MASCOT_SRC}
+            mp4Alpha={SUS_MASCOT_MP4}
             poster={SUS_MASCOT_POSTER}
             width={SUS_MASCOT_W}
             height={SUS_MASCOT_H}
-            className="-mx-5 min-h-0 w-[calc(100%+2.5rem)] flex-shrink object-contain drop-shadow-md"
+            className="min-h-0 w-auto max-w-full flex-shrink object-contain drop-shadow-md [max-height:clamp(4rem,18vh,11rem)]"
           />
           <p className="shrink-0 font-display text-[clamp(0.95rem,2.2vh,1.875rem)] font-extrabold uppercase leading-none tracking-tight text-brand-green">
             Our most sustainable event

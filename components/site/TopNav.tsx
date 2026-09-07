@@ -29,18 +29,15 @@ export function TopNav() {
         {/* Wordmark */}
         <Link href="/home" className="flex shrink-0 items-center gap-2.5">
           <Image
-            src="/art/dfgn-logo.png"
-            alt="DFGN"
-            width={447}
-            height={447}
+            src="/art/latvia-idfw26.png"
+            alt="Latvia — IDFW '26"
+            width={205}
+            height={78}
             priority
-            className="h-8 w-8"
+            className="h-8 w-auto rounded-md border-2 border-ink shadow-[2px_2px_0_var(--color-ink)] sm:h-9"
           />
-          <span className="hidden font-display text-xl font-extrabold tracking-tight text-ink sm:inline sm:text-2xl">
-            DFGN UnBoxed 2026
-          </span>
-          <span className="font-display text-lg font-extrabold tracking-tight text-ink sm:hidden">
-            UnBoxed
+          <span className="hidden font-display text-lg font-extrabold tracking-tight text-ink md:inline xl:text-xl">
+            UnBoxed 2026
           </span>
         </Link>
 

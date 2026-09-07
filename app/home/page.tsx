@@ -26,10 +26,10 @@ export default function Home() {
 
         <FallingPotatoes />
 
-        <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-5 py-12 sm:py-16">
+        <div className="relative mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 py-10 sm:py-14">
           {/* Hero */}
           <div className="relative">
-            <h1 className="text-shadow-brand text-center font-display text-5xl font-extrabold tracking-tight text-ink sm:text-6xl md:text-7xl">
+            <h1 className="text-shadow-brand text-center font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl md:text-6xl">
               DF Photo Booth
             </h1>
             {/* `unoptimized` is required: Next's image optimizer would
@@ -42,17 +42,17 @@ export default function Home() {
               height={100}
               unoptimized
               priority
-              className="pointer-events-none absolute -right-40 -top-16 w-36 sm:-right-56 sm:-top-20 sm:w-52"
+              className="pointer-events-none absolute -right-32 -top-12 hidden w-28 sm:block sm:-right-44 sm:-top-16 sm:w-40"
             />
           </div>
 
-          <p className="mt-5 max-w-2xl text-center text-base text-ink/75 sm:text-lg">
+          <p className="mt-4 max-w-xl text-center text-sm text-ink/75 sm:text-base">
             Welcome to the fertile ground of memory-making. Choose your
             experience.
           </p>
 
           {/* The two ways in */}
-          <div className="mt-12 grid w-full gap-7 sm:mt-14 md:grid-cols-2">
+          <div className="mt-8 grid w-full gap-5 sm:mt-10 sm:gap-6 md:grid-cols-2">
             {/* Capture */}
             <ChoiceCard
               href="/booth"
@@ -62,8 +62,8 @@ export default function Home() {
               icon={<CameraIcon className="h-4 w-4" />}
               className="bg-brand-yellow"
             >
-              <div className="relative flex h-44 items-center justify-center">
-                <div className="h-44 w-44 overflow-hidden border-[5px] border-brand-orange bg-cream-light [border-radius:48%_52%_45%_55%/55%_45%_55%_45%]">
+              <div className="relative flex h-32 items-center justify-center">
+                <div className="h-32 w-32 overflow-hidden border-[4px] border-brand-orange bg-cream-light [border-radius:48%_52%_45%_55%/55%_45%_55%_45%]">
                   {/* The source had a transparency checkerboard baked in (h264
                       carries no alpha), so it is keyed out and flattened onto
                       cream — hence the matching solid background here. */}
@@ -98,7 +98,7 @@ export default function Home() {
               icon={<CheckIcon className="h-4 w-4" />}
               className="bg-cream-light"
             >
-              <div className="relative flex h-44 w-full items-center justify-center">
+              <div className="relative flex h-32 w-full items-center justify-center">
                 {/* Two prints stacked behind the clip. Same footprint as the
                     front print but rotated and nudged sideways, so only their
                     corners show — a photo pile rather than a fan. */}
@@ -110,9 +110,9 @@ export default function Home() {
                     key={deg}
                     aria-hidden
                     style={{ rotate: `${deg}deg`, translate: `${x}px` }}
-                    className="absolute flex h-36 w-60 items-center justify-center rounded-md border border-ink/15 bg-white pb-3 shadow-md shadow-ink/10"
+                    className="absolute flex h-[6.5rem] w-44 items-center justify-center rounded-md border border-ink/15 bg-white pb-2 shadow-md shadow-ink/10"
                   >
-                    <PotatoSticker variant="scientist" className="h-14 w-14" />
+                    <PotatoSticker variant="scientist" className="h-10 w-10" />
                   </div>
                 ))}
 
@@ -121,7 +121,7 @@ export default function Home() {
                     frame is what makes the video's rectangle read as a photo. */}
                 <div className="relative rotate-1 rounded-md border border-ink/15 bg-white p-1.5 pb-4 shadow-lg shadow-ink/25">
                   <video
-                    className="motion-video block w-60 rounded-sm"
+                    className="motion-video block w-44 rounded-sm"
                     src="/art/potato-clicking.mp4"
                     poster="/art/potato-clicking-poster.jpg"
                     autoPlay
@@ -136,12 +136,12 @@ export default function Home() {
                     aria-hidden
                     width={400}
                     height={226}
-                    className="motion-still block w-60 rounded-sm"
+                    className="motion-still block w-44 rounded-sm"
                   />
                 </div>
 
-                <span className="absolute -bottom-4 left-1/2 z-10 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
-                  <GridIcon className="h-6 w-6 text-white" />
+                <span className="absolute -bottom-3 left-1/2 z-10 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border-[3px] border-ink bg-brand-orange shadow-[3px_3px_0_var(--color-ink)]">
+                  <GridIcon className="h-5 w-5 text-white" />
                 </span>
               </div>
             </ChoiceCard>
@@ -177,16 +177,16 @@ function ChoiceCard({
   return (
     <Link
       href={href}
-      className={`group relative flex flex-col items-center overflow-hidden rounded-[26px] border-[3px] border-ink p-6 shadow-[6px_6px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange ${className}`}
+      className={`group relative flex flex-col items-center overflow-hidden rounded-[22px] border-[3px] border-ink p-5 shadow-[5px_5px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange ${className}`}
     >
       {children}
       {/* mt-7, not mt-2: the gallery art has a badge hanging below its box, and
           both titles must sit on the same line across the two cards. */}
-      <h2 className="mt-7 text-center font-display text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
+      <h2 className="mt-6 text-center font-display text-2xl font-extrabold uppercase tracking-tight text-ink sm:text-3xl">
         {title}
       </h2>
       <span
-        className={`mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2 font-display text-sm font-bold shadow-sm transition-transform group-hover:scale-[1.03] ${ctaClass}`}
+        className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-display text-sm font-bold shadow-sm transition-transform group-hover:scale-[1.03] ${ctaClass}`}
       >
         {icon}
         {cta}

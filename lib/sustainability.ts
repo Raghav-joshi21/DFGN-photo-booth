@@ -7,16 +7,17 @@
  */
 
 /**
- * Animated mascot art: a transparent-background VP9 WebM (alpha) plus a still
- * frame for prefers-reduced-motion / no-WebM fallback. Rendered through
- * `components/site/Clip`. Source was a 40MB GIF — converted so it doesn't bloat
- * the repo (see .gitignore's note on large binaries).
+ * Animated mascot art, in the two formats that carry an alpha channel between
+ * them: VP9/WebM for Chrome, Firefox and Android, HEVC/MP4 for WebKit. See
+ * `components/site/Clip` for why both are needed and how one is picked. The
+ * PNG still covers prefers-reduced-motion.
  */
 export const SUS_MASCOT_SRC = "/art/sus-man.webm";
+export const SUS_MASCOT_MP4 = "/art/sus-man.mp4";
 export const SUS_MASCOT_POSTER = "/art/sus-man.png";
 /** Intrinsic size of the mascot clip, so the reduced-motion still reserves the same box. */
-export const SUS_MASCOT_W = 854;
-export const SUS_MASCOT_H = 480;
+export const SUS_MASCOT_W = 640;
+export const SUS_MASCOT_H = 360;
 
 export const SUSTAINABILITY_FACTS = [
   "This booth is 100% digital — no printed strips, no plastic frames, no landfill. 🌱",
