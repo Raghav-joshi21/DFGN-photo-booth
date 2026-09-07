@@ -17,6 +17,15 @@ import type { CameraKitSession, Lens } from "@snap/camera-kit";
  */
 const POTATO_LENS_PATTERN = /potato|spud|tater|tattie|fry|fries|chip|crisp|veg/i;
 
+/**
+ * Demo and diagnostic lenses that ship in Camera Kit's sample groups. They do
+ * nothing a guest wants — region and location probes, a typing test, a sound
+ * board — but in the strip they look exactly like real filters, so they are
+ * dropped rather than shown.
+ */
+const DEMO_LENS_PATTERN =
+  /region check|location check|typing test|camkit cutout|ck pet with text|sound ?board/i;
+
 export interface CameraKitHandle {
   session: CameraKitSession;
   /** Every lens across all groups, potato-themed ones first. "No filter" is UI-side. */
@@ -80,17 +89,24 @@ export async function startCameraKit(
       seen.has(lens.id) ? false : (seen.add(lens.id), true),
     );
 
-    const isPotato = (lens: Lens) => POTATO_LENS_PATTERN.test(lens.name);
-    const potato = allLenses.filter(isPotato);
+    const usable = allLenses.filter((lens) => !DEMO_LENS_PATTERN.test(lens.name));
+    if (usable.length < allLenses.length) {
+      console.info(
+        `[booth] hid ${allLenses.length - usable.length} demo lens(es)`,
+      );
+    }
 
-    // Every lens is offered — hiding the rest used to leave the strip empty
-    // whenever the potato lens was named something unexpected. Potato ones
-    // simply sort to the front, where the default selection lands.
-    const lenses = [...potato, ...allLenses.filter((lens) => !isPotato(lens))];
-    if (potato.length === 0 && allLenses.length > 0) {
+    const isPotato = (lens: Lens) => POTATO_LENS_PATTERN.test(lens.name);
+    const potato = usable.filter(isPotato);
+
+    // Every real lens is offered — hiding the rest used to leave the strip
+    // empty whenever the potato lens was named something unexpected. Potato
+    // ones simply sort to the front, where the default selection lands.
+    const lenses = [...potato, ...usable.filter((lens) => !isPotato(lens))];
+    if (potato.length === 0 && usable.length > 0) {
       console.warn(
         `[booth] no lens in groups [${groupIds.join(", ")}] matched ${POTATO_LENS_PATTERN}; ` +
-          `showing all ${allLenses.length} unsorted, with no filter applied by ` +
+          `showing all ${usable.length} unsorted, with no filter applied by ` +
           `default. Rename the potato lens or widen the pattern.`,
       );
     }
@@ -99,7 +115,7 @@ export async function startCameraKit(
       session,
       lenses,
       defaultLens: potato[0] ?? null,
-      totalLenses: allLenses.length,
+      totalLenses: usable.length,
       destroy: () => {
         try {
           session.destroy();

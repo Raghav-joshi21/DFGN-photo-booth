@@ -83,6 +83,15 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const [arReady, setArReady] = useState(false);
   const [faceLensId, setFaceLensId] = useState<string | null>(null);
 
+  // Snap lenses and our own face-tracked props are ONE picker as far as the
+  // guest is concerned: choosing from either replaces whatever was on. They
+  // are separate pieces of state because they are driven by different
+  // engines, so every place that sets one has to clear the other.
+  const activeLensIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeLensIdRef.current = activeLensId;
+  }, [activeLensId]);
+
   // --- IDFW event frame ---------------------------------------------------
   // A branded border laid over the shot and baked into the capture. Two
   // artworks: a 2:3 portrait one and a 16:9 landscape one, matching the two
@@ -246,6 +255,10 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       // lens that won't download leaves the plain (unfiltered) session up.
       if (result.defaultLens) {
         setActiveLensId(result.defaultLens.id);
+        // The AR boot below may already have put the potato hat on: whichever
+        // finishes last would otherwise leave both showing. The Snap lens is
+        // the richer effect, so it wins and clears the prop.
+        setFaceLensId(null);
         result.session.applyLens(result.defaultLens).catch((err) => {
           console.warn("[booth] could not apply the default lens", err);
           setActiveLensId(null);
@@ -276,10 +289,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     startFaceAr().then((ar: FaceArHandle | null) => {
       if (cancelled || !ar) return;
       setArReady(true);
-      // House style: the potato hat leads, same as the potato Snap lens
-      // above. Only sets it the first time — doesn't clobber a guest's own
-      // pick across a "Try again" re-run.
-      setFaceLensId((cur) => cur ?? "potato-hat");
+      // House style: the potato hat leads — but only when no Snap lens is
+      // already on, so the booth never starts with two effects at once. Only
+      // sets it the first time, so it doesn't clobber a guest's own pick
+      // across a "Try again" re-run.
+      setFaceLensId((cur) =>
+        cur ?? (activeLensIdRef.current ? null : "potato-hat"),
+      );
 
       const loop = () => {
         if (cancelled) return;
@@ -350,12 +366,30 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     // Optimistic: the strip should respond immediately, not after the lens
     // finishes downloading.
     setActiveLensId(lens?.id ?? null);
+    // Takes over from any face-tracked prop — and "No filter" means none of
+    // either, not "no Snap lens but keep the hat".
+    setFaceLensId(null);
     try {
       if (lens) await kit.session.applyLens(lens);
       else await kit.session.removeLens();
     } catch (err) {
       console.warn("[booth] could not apply lens", err);
       setActiveLensId(null);
+    }
+  }, []);
+
+  /**
+   * Pick a face-tracked prop, or tap the active one again to turn it off.
+   * Removes any Snap lens for the same reason `selectLens` clears this one.
+   */
+  const selectFaceLens = useCallback((id: string) => {
+    setFaceLensId((cur) => (cur === id ? null : id));
+    const kit = kitRef.current;
+    if (kit && activeLensIdRef.current) {
+      setActiveLensId(null);
+      kit.session.removeLens().catch((err) => {
+        console.warn("[booth] could not remove lens", err);
+      });
     }
   }, []);
 
@@ -447,19 +481,23 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   const startOver = () => {
     retake();
     setFrameOn(false);
-    // Back to the house default, same as the Snap lens below — not "off".
-    setFaceLensId(arReady ? "potato-hat" : null);
     setGameOn(false);
     setEaten(0);
     eatenRef.current = 0;
     potatoesRef.current = [];
+
+    // Back to the house default — one effect, picked the same way the boot
+    // above picks it: the Snap potato lens when there is one, our own potato
+    // hat otherwise. Never both.
     const kit = kitRef.current;
+    const snapDefault = kit?.defaultLens ?? null;
+    setActiveLensId(snapDefault?.id ?? null);
+    setFaceLensId(snapDefault ? null : arReady ? "potato-hat" : null);
     if (kit) {
-      const fallback = kit.defaultLens;
-      setActiveLensId(fallback?.id ?? null);
-      (fallback ? kit.session.applyLens(fallback) : kit.session.removeLens()).catch(
-        () => setActiveLensId(null),
-      );
+      (snapDefault
+        ? kit.session.applyLens(snapDefault)
+        : kit.session.removeLens()
+      ).catch(() => setActiveLensId(null));
     }
   };
 
@@ -635,7 +673,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                       fallback={f.emoji}
                       active={faceLensId === f.id}
                       onClick={() =>
-                        setFaceLensId((cur) => (cur === f.id ? null : f.id))
+                        selectFaceLens(f.id)
                       }
                     />
                   ))}

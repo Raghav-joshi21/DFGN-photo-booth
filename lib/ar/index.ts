@@ -39,9 +39,6 @@ export interface FaceLens {
 /** The face-tracked props on offer, in strip order. See `draw.ts` for how each renders. */
 export const FACE_LENSES: FaceLens[] = [
   { id: "potato-hat", name: "Potato hat", emoji: "🥔" },
-  { id: "shades", name: "Shades", emoji: "🕶️" },
-  { id: "mustache", name: "Mustache", emoji: "👨" },
-  { id: "crown", name: "Crown", emoji: "👑" },
   { id: "googly-eyes", name: "Googly eyes", emoji: "👀" },
 ];
 
