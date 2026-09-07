@@ -72,15 +72,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // frame arrives, when the CSS fallbacks below apply.
   const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [hasTwoCameras, setHasTwoCameras] = useState(false);
-  useEffect(() => {
-    // Labels stay blank until permission is granted, but the *count* does not,
-    // so this is enough to decide whether to offer the switch. Re-run per
-    // acquire, since the list is fuller once permission has been given.
-    navigator.mediaDevices
-      ?.enumerateDevices?.()
-      .then((ds) => setHasTwoCameras(ds.filter((d) => d.kind === "videoinput").length > 1))
-      .catch(() => setHasTwoCameras(false));
-  }, [attempt, facing]);
 
   // --- Snap Camera Kit (optional live filters) ---------------------------
   // `lens === null` is the always-available "no filter" option. The potato
@@ -94,6 +85,36 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   // Set once the stream exists, so the Camera Kit effect can wait for it.
   const [streamReady, setStreamReady] = useState(false);
+
+  // Is there a second camera to switch to?
+  //
+  // Deliberately gated on `streamReady`: before permission is granted browsers
+  // under-report this list — Safari hands back a single placeholder entry —
+  // so probing at mount always said "one camera" and the switch never
+  // appeared. Once the stream is live the list is complete.
+  //
+  // The `facingMode` fallback covers the case where the count is still
+  // unhelpful: a device that reports a rear-facing camera has two by
+  // definition, and phones support that even when enumeration is coy.
+  useEffect(() => {
+    if (!streamReady) return;
+    let cancelled = false;
+    navigator.mediaDevices
+      ?.enumerateDevices?.()
+      .then((ds) => {
+        if (cancelled) return;
+        const cams = ds.filter((d) => d.kind === "videoinput");
+        const supportsFacing =
+          "getSupportedConstraints" in navigator.mediaDevices &&
+          !!navigator.mediaDevices.getSupportedConstraints().facingMode;
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
+        setHasTwoCameras(cams.length > 1 || (supportsFacing && coarse));
+      })
+      .catch(() => setHasTwoCameras(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [streamReady, attempt]);
 
   // --- Face-tracked AR lenses (ours, no Snap account) ---------------------
   // Runs off the raw <video> regardless of Camera Kit, drawing onto its own
