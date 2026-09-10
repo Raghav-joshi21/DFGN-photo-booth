@@ -692,7 +692,7 @@ function Slideshow({
                   animate={slide.animate}
                   exit={slide.exit}
                   transition={slide.transition}
-                  className="absolute w-[78vw] max-w-sm drop-shadow-[0_30px_70px_rgba(0,0,0,0.6)] sm:w-[52vw] sm:max-w-md lg:w-[34vw] lg:max-w-lg"
+                  className="absolute w-[94vw] max-w-[28.8rem] drop-shadow-[0_30px_70px_rgba(0,0,0,0.6)] sm:w-[62vw] sm:max-w-[33.6rem] lg:w-[41vw] lg:max-w-[38.4rem]"
                 >
                   <PotatoFrame photo={photo} rotation={tiltFor(photo.id) * 1.6} natural />
                 </motion.div>
