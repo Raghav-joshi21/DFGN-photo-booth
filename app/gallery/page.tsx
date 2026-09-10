@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { PhotoWall } from "@/components/booth/PhotoWall";
 import { IdfwSticker } from "@/components/site/IdfwSticker";
 import { TopNav } from "@/components/site/TopNav";
