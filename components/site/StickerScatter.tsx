@@ -11,7 +11,7 @@ import { IdfwSticker, type IdfwStickerVariant } from "./IdfwSticker";
  */
 export type ScatterSticker = {
   variant: IdfwStickerVariant;
-  /** Tailwind position classes, e.g. "-left-6 top-4". Include size (h-*/w-*) too. */
+  /** Tailwind position classes, e.g. "-left-6 top-4". Include a size (h- and w-) too. */
   className: string;
   rotate?: number;
   /** Seconds for the idle bob loop; varied so the set doesn't pulse in lockstep. */
