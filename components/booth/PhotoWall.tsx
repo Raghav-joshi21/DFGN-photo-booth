@@ -768,37 +768,9 @@ function SlideCtl({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/10"
+      className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
     >
       {children}
-    </button>
-  );
-}
-
-/**
- * A neighbouring photo, peeking in from the slideshow's edge — the
- * "coverflow" side frame. Purely decorative-but-clickable: tapping one jumps
- * straight to it, same as the arrow it sits next to.
- */
-function SidePeek({ photo, onClick }: { photo: Photo | null; onClick: () => void }) {
-  if (!photo) return null;
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      aria-label="Jump to this photo"
-      className="pointer-events-auto relative hidden h-[64vh] w-[14vw] shrink-0 overflow-hidden rounded-lg border-4 border-cream-light/30 opacity-45 blur-[1.5px] grayscale-[0.15] transition-all duration-300 hover:opacity-70 hover:blur-0 hover:grayscale-0 lg:block"
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photo.editedUrl ?? photo.originalUrl}
-        alt=""
-        draggable={false}
-        className="h-full w-full object-cover"
-      />
     </button>
   );
 }
