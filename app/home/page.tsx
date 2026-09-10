@@ -44,6 +44,18 @@ export default function Home() {
           className="pointer-events-none absolute -bottom-14 -left-16 hidden w-64 rotate-[-8deg] opacity-95 drop-shadow-xl sm:block md:-left-20 md:w-80 lg:w-96"
         />
 
+        {/* A second, smaller potato bleeding from the top-right — brackets the
+            hero the way the conference site scatters more than one. Mirrored
+            so it doesn't read as a copy-paste of the bottom-left one. */}
+        <Image
+          src="/art/potato-hero-alt.png"
+          alt=""
+          aria-hidden
+          width={277}
+          height={246}
+          className="pointer-events-none absolute -right-10 -top-10 hidden w-40 -scale-x-100 rotate-[10deg] opacity-90 drop-shadow-lg md:block lg:w-48"
+        />
+
         <div className="relative mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 py-10 sm:py-14">
           {/* Hero */}
           <div className="relative">
