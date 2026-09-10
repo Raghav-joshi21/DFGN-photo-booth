@@ -4,13 +4,12 @@ import Image from "next/image";
  * Partner-strip footer, styled after the conference site's own (gold bar,
  * wordmark on the left, partner marks trailing off to the right).
  *
- * The reference footer carries real partner logos (RTU, RTU Innovations,
- * Aalto University) that we don't have image assets for here — recreating
- * their logo marks from a screenshot would misrepresent trademarks that
- * aren't ours to draw, so those three are plain text credits instead. Swap
- * `PartnerMark` for an <Image> the moment a real asset file shows up; DFGN's
- * own mark is already in the repo (public/art/dfgn-logo.png), so that one is
- * the real thing.
+ * The reference footer carries real partner logos. We have the real RTU mark
+ * and DFGN's own (public/art/rtu-logo.png, dfgn-logo.png) — RTU Innovations
+ * and Aalto University don't have an asset file yet, so recreating their
+ * logo marks from a screenshot would misrepresent trademarks that aren't
+ * ours to draw; those two stay plain text credits until a real file shows up
+ * (swap `PartnerMark` for an <Image> then).
  */
 export function SiteFooter() {
   return (
@@ -25,7 +24,13 @@ export function SiteFooter() {
         />
 
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          <PartnerMark eyebrow="RTU" name="Riga Technical University" />
+          <Image
+            src="/art/rtu-logo.png"
+            alt="Riga Technical University"
+            width={332}
+            height={64}
+            className="h-7 w-auto sm:h-8"
+          />
           <PartnerMark eyebrow="RTU" name="Innovations" />
           <PartnerMark eyebrow="Aalto" name="University" />
           <Image
