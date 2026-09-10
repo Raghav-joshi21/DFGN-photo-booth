@@ -19,10 +19,11 @@ export default function Home() {
       <TopNav />
 
       <main className="relative flex flex-1 flex-col overflow-hidden">
-        {/* Soft sage wash in the corners, matching the design's warm ground. */}
+        {/* Warm cream-to-gold sweep, matching the conference site's own hero
+            gradient (cream ground warming into the brand's gold/orange). */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,#fdf9f1_0%,#fbf4e8_38%,#f7dfa8_72%,#eeae4a_100%)]"
         />
 
         <FallingPotatoes />
@@ -30,6 +31,17 @@ export default function Home() {
         {/* Latvia / IDFW '26 sticker sheet, falling alongside the potatoes
             rather than pinned in place. */}
         <FallingStickers />
+
+        {/* The conference site's big bleeding-potato hero art, tucked in the
+            corner the way the real UnBoxed pages run it off-canvas. */}
+        <Image
+          src="/art/potato-hero.png"
+          alt=""
+          aria-hidden
+          width={392}
+          height={348}
+          className="pointer-events-none absolute -bottom-14 -right-16 hidden w-64 rotate-[8deg] opacity-95 drop-shadow-xl sm:block md:-right-20 md:w-80 lg:w-96"
+        />
 
         <div className="relative mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 py-10 sm:py-14">
           {/* Hero */}
