@@ -20,10 +20,10 @@ export default function Home() {
 
       <main className="relative flex flex-1 flex-col overflow-hidden">
         {/* Warm cream-to-gold sweep, matching the conference site's own hero
-            gradient (cream ground warming into the brand's gold/orange). */}
+            gradient — gold on the left, cream on the right. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,#fdf9f1_0%,#fbf4e8_38%,#f7dfa8_72%,#eeae4a_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(295deg,#fdf9f1_0%,#fbf4e8_38%,#f7dfa8_72%,#eeae4a_100%)]"
         />
 
         <FallingPotatoes />
