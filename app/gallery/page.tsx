@@ -28,6 +28,15 @@ export default function GalleryPage() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
 
+        {/* FallingPotatoes itself is `absolute inset-0` of its parent — on a
+            tall photo wall that parent's height runs way past the viewport,
+            so wrap it in a `fixed inset-0` box instead. That box IS the
+            viewport, so the drift stays visible the whole time you scroll,
+            not just for a page-height's worth of glimpse up top. */}
+        <div aria-hidden className="pointer-events-none fixed inset-0">
+          <FallingPotatoes />
+        </div>
+
         {/* Same bleeding-potato hero art as /home, pinned to the viewport
             (not `absolute` in the flow) so they stay in the corner instead of
             scrolling off with a tall photo wall. Fixed before PhotoWall in
