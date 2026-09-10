@@ -17,7 +17,7 @@ import { TopNav } from "@/components/site/TopNav";
 export default function Home() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-cream font-body text-ink">
-      <TopNav />
+      <TopNav liftBotForFooter />
 
       <main className="relative flex flex-1 flex-col overflow-hidden">
         {/* Warm cream-to-gold sweep, matching the conference site's own hero
