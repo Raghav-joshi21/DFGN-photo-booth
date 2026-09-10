@@ -426,36 +426,40 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
     if (!srcW || !srcH) return;
 
-    // Crop to the shape the guest is looking at — 9:16 on a phone, 16:9 on a
+    // Fit to the shape the guest is looking at — 9:16 on a phone, 16:9 on a
     // booth screen — read off the rendered box so the print is exactly the
-    // preview. Cover semantics, matching object-cover: fill the shape and trim
-    // the overflowing axis, centred. The stream was requested at this ratio,
-    // so in practice there is little to trim.
+    // preview. Contain semantics, matching object-contain: the whole frame is
+    // kept, letterboxed (not cropped) on whichever axis doesn't match, same
+    // as the on-screen preview. The stream was requested at this ratio, so in
+    // practice there is little or no letterboxing.
     const box = frameRef.current?.getBoundingClientRect();
     const targetAspect = box && box.height > 0 ? box.width / box.height : srcW / srcH;
 
-    let cropW = srcW;
-    let cropH = srcH;
-    if (srcW / srcH > targetAspect) cropW = srcH * targetAspect;
-    else cropH = srcW / targetAspect;
-    const sx = (srcW - cropW) / 2;
-    const sy = (srcH - cropH) / 2;
+    let canvasW = srcW;
+    let canvasH = srcH;
+    if (srcW / srcH > targetAspect) canvasH = srcW / targetAspect;
+    else canvasW = srcH * targetAspect;
+    const dx = (canvasW - srcW) / 2;
+    const dy = (canvasH - srcH) / 2;
 
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(cropW);
-    canvas.height = Math.round(cropH);
+    canvas.width = Math.round(canvasW);
+    canvas.height = Math.round(canvasH);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // Letterbox bars, matching the preview box's own bg-black.
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     // Not mirrored: the print should match what the guest saw on screen, and a
     // mirrored frame reverses any lens text along with it.
-    ctx.drawImage(source, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(source, 0, 0, srcW, srcH, dx, dy, srcW, srcH);
     // Face-tracked AR props live on their own canvas (see arCanvasRef), sized
-    // to the same video frame — composite it in with the same crop so the
+    // to the same video frame — composite it in at the same position so the
     // print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
     if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
-      ctx.drawImage(arCanvas, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(arCanvas, 0, 0, srcW, srcH, dx, dy, srcW, srcH);
     }
     // The event frame goes on last so it sits above everything, and is drawn
     // across the whole canvas rather than cropped: the canvas already has the
