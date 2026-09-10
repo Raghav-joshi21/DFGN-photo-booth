@@ -30,16 +30,20 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
   return (
     <header className="relative z-20 bg-ink">
       <div className="flex h-16 w-full items-center gap-2 px-4 sm:gap-6 sm:px-8">
-        {/* Wordmark */}
+        {/* Wordmark. The logo itself is transparent maroon text — unreadable
+            straight on the maroon bar — so it rides in a light chip, the way
+            it would print on paper. */}
         <Link href="/home" className="flex shrink-0 items-center gap-2.5">
-          <Image
-            src="/art/latvia-idfw26.png"
-            alt="Latvia — IDFW '26"
-            width={205}
-            height={78}
-            priority
-            className="h-8 w-auto rounded-md border-2 border-cream-light/60 shadow-[2px_2px_0_rgba(0,0,0,0.25)] sm:h-9"
-          />
+          <span className="flex items-center rounded-md border-2 border-cream-light/60 bg-cream-light px-2 py-1 shadow-[2px_2px_0_rgba(0,0,0,0.25)]">
+            <Image
+              src="/art/idfw26-latvia-logo.png"
+              alt="Latvia — IDFW '26"
+              width={2203}
+              height={863}
+              priority
+              className="h-6 w-auto sm:h-7"
+            />
+          </span>
           <span className="hidden font-display text-lg font-extrabold tracking-tight text-cream-light md:inline xl:text-xl">
             UnBoxed 2026
           </span>
