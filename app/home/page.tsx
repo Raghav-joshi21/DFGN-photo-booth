@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { FallingPotatoes } from "@/components/site/FallingPotatoes";
+import { FallingStickers } from "@/components/site/FallingStickers";
 import { PotatoSticker } from "@/components/site/PotatoSticker";
-import { StickerScatter } from "@/components/site/StickerScatter";
 import { TopNav } from "@/components/site/TopNav";
 
 /**
