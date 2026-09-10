@@ -29,21 +29,21 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
 
   return (
     <header className="relative z-20 bg-ink">
-      <div className="flex h-16 w-full items-center gap-2 px-4 sm:gap-6 sm:px-8">
-        {/* Wordmark. The logo itself is transparent maroon text — unreadable
-            straight on the maroon bar — so it rides in a light chip, the way
-            it would print on paper. */}
+      <div className="flex h-20 w-full items-center gap-2 px-4 sm:gap-6 sm:px-8">
+        {/* Wordmark — the knockout (cream-on-transparent) cut of the logo,
+            made for exactly this: sitting straight on the maroon bar with no
+            card behind it, unlike the maroon-on-transparent cut used where
+            the ground is light (see the booth rail panel). Sized up so it
+            reads as the header's anchor, not a small corner icon. */}
         <Link href="/home" className="flex shrink-0 items-center gap-2.5">
-          <span className="flex items-center rounded-md border-2 border-cream-light/60 bg-cream-light px-2 py-1 shadow-[2px_2px_0_rgba(0,0,0,0.25)]">
-            <Image
-              src="/art/idfw26-latvia-logo.png"
-              alt="Latvia — IDFW '26"
-              width={2203}
-              height={863}
-              priority
-              className="h-6 w-auto sm:h-7"
-            />
-          </span>
+          <Image
+            src="/art/idfw26-latvia-logo-light.png"
+            alt="Latvia — IDFW '26"
+            width={2263}
+            height={870}
+            priority
+            className="h-10 w-auto sm:h-12"
+          />
           <span className="hidden font-display text-lg font-extrabold tracking-tight text-cream-light md:inline xl:text-xl">
             UnBoxed 2026
           </span>
