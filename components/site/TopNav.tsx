@@ -27,57 +27,69 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
   const pathname = usePathname();
   const [helpOpen, setHelpOpen] = useState(false);
 
+  const logo = (
+    <Image
+      src="/art/idfw26-latvia-logo-light.png"
+      alt="Latvia — IDFW '26"
+      width={2263}
+      height={870}
+      priority
+      className="h-10 w-auto sm:h-12"
+    />
+  );
+
+  const navLinks = (
+    <>
+      {LINKS.map(({ href, label }) => {
+        // Every link is a distinct top-level path now, so a prefix match
+        // is enough — no "/" special case to get wrong.
+        const active = pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            aria-current={active ? "page" : undefined}
+            className={`relative shrink-0 rounded-full px-2 py-1.5 font-body text-[0.8125rem] font-bold transition-colors after:absolute after:-bottom-1 after:left-1/2 after:h-[2px] after:-translate-x-1/2 after:bg-cream-light after:transition-all sm:px-3 sm:text-base ${
+              active
+                ? "text-cream-light after:w-5"
+                : "text-cream-light/70 after:w-0 hover:bg-white/10 hover:text-cream-light"
+            }`}
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </>
+  );
+
   return (
     <header className="relative z-20 bg-ink">
       <div className="flex h-20 w-full items-center gap-2 px-4 sm:gap-6 sm:px-8">
-        {/* Wordmark — the knockout (cream-on-transparent) cut of the logo,
-            made for exactly this: sitting straight on the maroon bar with no
-            card behind it, unlike the maroon-on-transparent cut used where
-            the ground is light (see the booth rail panel). Sized up so it
-            reads as the header's anchor, not a small corner icon. */}
-        <Link href="/home" className="flex shrink-0 items-center gap-2.5">
-          <Image
-            src="/art/idfw26-latvia-logo-light.png"
-            alt="Latvia — IDFW '26"
-            width={2263}
-            height={870}
-            priority
-            className="h-10 w-auto sm:h-12"
-          />
-          <span className="hidden font-display text-lg font-extrabold tracking-tight text-cream-light md:inline xl:text-xl">
-            UnBoxed 2026
-          </span>
+        {/* Below `md`: logo pinned left, nav right after it — the centred
+            group below only kicks in once there's room to spare. */}
+        <Link href="/home" className="flex shrink-0 items-center gap-2.5 md:hidden">
+          {logo}
         </Link>
-
-        {/* Primary nav — dead-centred on the bar itself (not just the space
-            left over between the logo and the help icon, which are different
-            widths and would otherwise pull the "centre" off to one side). */}
-        <nav className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-2 md:absolute md:left-1/2 md:ml-0 md:-translate-x-1/2">
-          {LINKS.map(({ href, label }) => {
-            // Every link is a distinct top-level path now, so a prefix match
-            // is enough — no "/" special case to get wrong.
-            const active = pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={`relative shrink-0 rounded-full px-2 py-1.5 font-body text-[0.8125rem] font-bold transition-colors after:absolute after:-bottom-1 after:left-1/2 after:h-[2px] after:-translate-x-1/2 after:bg-cream-light after:transition-all sm:px-3 sm:text-base ${
-                  active
-                    ? "text-cream-light after:w-5"
-                    : "text-cream-light/70 after:w-0 hover:bg-white/10 hover:text-cream-light"
-                }`}
-              >
-                {label}
-              </Link>
-            );
-          })}
+        <nav className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-2 md:hidden">
+          {navLinks}
         </nav>
 
-        {/* Help. `md:ml-auto` pushes it to the bar's far right now that nav
-            is absolutely centred (and so no longer in flex flow to do that
-            push itself) at that breakpoint. */}
-        <div className="relative shrink-0 md:ml-auto">
+        {/* `md` and up: logo and nav travel together as one group, dead
+            centred on the bar — the logo sits right next to "Home" rather
+            than pinned to the far left. */}
+        <div className="hidden items-center gap-4 md:absolute md:left-1/2 md:flex md:-translate-x-1/2 lg:gap-6">
+          <Link href="/home" className="flex shrink-0 items-center gap-2.5">
+            {logo}
+          </Link>
+          <nav className="flex min-w-0 items-center gap-0.5 sm:gap-2">
+            {navLinks}
+          </nav>
+        </div>
+
+        {/* Help. `md:ml-auto` pushes it to the bar's far right — the centred
+            group above is out of flex flow (absolute) at that breakpoint, so
+            it no longer does that push itself. */}
+        <div className="relative shrink-0 ml-auto md:ml-auto">
           <button
             type="button"
             onClick={() => setHelpOpen((o) => !o)}
