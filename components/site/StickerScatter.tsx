@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { IdfwSticker, type IdfwStickerVariant } from "./IdfwSticker";
 
 /**
