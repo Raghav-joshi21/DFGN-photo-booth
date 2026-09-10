@@ -34,7 +34,7 @@ export function StickerScatter({ stickers }: { stickers: ScatterSticker[] }) {
               animationDuration: `${s.duration ?? 6}s`,
               animationDelay: `${s.delay ?? 0}s`,
               "--sticker-rotate": `${s.rotate ?? 0}deg`,
-            } as React.CSSProperties
+            } as CSSProperties
           }
         >
           <IdfwSticker variant={s.variant} className="h-full w-full" />
