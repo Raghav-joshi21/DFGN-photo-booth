@@ -852,6 +852,19 @@ function PauseIcon({ className = "" }: { className?: string }) {
   );
 }
 
+/** Four corner brackets — expand when off, pinch inward when already
+ *  fullscreen (so the icon itself hints at "exit"). */
+function FullscreenIcon({ className = "", exit = false }: { className?: string; exit?: boolean }) {
+  const d = exit
+    ? "M9 4H5v4M15 4h4v4M9 20H5v-4M15 20h4v-4"
+    : "M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4";
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} role="presentation">
+      <path d={d} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function DownloadIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} role="presentation">
