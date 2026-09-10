@@ -68,6 +68,8 @@ export default function Home() {
             experience.
           </p>
 
+          <span aria-hidden className="mt-5 h-1 w-16 rounded-full bg-ink sm:mt-6" />
+
           {/* The two ways in */}
           <div className="mt-8 grid w-full gap-5 sm:mt-10 sm:gap-6 md:grid-cols-2">
             {/* Capture */}
