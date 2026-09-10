@@ -673,22 +673,32 @@ function Slideshow({
             </div>
           ) : null}
 
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <AnimatePresence initial={false}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <motion.img
-                key={photo.id}
-                src={photo.editedUrl ?? photo.originalUrl}
-                alt=""
-                draggable={false}
-                initial={slide.initial}
-                animate={slide.animate}
-                exit={slide.exit}
-                transition={slide.transition}
-                style={{ rotate: `${tiltFor(photo.id) * 1.6}deg` }}
-                className="absolute max-h-[86vh] max-w-[90vw] rounded-lg border-[6px] border-cream-light object-contain shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)]"
-              />
-            </AnimatePresence>
+          {/* Coverflow-style: the neighbours peek in from the sides, so the
+              wall reads as one continuous strip rather than a single slide
+              in a void. Hidden below `lg` — there's no room to spare, and the
+              swipeable Lightbox already covers phones/tablets. */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 px-3 lg:gap-6 lg:px-8">
+            <SidePeek photo={prevPhoto} onClick={() => go(-1)} />
+
+            <div className="relative flex h-full min-w-0 flex-1 items-center justify-center">
+              <AnimatePresence initial={false}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <motion.img
+                  key={photo.id}
+                  src={photo.editedUrl ?? photo.originalUrl}
+                  alt=""
+                  draggable={false}
+                  initial={slide.initial}
+                  animate={slide.animate}
+                  exit={slide.exit}
+                  transition={slide.transition}
+                  style={{ rotate: `${tiltFor(photo.id) * 1.6}deg` }}
+                  className="absolute max-h-[82vh] max-w-[86vw] rounded-lg border-[6px] border-cream-light object-contain shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] lg:max-w-[64vw]"
+                />
+              </AnimatePresence>
+            </div>
+
+            <SidePeek photo={nextPhoto} onClick={() => go(1)} />
           </div>
 
           <div
