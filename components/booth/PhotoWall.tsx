@@ -743,7 +743,7 @@ function Slideshow({
               onClose();
             }}
             aria-label="Close slideshow"
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-ink bg-cream-light text-lg text-ink shadow-[3px_3px_0_rgba(0,0,0,0.4)] transition-transform hover:scale-105"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/45 text-lg text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-105"
           >
             ✕
           </button>
