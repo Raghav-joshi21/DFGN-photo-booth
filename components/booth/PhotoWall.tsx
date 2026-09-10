@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
+import Image from "next/image";
+
 import { PotatoFrame } from "@/components/booth/PotatoFrame";
+import { FallingPotatoes } from "@/components/site/FallingPotatoes";
+import { FallingStickers } from "@/components/site/FallingStickers";
 import type { Photo } from "@/types";
 
 /**
