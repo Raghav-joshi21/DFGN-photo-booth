@@ -33,14 +33,15 @@ export default function Home() {
         <FallingStickers />
 
         {/* The conference site's big bleeding-potato hero art, tucked in the
-            corner the way the real UnBoxed pages run it off-canvas. */}
+            corner the way the real UnBoxed pages run it off-canvas. Bottom
+            LEFT deliberately — PotatoBot already owns the bottom-right. */}
         <Image
           src="/art/potato-hero.png"
           alt=""
           aria-hidden
           width={392}
           height={348}
-          className="pointer-events-none absolute -bottom-14 -right-16 hidden w-64 rotate-[8deg] opacity-95 drop-shadow-xl sm:block md:-right-20 md:w-80 lg:w-96"
+          className="pointer-events-none absolute -bottom-14 -left-16 hidden w-64 rotate-[-8deg] opacity-95 drop-shadow-xl sm:block md:-left-20 md:w-80 lg:w-96"
         />
 
         <div className="relative mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 py-10 sm:py-14">
