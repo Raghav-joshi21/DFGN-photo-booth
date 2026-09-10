@@ -28,7 +28,7 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
   const [helpOpen, setHelpOpen] = useState(false);
 
   return (
-    <header className="relative z-20 border-b-2 border-ink bg-gradient-to-r from-cream-light via-cream-light to-cream">
+    <header className="relative z-20 bg-ink">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-6 sm:px-5">
         {/* Wordmark */}
         <Link href="/home" className="flex shrink-0 items-center gap-2.5">
@@ -38,9 +38,9 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
             width={205}
             height={78}
             priority
-            className="h-8 w-auto rounded-md border-2 border-ink shadow-[2px_2px_0_var(--color-ink)] sm:h-9"
+            className="h-8 w-auto rounded-md border-2 border-cream-light/60 shadow-[2px_2px_0_rgba(0,0,0,0.25)] sm:h-9"
           />
-          <span className="hidden font-display text-lg font-extrabold tracking-tight text-ink md:inline xl:text-xl">
+          <span className="hidden font-display text-lg font-extrabold tracking-tight text-cream-light md:inline xl:text-xl">
             UnBoxed 2026
           </span>
         </Link>
@@ -56,10 +56,10 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`shrink-0 rounded-full px-2 py-1.5 font-body text-[0.8125rem] font-bold transition-colors sm:px-3 sm:text-base ${
+                className={`relative shrink-0 rounded-full px-2 py-1.5 font-body text-[0.8125rem] font-bold transition-colors after:absolute after:-bottom-1 after:left-1/2 after:h-[2px] after:-translate-x-1/2 after:bg-cream-light after:transition-all sm:px-3 sm:text-base ${
                   active
-                    ? "text-brand-orange"
-                    : "text-ink/75 hover:bg-ink/5 hover:text-ink"
+                    ? "text-cream-light after:w-5"
+                    : "text-cream-light/70 after:w-0 hover:bg-white/10 hover:text-cream-light"
                 }`}
               >
                 {label}
@@ -75,7 +75,7 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
             onClick={() => setHelpOpen((o) => !o)}
             aria-expanded={helpOpen}
             aria-label="How the photo booth works"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/5 hover:text-ink"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-cream-light/80 transition-colors hover:bg-white/10 hover:text-cream-light"
           >
             <QuestionMark className="h-6 w-6" />
           </button>
