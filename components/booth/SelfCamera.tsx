@@ -642,12 +642,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           ref={frameRef}
           className="relative mx-auto aspect-[9/16] max-h-full w-full max-w-[calc(100cqh*9/16)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
         >
-        {/* Live preview (hidden once we have a capture). */}
+        {/* Live preview (hidden once we have a capture). object-contain, not
+            -cover: the whole shot is kept on screen, letterboxed rather than
+            cropped, against the box's own bg-black. */}
         <video
           ref={videoRef}
           playsInline
           muted
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain"
           hidden={phase === "captured" || kitReady}
         />
 
@@ -655,16 +657,18 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             exists before the session boots; only shown once it is live. */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain"
           hidden={!kitReady || phase === "captured"}
         />
 
         {/* Face-tracked AR props (ours — see lib/ar), painted on a transparent
             overlay above whichever preview layer is showing. Sized to the
-            video's own resolution so its landmark coordinates line up. */}
+            video's own resolution so its landmark coordinates line up —
+            object-contain here too, so it letterboxes identically and stays
+            pixel-aligned with the layer underneath. */}
         <canvas
           ref={arCanvasRef}
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
           hidden={phase === "captured"}
         />
 
