@@ -46,7 +46,7 @@ const CYCLE_MS = 17000;
 /** Matches Tailwind's `lg` — the width at which the corner is spare room. */
 const WIDE_ENOUGH = "(min-width: 1024px)";
 
-export function PotatoBot() {
+export function PotatoBot({ liftForFooter = false }: { liftForFooter?: boolean } = {}) {
   const [mounted, setMounted] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [fact, setFact] = useState<number | null>(null);
