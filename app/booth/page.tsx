@@ -181,12 +181,12 @@ function IdleScreen() {
             block below takes whatever height is left. */}
         <div className="flex shrink-0 flex-col items-center justify-start gap-[clamp(0.25rem,1vh,0.5rem)] px-[clamp(0.75rem,1.5vw,1.25rem)] pb-3 pt-[clamp(1rem,6vh,4rem)]">
           <Image
-            src="/art/latvia-idfw26.png"
+            src="/art/idfw26-latvia-logo.png"
             alt="Latvia — IDFW '26"
-            width={205}
-            height={78}
+            width={2203}
+            height={863}
             priority
-            className="w-[clamp(7rem,55%,12rem)] rounded-lg border-2 border-ink shadow-[3px_3px_0_var(--color-ink)]"
+            className="w-[clamp(7rem,55%,12rem)] rounded-lg border-2 border-ink bg-cream-light px-2 py-1.5 shadow-[3px_3px_0_var(--color-ink)]"
           />
 
           <p className="font-display text-[clamp(1rem,2.6vh,1.875rem)] font-extrabold uppercase leading-tight tracking-tight text-ink">
