@@ -89,7 +89,7 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
         {/* Help. `md:ml-auto` pushes it to the bar's far right — the centred
             group above is out of flex flow (absolute) at that breakpoint, so
             it no longer does that push itself. */}
-        <div className="relative shrink-0 ml-auto md:ml-auto">
+        <div className="relative shrink-0 ml-auto">
           <button
             type="button"
             onClick={() => setHelpOpen((o) => !o)}
