@@ -599,6 +599,11 @@ function Slideshow({
   }, [open, i, count]);
 
   const photo = count > 0 ? photos[Math.min(i, count - 1)] : null;
+  // Peeking side frames — what's coming, coverflow-style. Wrap so they're
+  // always populated (even at the very ends of the wall) as long as there's
+  // more than one photo to show.
+  const prevPhoto = count > 1 ? photos[(i - 1 + count) % count] : null;
+  const nextPhoto = count > 1 ? photos[(i + 1) % count] : null;
   const dir = i % 2 === 0 ? 1 : -1;
 
   const slide = reduce
