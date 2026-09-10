@@ -14,7 +14,7 @@ import Image from "next/image";
 export function SiteFooter() {
   return (
     <footer className="border-t-2 border-ink bg-brand-yellow">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-5 px-6 py-6 sm:justify-between sm:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-5 px-6 py-6 sm:px-8">
         <Image
           src="/art/idfw26-latvia-logo.png"
           alt="Latvia — IDFW '26"
