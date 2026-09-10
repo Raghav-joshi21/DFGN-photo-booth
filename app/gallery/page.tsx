@@ -40,7 +40,7 @@ export default function GalleryPage() {
           aria-hidden
           width={392}
           height={348}
-          className="pointer-events-none fixed -bottom-12 -left-14 z-0 hidden w-48 rotate-[-8deg] opacity-90 drop-shadow-lg lg:block xl:w-60"
+          className="pointer-events-none fixed -bottom-12 -left-14 hidden w-48 rotate-[-8deg] opacity-90 drop-shadow-lg lg:block xl:w-60"
         />
         <Image
           src="/art/potato-hero-alt.png"
