@@ -41,6 +41,53 @@ export default function BoothPage() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
+
+        {/* Same potato-sheet art as home/gallery. This layout is a packed
+            three-column kiosk screen with almost no open background, so these
+            stay low-opacity and sit behind IdleScreen in paint order (earlier
+            in source, no z-index) — a faint watermark rather than something
+            competing with the camera or the QR panel. */}
+        <Image
+          src="/art/potato-hero-alt.png"
+          alt=""
+          aria-hidden
+          width={277}
+          height={246}
+          className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[26vh] max-w-[20rem] -translate-x-1/2 -translate-y-1/2 rotate-[-6deg] opacity-[0.08] sm:block"
+        />
+        <Image
+          src="/art/potato-hero.png"
+          alt=""
+          aria-hidden
+          width={392}
+          height={348}
+          className="pointer-events-none absolute -left-10 -top-10 hidden w-28 rotate-[10deg] opacity-40 sm:block md:w-36"
+        />
+        <Image
+          src="/art/potato-hero-alt.png"
+          alt=""
+          aria-hidden
+          width={277}
+          height={246}
+          className="pointer-events-none absolute -right-8 -top-8 hidden w-24 -scale-x-100 rotate-[8deg] opacity-40 sm:block md:w-32"
+        />
+        <Image
+          src="/art/potato-hero.png"
+          alt=""
+          aria-hidden
+          width={392}
+          height={348}
+          className="pointer-events-none absolute -bottom-10 -right-10 hidden w-28 -scale-x-100 rotate-[-10deg] opacity-40 sm:block md:w-36"
+        />
+        <Image
+          src="/art/potato-hero-alt.png"
+          alt=""
+          aria-hidden
+          width={277}
+          height={246}
+          className="pointer-events-none absolute -bottom-8 -left-8 hidden w-24 rotate-[-4deg] opacity-40 sm:block md:w-32"
+        />
+
         <IdleScreen />
       </main>
     </div>
