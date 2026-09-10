@@ -4,12 +4,12 @@ import Image from "next/image";
  * Partner-strip footer, styled after the conference site's own (gold bar,
  * wordmark on the left, partner marks trailing off to the right).
  *
- * The reference footer carries real partner logos. We have the real RTU mark
- * and DFGN's own (public/art/rtu-logo.png, dfgn-logo.png) — RTU Innovations
- * and Aalto University don't have an asset file yet, so recreating their
- * logo marks from a screenshot would misrepresent trademarks that aren't
- * ours to draw; those two stay plain text credits until a real file shows up
- * (swap `PartnerMark` for an <Image> then).
+ * Real logo files for RTU, Aalto University, and DFGN (white cut, made for
+ * sitting on a colour like this bar). RTU Innovations doesn't have a distinct
+ * asset yet — the files supplied for it were duplicates of the plain RTU
+ * mark — so it stays a plain text credit until a real one shows up (swap
+ * `PartnerMark` for an <Image> then; recreating its logo mark from a
+ * screenshot would misrepresent a trademark that isn't ours to draw).
  */
 export function SiteFooter() {
   return (
@@ -32,13 +32,19 @@ export function SiteFooter() {
             className="h-7 w-auto sm:h-8"
           />
           <PartnerMark eyebrow="RTU" name="Innovations" />
-          <PartnerMark eyebrow="Aalto" name="University" />
           <Image
-            src="/art/dfgn-logo.png"
+            src="/art/aalto-logo.png"
+            alt="Aalto University"
+            width={112}
+            height={91}
+            className="h-8 w-auto sm:h-9"
+          />
+          <Image
+            src="/art/dfgn-logo-white.png"
             alt="Design Factory Global Network"
-            width={432}
-            height={432}
-            className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
+            width={66}
+            height={64}
+            className="h-8 w-auto sm:h-9"
           />
         </div>
       </div>
