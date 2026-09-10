@@ -103,7 +103,9 @@ export function PotatoBot({ liftForFooter = false }: { liftForFooter?: boolean }
   if (!mounted || dismissed || !wideEnough) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-5 z-50 print:hidden">
+    <div
+      className={`pointer-events-none fixed right-5 z-50 print:hidden ${liftForFooter ? "bottom-28" : "bottom-5"}`}
+    >
       <div className="relative">
         {fact !== null ? (
           <div
