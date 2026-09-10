@@ -724,6 +724,13 @@ function Slideshow({
             <span className="px-2 font-display text-xs font-bold text-ink/70">
               {Math.min(i + 1, count)} / {count}
             </span>
+            <span className="h-5 w-px bg-ink/15" aria-hidden />
+            <SlideCtl
+              label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              onClick={toggleFullscreen}
+            >
+              <FullscreenIcon className="h-4 w-4" exit={isFullscreen} />
+            </SlideCtl>
           </div>
 
           <button
