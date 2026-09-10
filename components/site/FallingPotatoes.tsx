@@ -43,7 +43,7 @@ const DROPS: Drop[] = [
   { left: 27, size: "h-12 w-12", duration: 30, delay: -21, opacity: 0.3, sway: 8, spin: 25, variant: "scientist" },
   { left: 30, size: "h-7 w-7", duration: 21, delay: -4, opacity: 0.26, sway: 6.5, spin: 13, variant: "badge" },
   { left: 33, size: "h-6 w-6", duration: 36, delay: -6, opacity: 0.24, sway: 5.5, spin: 16, variant: "jumper" },
-  { left: 36, size: "h-15 w-15", duration: 24, delay: -25, opacity: 0.42, sway: 7, spin: 20, variant: "party" },
+  { left: 36, size: "h-14 w-14", duration: 24, delay: -25, opacity: 0.42, sway: 7, spin: 20, variant: "party" },
   { left: 39, size: "h-16 w-16", duration: 24, delay: -5, opacity: 0.4, sway: 6.5, spin: 20, variant: "party" },
   { left: 42, size: "h-9 w-9", duration: 34, delay: -12, opacity: 0.28, sway: 4, spin: 24, variant: "scientist" },
   { left: 45, size: "h-10 w-10", duration: 29, delay: -18, opacity: 0.32, sway: 4, spin: 11, variant: "badge" },
