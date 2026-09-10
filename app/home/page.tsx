@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { FallingPotatoes } from "@/components/site/FallingPotatoes";
 import { PotatoSticker } from "@/components/site/PotatoSticker";
+import { StickerScatter } from "@/components/site/StickerScatter";
 import { TopNav } from "@/components/site/TopNav";
 
 /**
