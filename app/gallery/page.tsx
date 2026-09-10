@@ -27,6 +27,30 @@ export default function GalleryPage() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_-10%,#fdf9f1_0%,#fbf4e8_45%,#e9eede_100%)]"
         />
 
+        {/* Same bleeding-potato hero art as /home, pinned to the viewport
+            (not `absolute` in the flow) so they stay in the corner instead of
+            scrolling off with a tall photo wall. Fixed before PhotoWall in
+            source order, so a card always paints over a potato at the edge
+            rather than the other way round. PotatoBot is hidden on this page
+            (`hideBot`), so bottom-right stays free — unlike home, no need to
+            dodge it. */}
+        <Image
+          src="/art/potato-hero.png"
+          alt=""
+          aria-hidden
+          width={392}
+          height={348}
+          className="pointer-events-none fixed -bottom-12 -left-14 z-0 hidden w-48 rotate-[-8deg] opacity-90 drop-shadow-lg lg:block xl:w-60"
+        />
+        <Image
+          src="/art/potato-hero-alt.png"
+          alt=""
+          aria-hidden
+          width={277}
+          height={246}
+          className="pointer-events-none fixed -top-8 -left-10 z-0 hidden w-32 rotate-[6deg] opacity-85 drop-shadow-md lg:block xl:w-40"
+        />
+
         <div className="relative mx-auto w-full max-w-[112rem] px-3 py-8 sm:px-8 sm:py-12">
           <header className="relative mb-8 text-center">
             <IdfwSticker
