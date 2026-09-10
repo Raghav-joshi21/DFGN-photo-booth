@@ -135,7 +135,21 @@ function IdleScreen() {
       {/* Camera — the main event. */}
       {/* pt on small screens clears the Back button, which sits over this
           column once the wall and rail are hidden. */}
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center pt-11 sm:pt-0">
+      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center pt-11 sm:pt-0">
+        {/* The "centre" potato: the header + camera block is vertically
+            centred in this column, so whatever's shorter than the column
+            leaves open margin above the header — that's genuinely visible
+            background, unlike the corner ones above which sit behind the
+            opaque wall/rail columns at this width. */}
+        <Image
+          src="/art/potato-hero-alt.png"
+          alt=""
+          aria-hidden
+          width={277}
+          height={246}
+          className="pointer-events-none absolute left-1/2 top-1 hidden w-16 -translate-x-1/2 rotate-[-5deg] opacity-60 drop-shadow-sm sm:top-2 sm:block sm:w-20 md:w-24"
+        />
+
         <header className="mb-[clamp(0.5rem,1.2vh,1rem)] flex shrink-0 items-center gap-3">
           <div className="h-[clamp(2.25rem,4vh,3rem)] w-[clamp(2.25rem,4vh,3rem)] shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
             <Clip
