@@ -48,7 +48,7 @@ export default function GalleryPage() {
           aria-hidden
           width={277}
           height={246}
-          className="pointer-events-none fixed -top-8 -left-10 z-0 hidden w-32 rotate-[6deg] opacity-85 drop-shadow-md lg:block xl:w-40"
+          className="pointer-events-none fixed -top-8 -left-10 hidden w-32 rotate-[6deg] opacity-85 drop-shadow-md lg:block xl:w-40"
         />
 
         <div className="relative mx-auto w-full max-w-[112rem] px-3 py-8 sm:px-8 sm:py-12">
