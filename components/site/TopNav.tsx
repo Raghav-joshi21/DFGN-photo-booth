@@ -22,8 +22,15 @@ const LINKS = [
  * `hideBot` drops the corner sustainability mascot — the gallery is a wall of
  * photos meant to be looked at, and a talking potato hopping over the corner
  * competes with it.
+ *
+ * `liftBotForFooter` raises it clear of a page footer's partner-logo strip —
+ * both are fixed/pinned to the bottom-right-ish corner independently, so
+ * without this they'd otherwise overlap once a footer is in view.
  */
-export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
+export function TopNav({
+  hideBot = false,
+  liftBotForFooter = false,
+}: { hideBot?: boolean; liftBotForFooter?: boolean } = {}) {
   const pathname = usePathname();
   const [helpOpen, setHelpOpen] = useState(false);
 
