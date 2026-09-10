@@ -525,6 +525,29 @@ function Slideshow({
   const [playing, setPlaying] = useState(true);
   const count = photos.length;
 
+  // Real Fullscreen API, not just a fixed overlay — this is meant to be
+  // handed to a big screen. Best-effort: some browsers (notably iOS Safari)
+  // don't support it at all, so the toggle just no-ops there rather than
+  // throwing, and the slideshow works fine without it either way.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === containerRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      containerRef.current?.requestFullscreen?.().catch(() => {});
+    }
+  }, []);
+  // Leaving the slideshow shouldn't strand the browser in fullscreen.
+  useEffect(() => {
+    if (!open && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }, [open]);
+
   // Jump to the requested start photo (or the top of the wall) each time the
   // show opens.
   useEffect(() => {
