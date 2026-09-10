@@ -599,10 +599,13 @@ function Slideshow({
   }, [open, i, count]);
 
   const photo = count > 0 ? photos[Math.min(i, count - 1)] : null;
+  // Peeking side frames — what's coming, coverflow-style. Wrap so they're
+  // always populated (even at the very ends of the wall) as long as there's
+  // more than one photo to show.
+  const prevPhoto = count > 1 ? photos[(i - 1 + count) % count] : null;
+  const nextPhoto = count > 1 ? photos[(i + 1) % count] : null;
   const dir = i % 2 === 0 ? 1 : -1;
 
-  // True full-bleed now — object-cover fills the whole screen edge to edge,
-  // so the Ken Burns push can be bigger without ever showing a gap.
   const slide = reduce
     ? {
         initial: { opacity: 0 },
@@ -611,8 +614,8 @@ function Slideshow({
         transition: { duration: 0.6, ease: "easeInOut" as const },
       }
     : {
-        initial: { opacity: 0, scale: 1.06 },
-        animate: { opacity: 1, scale: 1.18, x: -26 * dir, y: -14 * dir },
+        initial: { opacity: 0, scale: 1, x: 34 * dir },
+        animate: { opacity: 1, scale: 1.12, x: -20 * dir },
         exit: { opacity: 0, transition: { duration: 0.9, ease: "easeInOut" as const } },
         transition: {
           opacity: { duration: 1, ease: "easeInOut" as const },
@@ -635,46 +638,12 @@ function Slideshow({
           className="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-[radial-gradient(140%_120%_at_50%_45%,#3a0e10_0%,#1c0607_55%,#080202_100%)]"
         >
           {/* Ambient brand backdrop — the same falling potatoes/stickers as
-              the rest of the site. With the photo full-bleed over it this
-              only ever shows through in the split-second cross-dissolve
-              between two slides, which is exactly the point: a flash of
-              "the booth" between shots rather than a dead black gap. */}
+              the rest of the site, dialled right down so the room reads as
+              "the booth, at night" instead of a generic black lightbox. */}
           <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.16] mix-blend-screen">
             <FallingPotatoes />
             <FallingStickers />
           </div>
-
-          {/* The photo itself — full-bleed, edge to edge, cropped (not
-              letterboxed) to fill the screen exactly like a big-screen
-              slideshow should. */}
-          <div className="absolute inset-0">
-            <AnimatePresence initial={false}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <motion.img
-                key={photo.id}
-                src={photo.editedUrl ?? photo.originalUrl}
-                alt=""
-                draggable={false}
-                initial={slide.initial}
-                animate={slide.animate}
-                exit={slide.exit}
-                transition={slide.transition}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            </AnimatePresence>
-          </div>
-
-          {/* Scrims: the chip, progress bar, and controls float directly on
-              top of the photo now, so they need a dark gradient underneath
-              to stay legible over a bright shot. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-36 bg-gradient-to-b from-black/65 to-transparent"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 bg-gradient-to-t from-black/70 to-transparent"
-          />
 
           {/* Brand chip, top-left — this is still "the booth", just handed to
               a big screen. */}
@@ -685,15 +654,15 @@ function Slideshow({
               aria-hidden
               width={2263}
               height={870}
-              className="h-6 w-auto opacity-90 drop-shadow sm:h-7"
+              className="h-6 w-auto opacity-90 sm:h-7"
             />
-            <span className="hidden font-display text-xs font-bold uppercase tracking-wide text-cream-light/70 drop-shadow sm:inline">
+            <span className="hidden font-display text-xs font-bold uppercase tracking-wide text-cream-light/60 sm:inline">
               Gallery Slideshow
             </span>
           </div>
 
           {playing && count > 1 ? (
-            <div className="absolute inset-x-4 top-4 z-10 h-1.5 overflow-hidden rounded-full bg-white/20 sm:inset-x-6">
+            <div className="absolute inset-x-4 top-4 z-10 h-1.5 overflow-hidden rounded-full bg-white/10 sm:inset-x-6">
               <motion.div
                 key={`${i}-bar`}
                 className="h-full origin-left rounded-full bg-gradient-to-r from-brand-orange to-brand-yellow"
@@ -704,9 +673,37 @@ function Slideshow({
             </div>
           ) : null}
 
+          {/* Coverflow-style: the neighbours peek in from the sides, so the
+              wall reads as one continuous strip rather than a single slide
+              in a void. Hidden below `lg` — there's no room to spare, and the
+              swipeable Lightbox already covers phones/tablets. */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 px-3 lg:gap-6 lg:px-8">
+            <SidePeek photo={prevPhoto} onClick={() => go(-1)} />
+
+            <div className="relative flex h-full min-w-0 flex-1 items-center justify-center">
+              <AnimatePresence initial={false}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <motion.img
+                  key={photo.id}
+                  src={photo.editedUrl ?? photo.originalUrl}
+                  alt=""
+                  draggable={false}
+                  initial={slide.initial}
+                  animate={slide.animate}
+                  exit={slide.exit}
+                  transition={slide.transition}
+                  style={{ rotate: `${tiltFor(photo.id) * 1.6}deg` }}
+                  className="absolute max-h-[82vh] max-w-[86vw] rounded-lg border-[6px] border-cream-light object-contain shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] lg:max-w-[64vw]"
+                />
+              </AnimatePresence>
+            </div>
+
+            <SidePeek photo={nextPhoto} onClick={() => go(1)} />
+          </div>
+
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/25 bg-black/45 px-2 py-1.5 shadow-lg backdrop-blur-sm"
+            className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border-[3px] border-ink bg-cream-light px-2 py-1.5 shadow-[3px_3px_0_rgba(0,0,0,0.4)]"
           >
             <SlideCtl label="Previous photo" onClick={() => go(-1)}>
               <Chevron side="left" />
@@ -724,10 +721,10 @@ function Slideshow({
             <SlideCtl label="Next photo" onClick={() => go(1)}>
               <Chevron side="right" />
             </SlideCtl>
-            <span className="px-2 font-display text-xs font-bold text-white/80">
+            <span className="px-2 font-display text-xs font-bold text-ink/70">
               {Math.min(i + 1, count)} / {count}
             </span>
-            <span className="h-5 w-px bg-white/20" aria-hidden />
+            <span className="h-5 w-px bg-ink/15" aria-hidden />
             <SlideCtl
               label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
               onClick={toggleFullscreen}
@@ -743,7 +740,7 @@ function Slideshow({
               onClose();
             }}
             aria-label="Close slideshow"
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/45 text-lg text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-105"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-ink bg-cream-light text-lg text-ink shadow-[3px_3px_0_rgba(0,0,0,0.4)] transition-transform hover:scale-105"
           >
             ✕
           </button>
@@ -768,9 +765,37 @@ function SlideCtl({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
+      className="flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/10"
     >
       {children}
+    </button>
+  );
+}
+
+/**
+ * A neighbouring photo, peeking in from the slideshow's edge — the
+ * "coverflow" side frame. Purely decorative-but-clickable: tapping one jumps
+ * straight to it, same as the arrow it sits next to.
+ */
+function SidePeek({ photo, onClick }: { photo: Photo | null; onClick: () => void }) {
+  if (!photo) return null;
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-label="Jump to this photo"
+      className="pointer-events-auto relative hidden h-[64vh] w-[14vw] shrink-0 overflow-hidden rounded-lg border-4 border-cream-light/30 opacity-45 blur-[1.5px] grayscale-[0.15] transition-all duration-300 hover:opacity-70 hover:blur-0 hover:grayscale-0 lg:block"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={photo.editedUrl ?? photo.originalUrl}
+        alt=""
+        draggable={false}
+        className="h-full w-full object-cover"
+      />
     </button>
   );
 }
