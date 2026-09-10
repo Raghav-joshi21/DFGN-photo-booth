@@ -43,18 +43,12 @@ export default function BoothPage() {
         />
 
         {/* Same potato-sheet art as home/gallery. This layout is a packed
-            three-column kiosk screen with almost no open background, so these
-            stay low-opacity and sit behind IdleScreen in paint order (earlier
-            in source, no z-index) — a faint watermark rather than something
-            competing with the camera or the QR panel. */}
-        <Image
-          src="/art/potato-hero-alt.png"
-          alt=""
-          aria-hidden
-          width={277}
-          height={246}
-          className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[26vh] max-w-[20rem] -translate-x-1/2 -translate-y-1/2 rotate-[-6deg] opacity-[0.08] sm:block"
-        />
+            three-column kiosk screen with almost no open background — the
+            wall and rail columns are opaque and sit right at the page edges —
+            so these four are a bonus that only shows once those columns hide
+            below `lg`. The one that's always visible (the "centre" one) lives
+            inside IdleScreen's camera column instead, where there's real open
+            margin above the header. */}
         <Image
           src="/art/potato-hero.png"
           alt=""
