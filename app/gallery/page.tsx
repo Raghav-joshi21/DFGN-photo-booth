@@ -30,7 +30,6 @@ export default function GalleryPage() {
             <IdfwSticker
               variant="star-maroon"
               rotate={-10}
-              aria-hidden
               className="pointer-events-none absolute left-[calc(50%-9.5rem)] top-1 hidden h-8 w-8 sm:block sm:left-[calc(50%-13rem)] sm:h-10 sm:w-10"
             />
             <h1 className="text-shadow-brand font-display text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
