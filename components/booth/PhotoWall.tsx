@@ -599,13 +599,10 @@ function Slideshow({
   }, [open, i, count]);
 
   const photo = count > 0 ? photos[Math.min(i, count - 1)] : null;
-  // Peeking side frames — what's coming, coverflow-style. Wrap so they're
-  // always populated (even at the very ends of the wall) as long as there's
-  // more than one photo to show.
-  const prevPhoto = count > 1 ? photos[(i - 1 + count) % count] : null;
-  const nextPhoto = count > 1 ? photos[(i + 1) % count] : null;
   const dir = i % 2 === 0 ? 1 : -1;
 
+  // True full-bleed now — object-cover fills the whole screen edge to edge,
+  // so the Ken Burns push can be bigger without ever showing a gap.
   const slide = reduce
     ? {
         initial: { opacity: 0 },
@@ -614,8 +611,8 @@ function Slideshow({
         transition: { duration: 0.6, ease: "easeInOut" as const },
       }
     : {
-        initial: { opacity: 0, scale: 1, x: 34 * dir },
-        animate: { opacity: 1, scale: 1.12, x: -20 * dir },
+        initial: { opacity: 0, scale: 1.06 },
+        animate: { opacity: 1, scale: 1.18, x: -26 * dir, y: -14 * dir },
         exit: { opacity: 0, transition: { duration: 0.9, ease: "easeInOut" as const } },
         transition: {
           opacity: { duration: 1, ease: "easeInOut" as const },
