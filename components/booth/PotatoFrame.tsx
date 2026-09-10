@@ -67,13 +67,16 @@ export function PotatoFrame({
 
       {/* Caption strip */}
       <div className="absolute inset-x-2 bottom-1.5 flex items-center justify-between">
+        {/* The new DFGN mark is white-on-transparent, made for a dark or
+            colour ground (see the footer) — inverted here since this strip
+            sits on a plain white card. */}
         <Image
-          src="/art/dfgn-logo.png"
+          src="/art/dfgn-logo-white.png"
           alt=""
           aria-hidden
-          width={447}
-          height={447}
-          className="h-3.5 w-3.5 opacity-70"
+          width={66}
+          height={64}
+          className="h-3.5 w-auto opacity-70 invert"
         />
         <span className="font-display text-[10px] font-extrabold uppercase tracking-wide text-ink/45">
           UnBoxed 2026
