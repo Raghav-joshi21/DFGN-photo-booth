@@ -606,16 +606,42 @@ function Slideshow({
           role="dialog"
           aria-modal="true"
           aria-label="Gallery slideshow"
-          className="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-black"
+          className="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-[radial-gradient(140%_120%_at_50%_45%,#3a0e10_0%,#1c0607_55%,#080202_100%)]"
         >
-          {playing && count > 1 ? (
-            <motion.div
-              key={`${i}-bar`}
-              className="absolute inset-x-0 top-0 z-10 h-1 origin-left bg-brand-orange"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: SLIDE_MS / 1000, ease: "linear" }}
+          {/* Ambient brand backdrop — the same falling potatoes/stickers as
+              the rest of the site, dialled right down so the room reads as
+              "the booth, at night" instead of a generic black lightbox. */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.16] mix-blend-screen">
+            <FallingPotatoes />
+            <FallingStickers />
+          </div>
+
+          {/* Brand chip, top-left — this is still "the booth", just handed to
+              a big screen. */}
+          <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2">
+            <Image
+              src="/art/idfw26-latvia-logo-light.png"
+              alt=""
+              aria-hidden
+              width={2263}
+              height={870}
+              className="h-6 w-auto opacity-90 sm:h-7"
             />
+            <span className="hidden font-display text-xs font-bold uppercase tracking-wide text-cream-light/60 sm:inline">
+              Gallery Slideshow
+            </span>
+          </div>
+
+          {playing && count > 1 ? (
+            <div className="absolute inset-x-4 top-4 z-10 h-1.5 overflow-hidden rounded-full bg-white/10 sm:inset-x-6">
+              <motion.div
+                key={`${i}-bar`}
+                className="h-full origin-left rounded-full bg-gradient-to-r from-brand-orange to-brand-yellow"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: SLIDE_MS / 1000, ease: "linear" }}
+              />
+            </div>
           ) : null}
 
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -630,14 +656,15 @@ function Slideshow({
                 animate={slide.animate}
                 exit={slide.exit}
                 transition={slide.transition}
-                className="absolute max-h-[92vh] max-w-[94vw] object-contain shadow-2xl"
+                style={{ rotate: `${tiltFor(photo.id) * 1.6}deg` }}
+                className="absolute max-h-[86vh] max-w-[90vw] rounded-lg border-[6px] border-cream-light object-contain shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)]"
               />
             </AnimatePresence>
           </div>
 
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border-2 border-white/25 bg-black/50 px-2 py-1.5 backdrop-blur-sm"
+            className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border-[3px] border-ink bg-cream-light px-2 py-1.5 shadow-[3px_3px_0_rgba(0,0,0,0.4)]"
           >
             <SlideCtl label="Previous photo" onClick={() => go(-1)}>
               <Chevron side="left" />
@@ -655,7 +682,7 @@ function Slideshow({
             <SlideCtl label="Next photo" onClick={() => go(1)}>
               <Chevron side="right" />
             </SlideCtl>
-            <span className="px-2 font-display text-xs font-bold text-white/70">
+            <span className="px-2 font-display text-xs font-bold text-ink/70">
               {Math.min(i + 1, count)} / {count}
             </span>
           </div>
@@ -667,7 +694,7 @@ function Slideshow({
               onClose();
             }}
             aria-label="Close slideshow"
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 bg-black/50 text-lg text-white backdrop-blur-sm transition-transform hover:scale-105"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-ink bg-cream-light text-lg text-ink shadow-[3px_3px_0_rgba(0,0,0,0.4)] transition-transform hover:scale-105"
           >
             ✕
           </button>
