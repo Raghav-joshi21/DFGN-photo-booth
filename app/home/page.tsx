@@ -27,6 +27,21 @@ export default function Home() {
 
         <FallingPotatoes />
 
+        {/* Latvia / IDFW '26 sticker sheet, pinned around the hero's outer
+            margins — kept clear of the h1's own potato-sleep accent and the
+            two choice cards. */}
+        <StickerScatter
+          stickers={[
+            { variant: "astronaut-helmet", className: "left-3 top-4 h-16 w-16 sm:left-8 sm:top-8 sm:h-24 sm:w-24", rotate: -6, duration: 7, hideOnMobile: false },
+            { variant: "potato-astronaut", className: "right-3 bottom-6 h-20 w-20 sm:right-10 sm:bottom-10 sm:h-28 sm:w-28", rotate: 5, duration: 6.5, delay: -1.5 },
+            { variant: "wheat-bundle", className: "left-4 bottom-4 h-16 w-16 sm:left-12 sm:bottom-16 sm:h-24 sm:w-24", rotate: -4, duration: 8, hideOnMobile: true },
+            { variant: "oak-leaf", className: "right-4 top-24 h-14 w-14 sm:right-14 sm:top-32 sm:h-20 sm:w-20", rotate: 10, duration: 7.5, delay: -2, hideOnMobile: true },
+            { variant: "star-yellow", className: "left-[8%] top-16 h-6 w-6 sm:h-8 sm:w-8", rotate: -12, duration: 5, hideOnMobile: true },
+            { variant: "star-maroon", className: "right-[10%] bottom-24 h-6 w-6 sm:h-8 sm:w-8", rotate: 14, duration: 5.5, delay: -1, hideOnMobile: true },
+            { variant: "star-navy", className: "left-[12%] bottom-10 h-5 w-5 sm:h-7 sm:w-7", rotate: 8, duration: 6, delay: -3, hideOnMobile: true },
+          ]}
+        />
+
         <div className="relative mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 py-10 sm:py-14">
           {/* Hero */}
           <div className="relative">
