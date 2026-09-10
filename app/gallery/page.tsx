@@ -1,6 +1,7 @@
 "use client";
 
 import { PhotoWall } from "@/components/booth/PhotoWall";
+import { IdfwSticker } from "@/components/site/IdfwSticker";
 import { TopNav } from "@/components/site/TopNav";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
 
