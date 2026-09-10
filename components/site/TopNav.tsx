@@ -49,8 +49,10 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
           </span>
         </Link>
 
-        {/* Primary nav */}
-        <nav className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-2 md:ml-0 md:flex-1 md:justify-center">
+        {/* Primary nav — dead-centred on the bar itself (not just the space
+            left over between the logo and the help icon, which are different
+            widths and would otherwise pull the "centre" off to one side). */}
+        <nav className="ml-auto flex min-w-0 items-center gap-0.5 sm:gap-2 md:absolute md:left-1/2 md:ml-0 md:-translate-x-1/2">
           {LINKS.map(({ href, label }) => {
             // Every link is a distinct top-level path now, so a prefix match
             // is enough — no "/" special case to get wrong.
