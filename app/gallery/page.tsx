@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { PhotoWall } from "@/components/booth/PhotoWall";
+import { FallingPotatoes } from "@/components/site/FallingPotatoes";
 import { IdfwSticker } from "@/components/site/IdfwSticker";
 import { TopNav } from "@/components/site/TopNav";
 import { useApprovedPhotos } from "@/lib/hooks/use-approved-photos";
