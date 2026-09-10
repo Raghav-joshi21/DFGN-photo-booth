@@ -724,10 +724,10 @@ function Slideshow({
             <SlideCtl label="Next photo" onClick={() => go(1)}>
               <Chevron side="right" />
             </SlideCtl>
-            <span className="px-2 font-display text-xs font-bold text-ink/70">
+            <span className="px-2 font-display text-xs font-bold text-white/80">
               {Math.min(i + 1, count)} / {count}
             </span>
-            <span className="h-5 w-px bg-ink/15" aria-hidden />
+            <span className="h-5 w-px bg-white/20" aria-hidden />
             <SlideCtl
               label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
               onClick={toggleFullscreen}
