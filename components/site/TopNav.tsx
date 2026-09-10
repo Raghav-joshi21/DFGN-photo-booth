@@ -141,7 +141,7 @@ export function TopNav({
         </div>
       </div>
 
-      {hideBot ? null : <PotatoBot />}
+      {hideBot ? null : <PotatoBot liftForFooter={liftBotForFooter} />}
     </header>
   );
 }
