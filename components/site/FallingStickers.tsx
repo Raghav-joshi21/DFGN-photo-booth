@@ -34,7 +34,7 @@ const DROPS: Drop[] = [
   { left: 68, size: "h-9 w-9", duration: 21, delay: -25, opacity: 0.3, sway: 4, spin: 12, variant: "star-navy" },
   { left: 74, size: "h-12 w-12", duration: 34, delay: -5, opacity: 0.32, sway: 6, spin: 19, variant: "mitten" },
   { left: 80, size: "h-8 w-8", duration: 23, delay: -20, opacity: 0.28, sway: 7.5, spin: 14, variant: "star-yellow" },
-  { left: 86, size: "h-13 w-13", duration: 31, delay: -9, opacity: 0.36, sway: 5.5, spin: 22, variant: "wooden-spoon" },
+  { left: 86, size: "h-12 w-12", duration: 31, delay: -9, opacity: 0.36, sway: 5.5, spin: 22, variant: "wooden-spoon" },
   { left: 92, size: "h-10 w-10", duration: 28, delay: -14, opacity: 0.3, sway: 6.5, spin: 16, variant: "sun-face" },
   { left: 97, size: "h-9 w-9", duration: 36, delay: -3, opacity: 0.26, sway: 4.5, spin: 25, variant: "star-maroon" },
 ];
