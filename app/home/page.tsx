@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FallingPotatoes } from "@/components/site/FallingPotatoes";
 import { FallingStickers } from "@/components/site/FallingStickers";
 import { PotatoSticker } from "@/components/site/PotatoSticker";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { TopNav } from "@/components/site/TopNav";
 
 /**
