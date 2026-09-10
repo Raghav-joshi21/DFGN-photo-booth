@@ -788,15 +788,10 @@ function SidePeek({ photo, onClick }: { photo: Photo | null; onClick: () => void
         onClick();
       }}
       aria-label="Jump to this photo"
-      className="pointer-events-auto relative hidden h-[64vh] w-[14vw] shrink-0 overflow-hidden rounded-lg border-4 border-cream-light/30 opacity-45 blur-[1.5px] grayscale-[0.15] transition-all duration-300 hover:opacity-70 hover:blur-0 hover:grayscale-0 lg:block"
+      className="pointer-events-auto relative hidden w-[14vw] shrink-0 opacity-45 blur-[1.5px] grayscale-[0.15] transition-all duration-300 hover:opacity-70 hover:blur-0 hover:grayscale-0 lg:block"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photo.editedUrl ?? photo.originalUrl}
-        alt=""
-        draggable={false}
-        className="h-full w-full object-cover"
-      />
+      {/* Same house frame as the main photo, just smaller and dimmed. */}
+      <PotatoFrame photo={photo} natural />
     </button>
   );
 }
