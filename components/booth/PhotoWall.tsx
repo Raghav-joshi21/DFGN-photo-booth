@@ -682,19 +682,20 @@ function Slideshow({
 
             <div className="relative flex h-full min-w-0 flex-1 items-center justify-center">
               <AnimatePresence initial={false}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <motion.img
+                {/* Same house frame as the wall — a chunky print with the
+                    DFGN caption strip and the corner potato, not just a bare
+                    photo. PotatoFrame applies its own tilt on its own root
+                    element, so it doesn't fight the Ken Burns push here. */}
+                <motion.div
                   key={photo.id}
-                  src={photo.editedUrl ?? photo.originalUrl}
-                  alt=""
-                  draggable={false}
                   initial={slide.initial}
                   animate={slide.animate}
                   exit={slide.exit}
                   transition={slide.transition}
-                  style={{ rotate: `${tiltFor(photo.id) * 1.6}deg` }}
-                  className="absolute max-h-[82vh] max-w-[86vw] rounded-lg border-[6px] border-cream-light object-contain shadow-[0_30px_70px_-20px_rgba(0,0,0,0.7)] lg:max-w-[64vw]"
-                />
+                  className="absolute w-[78vw] max-w-sm drop-shadow-[0_30px_70px_rgba(0,0,0,0.6)] sm:w-[52vw] sm:max-w-md lg:w-[34vw] lg:max-w-lg"
+                >
+                  <PotatoFrame photo={photo} rotation={tiltFor(photo.id) * 1.6} natural />
+                </motion.div>
               </AnimatePresence>
             </div>
 
