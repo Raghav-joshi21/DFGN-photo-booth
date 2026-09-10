@@ -273,6 +273,32 @@ body {
   }
 }
 
+/* --- IDFW sticker scatter --------------------------------------------------
+   The event's own sticker-sheet art (public/stickers), pinned around a hero
+   like it's been stuck there by hand. A slow bob + tiny rotate wobble reads
+   as "gently alive" without competing with the falling potatoes. */
+
+@keyframes idfw-sticker-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--sticker-rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-6px) rotate(calc(var(--sticker-rotate, 0deg) + 2deg));
+  }
+}
+
+.idfw-sticker {
+  animation: idfw-sticker-float ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idfw-sticker {
+    animation: none;
+    transform: rotate(var(--sticker-rotate, 0deg));
+  }
+}
+
 /* --- Scrollers without the bar --------------------------------------------
    Used by the booth's filter carousel: it scrolls, but a track drawn across
    the bottom of the preview reads as browser chrome on a kiosk. */
