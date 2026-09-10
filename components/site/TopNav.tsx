@@ -29,7 +29,7 @@ export function TopNav({ hideBot = false }: { hideBot?: boolean } = {}) {
 
   return (
     <header className="relative z-20 bg-ink">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-6 sm:px-5">
+      <div className="flex h-16 w-full items-center gap-2 px-4 sm:gap-6 sm:px-8">
         {/* Wordmark */}
         <Link href="/home" className="flex shrink-0 items-center gap-2.5">
           <Image
