@@ -63,6 +63,10 @@ const COUNTDOWN_BEAT_MS = 700;
 /** Score milestones worth a confetti burst + fanfare. */
 const MILESTONES = [10, 25, 50, 75, 100];
 const HIGH_SCORE_KEY = "dfgn-booth-catch-high-score";
+/** Every Nth consecutive good catch fires a big "+BONUS" callout on top of
+ *  the potato's own value — the payoff for staying on a streak. */
+const COMBO_BONUS_EVERY = 5;
+const COMBO_BONUS_POINTS = 5;
 
 /**
  * The official "IDFW '26 — Latvia" sticker sheet (public/stickers), cut out
