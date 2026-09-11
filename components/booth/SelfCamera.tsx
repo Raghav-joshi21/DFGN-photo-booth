@@ -443,18 +443,55 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           // Catch-game step: reuses the same landmarks already detected above
           // for the face lens — no extra detection call needed.
           if (gameOnRef.current && phaseRef.current !== "captured") {
+            // Difficulty ramps with score over the first ~15 points, then
+            // holds — potatoes fall a little faster and a little more often,
+            // capped well short of unfair for a kiosk guest.
+            const difficulty = Math.min(eatenRef.current / 15, 1);
+            const spawnInterval = 900 - difficulty * 350;
+            const speedMul = 1 + difficulty * 0.5;
+
             spawnAccRef.current += dt;
-            if (spawnAccRef.current > 900) {
+            if (spawnAccRef.current > spawnInterval) {
               spawnAccRef.current = 0;
-              spawnPotato(potatoesRef.current, canvas.width);
+              spawnPotato(potatoesRef.current, canvas.width, speedMul);
             }
             const result = stepPotatoes(potatoesRef.current, dt, canvas.height, mouths);
             potatoesRef.current = result.potatoes;
-            if (result.eaten > 0) {
-              eatenRef.current += result.eaten;
+
+            if (result.catches.length > 0) {
+              let scoreGain = 0;
+              for (const c of result.catches) {
+                scoreGain += c.value;
+                spawnCatchParticles(particlesRef.current, c.x, c.y, c.golden);
+
+                // A catch within the window of the last one extends the
+                // combo; a gap resets it to 1 rather than to 0, since this
+                // catch itself starts the (possibly new) streak.
+                comboRef.current =
+                  now - lastCatchAtRef.current < COMBO_WINDOW_MS ? comboRef.current + 1 : 1;
+                lastCatchAtRef.current = now;
+
+                const popupText = c.golden
+                  ? `+${c.value} GOLDEN!`
+                  : comboRef.current >= 3
+                    ? `+${c.value} ×${comboRef.current}!`
+                    : `+${c.value}`;
+                spawnScorePopup(
+                  popupsRef.current,
+                  c.x,
+                  c.y,
+                  popupText,
+                  c.golden ? "#ffe27a" : comboRef.current >= 3 ? "#f2c744" : "#ffffff",
+                );
+                playCatchSound({ combo: comboRef.current, golden: c.golden });
+              }
+              eatenRef.current += scoreGain;
               setEaten(eatenRef.current);
-              playCatchSound();
+              setPulseKey((k) => k + 1);
             }
+
+            particlesRef.current = stepParticles(particlesRef.current, dt);
+            popupsRef.current = stepPopups(popupsRef.current, dt);
           }
 
           if (ctx) {
