@@ -594,6 +594,19 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     centreChip(first.key);
   }, [carousel, applySelection, centreChip]);
 
+  // Switching Fun ↔ Professional swaps the whole list out from under the
+  // guest, so land on the new list's first entry rather than leaving the
+  // strip on a chip (or a selection) that may no longer exist in it.
+  const prevCategoryRef = useRef(category);
+  useEffect(() => {
+    if (prevCategoryRef.current === category) return;
+    prevCategoryRef.current = category;
+    const first = carousel[0];
+    if (!first) return;
+    applySelection(first.key);
+    centreChip(first.key);
+  }, [category, carousel, applySelection, centreChip]);
+
   const retake = () => {
     setCaptured(null);
     capturedBlob.current = null;
