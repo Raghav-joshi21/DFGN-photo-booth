@@ -512,12 +512,23 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     if (frameOn && frameImg?.complete && frameImg.naturalWidth > 0) {
       ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
     }
+    // IDFW sticker stamp — a corner badge rather than a full-bleed border, at
+    // the same margin/size fractions as the preview's CSS positioning below
+    // so the print matches what the guest saw.
+    const stickerImg = stickerImgRef.current;
+    if (stickerId && stickerImg?.complete && stickerImg.naturalWidth > 0) {
+      const marginX = canvas.width * 0.04;
+      const marginY = canvas.height * 0.04;
+      const stW = canvas.width * 0.3;
+      const stH = stW * (stickerImg.naturalHeight / stickerImg.naturalWidth);
+      ctx.drawImage(stickerImg, canvas.width - marginX - stW, canvas.height - marginY - stH, stW, stH);
+    }
     setCaptured(canvas.toDataURL("image/jpeg", 0.92));
     // Also keep the raw bytes: uploading the blob avoids the third that base64
     // adds to every frame on its way to Storage.
     canvas.toBlob((blob) => (capturedBlob.current = blob), "image/jpeg", 0.92);
     setPhase("captured");
-  }, [kitReady, faceLensId, gameOn, frameOn]);
+  }, [kitReady, faceLensId, gameOn, frameOn, stickerId]);
 
   // --- Filter carousel -----------------------------------------------------
   // Every effect the booth offers, as one list, because the carousel has one
