@@ -588,6 +588,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       setSelectedKey(key);
       setFrameOn(key === "frame");
       setFaceLensId(key.startsWith("face:") ? key.slice(5) : null);
+      setStickerId(key.startsWith("sticker:") ? key.slice(8) : null);
 
       const kit = kitRef.current;
       if (!kit) return;
