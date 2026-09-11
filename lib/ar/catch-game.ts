@@ -25,7 +25,9 @@ export interface FallingPotato {
   eaten?: boolean;
   /** A rare golden potato is worth more and gets its own catch sound/particle colour. */
   golden?: boolean;
-  /** Points this potato is worth when caught — 1 normally, more if golden. */
+  /** A rotten one is the one to dodge — eating it costs a point and breaks the combo. */
+  rotten?: boolean;
+  /** Points this potato is worth when caught — 1 normally, more if golden, negative if rotten. */
   value: number;
 }
 
