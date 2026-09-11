@@ -299,6 +299,34 @@ body {
   }
 }
 
+/* --- Catch-game score pulse -------------------------------------------------
+   Re-keyed by React on every catch (see SelfCamera's `pulseKey`), which
+   remounts the badge and replays this animation — a quick, juicy "got it"
+   without any imperative animation-restart code. */
+
+@keyframes catch-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.catch-pulse {
+  animation: catch-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catch-pulse {
+    animation: none;
+  }
+}
+
 /* --- Scrollers without the bar --------------------------------------------
    Used by the booth's filter carousel: it scrolls, but a track drawn across
    the bottom of the preview reads as browser chrome on a kiosk. */
