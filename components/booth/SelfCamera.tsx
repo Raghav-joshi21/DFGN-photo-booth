@@ -565,63 +565,122 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           const dt = lastFrameRef.current ? now - lastFrameRef.current : 16;
           lastFrameRef.current = now;
           const faces = ar.detect(video, now);
+          const isPlaying = stageRef.current === "playing";
           // One mouth per face: in the catch game everybody in frame plays.
-          const mouths = gameOnRef.current
+          const mouths = isPlaying
             ? faces.map((lm) => computeMouth(lm, canvas.width, canvas.height))
             : [];
 
           // Catch-game step: reuses the same landmarks already detected above
           // for the face lens — no extra detection call needed.
-          if (gameOnRef.current && phaseRef.current !== "captured") {
-            // Difficulty ramps with score over the first ~15 points, then
-            // holds — potatoes fall a little faster and a little more often,
-            // capped well short of unfair for a kiosk guest.
-            const difficulty = Math.min(eatenRef.current / 15, 1);
-            const spawnInterval = 900 - difficulty * 350;
-            const speedMul = 1 + difficulty * 0.5;
-
-            spawnAccRef.current += dt;
-            if (spawnAccRef.current > spawnInterval) {
-              spawnAccRef.current = 0;
-              spawnPotato(potatoesRef.current, canvas.width, speedMul);
+          if (isPlaying && phaseRef.current !== "captured") {
+            const remaining = roundEndAtRef.current - now;
+            const secs = Math.max(0, Math.ceil(remaining / 1000));
+            if (secs !== timeLeftRef.current) {
+              timeLeftRef.current = secs;
+              setTimeLeft(secs);
             }
-            const result = stepPotatoes(potatoesRef.current, dt, canvas.height, mouths);
-            potatoesRef.current = result.potatoes;
 
-            if (result.catches.length > 0) {
-              let scoreGain = 0;
-              for (const c of result.catches) {
-                scoreGain += c.value;
-                spawnCatchParticles(particlesRef.current, c.x, c.y, c.golden);
+            if (remaining <= 0) {
+              endRound();
+            } else {
+              // Difficulty ramps with score over the first ~15 points, then
+              // holds — potatoes fall a little faster and a little more
+              // often, capped well short of unfair for a kiosk guest.
+              const difficulty = Math.min(eatenRef.current / 15, 1);
+              const spawnInterval = 900 - difficulty * 350;
+              const speedMul = 1 + difficulty * 0.5;
 
-                // A catch within the window of the last one extends the
-                // combo; a gap resets it to 1 rather than to 0, since this
-                // catch itself starts the (possibly new) streak.
-                comboRef.current =
-                  now - lastCatchAtRef.current < COMBO_WINDOW_MS ? comboRef.current + 1 : 1;
-                lastCatchAtRef.current = now;
-
-                const popupText = c.golden
-                  ? `+${c.value} GOLDEN!`
-                  : comboRef.current >= 3
-                    ? `+${c.value} ×${comboRef.current}!`
-                    : `+${c.value}`;
-                spawnScorePopup(
-                  popupsRef.current,
-                  c.x,
-                  c.y,
-                  popupText,
-                  c.golden ? "#ffe27a" : comboRef.current >= 3 ? "#f2c744" : "#ffffff",
-                );
-                playCatchSound({ combo: comboRef.current, golden: c.golden });
+              spawnAccRef.current += dt;
+              if (spawnAccRef.current > spawnInterval) {
+                spawnAccRef.current = 0;
+                spawnPotato(potatoesRef.current, canvas.width, speedMul);
               }
-              eatenRef.current += scoreGain;
-              setEaten(eatenRef.current);
-              setPulseKey((k) => k + 1);
-            }
+              const result = stepPotatoes(potatoesRef.current, dt, canvas.height, mouths);
+              potatoesRef.current = result.potatoes;
 
-            particlesRef.current = stepParticles(particlesRef.current, dt);
-            popupsRef.current = stepPopups(popupsRef.current, dt);
+              if (result.catches.length > 0) {
+                let scoreGain = 0;
+                for (const c of result.catches) {
+                  scoreGain += c.value;
+
+                  if (c.rotten) {
+                    // Breaks the streak immediately — no grace window, unlike
+                    // a plain gap in catches.
+                    comboRef.current = 0;
+                    spawnCatchParticles(particlesRef.current, c.x, c.y, "rotten");
+                    spawnScorePopup(popupsRef.current, c.x, c.y, `${c.value} 🤢`, "#ff6b5e");
+                    playRottenSound();
+                    triggerShake();
+                    continue;
+                  }
+
+                  spawnCatchParticles(particlesRef.current, c.x, c.y, c.golden ? "golden" : "normal");
+
+                  // A catch within the window of the last one extends the
+                  // combo; a gap resets it to 1 rather than to 0, since this
+                  // catch itself starts the (possibly new) streak.
+                  comboRef.current =
+                    now - lastCatchAtRef.current < COMBO_WINDOW_MS ? comboRef.current + 1 : 1;
+                  lastCatchAtRef.current = now;
+                  if (comboRef.current > bestComboRef.current) bestComboRef.current = comboRef.current;
+
+                  const popupText = c.golden
+                    ? `+${c.value} GOLDEN!`
+                    : comboRef.current >= 3
+                      ? `+${c.value} ×${comboRef.current}!`
+                      : `+${c.value}`;
+                  spawnScorePopup(
+                    popupsRef.current,
+                    c.x,
+                    c.y,
+                    popupText,
+                    c.golden ? "#ffe27a" : comboRef.current >= 3 ? "#f2c744" : "#ffffff",
+                  );
+                  playCatchSound({ combo: comboRef.current, golden: c.golden });
+                  if (c.golden) triggerShake();
+
+                  // Every Nth consecutive good catch: a big bonus callout,
+                  // its own confetti burst, a punchier sound, and a shake —
+                  // the payoff for staying on a streak, not just another +1.
+                  if (comboRef.current % COMBO_BONUS_EVERY === 0) {
+                    scoreGain += COMBO_BONUS_POINTS;
+                    const bx = canvas.width / 2;
+                    const by = canvas.height * 0.4;
+                    spawnScorePopup(
+                      popupsRef.current,
+                      bx,
+                      by,
+                      `🔥 ×${comboRef.current} COMBO! +${COMBO_BONUS_POINTS}`,
+                      "#ee8b2b",
+                      true,
+                    );
+                    spawnMilestoneBurst(particlesRef.current, bx, by);
+                    playComboBonusSound();
+                    triggerShake();
+                  }
+                }
+
+                eatenRef.current = Math.max(0, eatenRef.current + scoreGain);
+                setEaten(eatenRef.current);
+                setPulseKey((k) => k + 1);
+
+                // Score milestones, checked against the post-catch total —
+                // each one fires once per round.
+                for (const m of MILESTONES) {
+                  if (milestoneHitRef.current.has(m) || eatenRef.current < m) continue;
+                  milestoneHitRef.current.add(m);
+                  const mx = canvas.width / 2;
+                  const my = canvas.height * 0.28;
+                  spawnMilestoneBurst(particlesRef.current, mx, my);
+                  spawnScorePopup(popupsRef.current, mx, my, `🎉 ${m} CAUGHT!`, "#f2c744", true);
+                  playMilestoneSound();
+                }
+              }
+
+              particlesRef.current = stepParticles(particlesRef.current, dt);
+              popupsRef.current = stepPopups(popupsRef.current, dt);
+            }
           }
 
           if (ctx) {
@@ -633,7 +692,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                 drawFaceLens(ctx, lm, lensId, canvas.width, canvas.height, now);
               }
             }
-            if (gameOnRef.current) {
+            if (isPlaying) {
               for (const p of potatoesRef.current) drawFallingPotato(ctx, p);
               for (const m of mouths) drawMouthRing(ctx, m);
               drawParticles(ctx, particlesRef.current);
