@@ -757,7 +757,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     // to the same video frame — composite it in at the same position so the
     // print matches what the guest saw.
     const arCanvas = arCanvasRef.current;
-    if ((faceLensId || gameOn) && arCanvas && arCanvas.width > 0) {
+    if ((faceLensId || stage === "playing") && arCanvas && arCanvas.width > 0) {
       ctx.drawImage(arCanvas, 0, 0, srcW, srcH, dx, dy, srcW, srcH);
     }
     // The event frame goes on last so it sits above everything, and is drawn
