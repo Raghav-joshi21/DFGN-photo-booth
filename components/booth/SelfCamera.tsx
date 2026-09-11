@@ -50,6 +50,8 @@ const PORTRAIT_ASPECT = 9 / 16;
 const LANDSCAPE_ASPECT = 16 / 9;
 const IDFW_FRAME_PORTRAIT = "/art/idfw-frame-portrait.webp";
 const IDFW_FRAME_LANDSCAPE = "/art/idfw-frame-landscape.webp";
+/** Catches within this many ms of each other extend the catch-game combo. */
+const COMBO_WINDOW_MS = 1400;
 
 /**
  * The official "IDFW '26 — Latvia" sticker sheet (public/stickers), cut out
