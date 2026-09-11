@@ -220,6 +220,8 @@ export interface ScorePopup {
   life: number; // ms remaining
   maxLife: number;
   color: string;
+  /** A combo-bonus callout — noticeably bigger than a plain "+1". */
+  big?: boolean;
 }
 
 const PARTICLE_COLORS = ["#d9a441", "#e8c27a", "#fff4dc"];
