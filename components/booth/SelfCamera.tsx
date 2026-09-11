@@ -44,6 +44,42 @@ const IDFW_FRAME_PORTRAIT = "/art/idfw-frame-portrait.webp";
 const IDFW_FRAME_LANDSCAPE = "/art/idfw-frame-landscape.webp";
 
 /**
+ * The official "IDFW '26 — Latvia" sticker sheet (public/stickers), cut out
+ * per-sticker. Professional-category filters: each one stamps a single
+ * sticker in the corner of the shot, rather than a face prop or a full-bleed
+ * border. w/h are the source PNG's real pixel size, used to keep the stamp's
+ * aspect ratio when it's drawn into the capture canvas.
+ */
+const IDFW_STICKERS: { id: string; label: string; src: string; w: number; h: number }[] = [
+  { id: "st-peters-cathedral", label: "St. Peter's", src: "/stickers/idfw-st-peters-cathedral.png", w: 506, h: 560 },
+  { id: "st-johns-cathedral", label: "St. John's", src: "/stickers/idfw-st-johns-cathedral.png", w: 560, h: 525 },
+  { id: "riga-landscape", label: "Riga skyline", src: "/stickers/idfw-riga-landscape.png", w: 560, h: 379 },
+  { id: "manor-house", label: "Manor house", src: "/stickers/idfw-manor-house.png", w: 480, h: 367 },
+  { id: "potato-astronaut", label: "Astro potato", src: "/stickers/idfw-potato-astronaut.png", w: 355, h: 420 },
+  { id: "potato-rocket", label: "Potato & rocket", src: "/stickers/idfw-potato-rocket.png", w: 389, h: 420 },
+  { id: "astronaut-helmet", label: "Astro helmet", src: "/stickers/idfw-astronaut-helmet.png", w: 475, h: 480 },
+  { id: "rocket", label: "Rocket", src: "/stickers/idfw-rocket.png", w: 300, h: 298 },
+  { id: "amber-necklace", label: "Amber necklace", src: "/stickers/idfw-amber-necklace.png", w: 265, h: 320 },
+  { id: "sun-sceptre", label: "Sun sceptre", src: "/stickers/idfw-sun-sceptre.png", w: 373, h: 380 },
+  { id: "sun-face", label: "Sun face", src: "/stickers/idfw-sun-face.png", w: 252, h: 248 },
+  { id: "moon-stars", label: "Moon & stars", src: "/stickers/idfw-moon-stars.png", w: 234, h: 244 },
+  { id: "floral-wreath", label: "Floral wreath", src: "/stickers/idfw-floral-wreath.png", w: 480, h: 363 },
+  { id: "flower-basket", label: "Flower basket", src: "/stickers/idfw-flower-basket.png", w: 460, h: 455 },
+  { id: "mitten", label: "Mitten", src: "/stickers/idfw-mitten.png", w: 222, h: 340 },
+  { id: "folk-rug", label: "Folk rug", src: "/stickers/idfw-folk-rug.png", w: 204, h: 340 },
+  { id: "folk-clogs", label: "Folk clogs", src: "/stickers/idfw-folk-clogs.png", w: 420, h: 310 },
+  { id: "oak-leaf", label: "Oak leaf", src: "/stickers/idfw-oak-leaf.png", w: 286, h: 380 },
+  { id: "wheat-bundle", label: "Wheat bundle", src: "/stickers/idfw-wheat-bundle.png", w: 183, h: 380 },
+  { id: "cheese-wedge", label: "Cheese wedge", src: "/stickers/idfw-cheese-wedge.png", w: 300, h: 283 },
+  { id: "wooden-spoon", label: "Wooden spoon", src: "/stickers/idfw-wooden-spoon.png", w: 100, h: 280 },
+  { id: "weathervane-rooster", label: "Weathervane", src: "/stickers/idfw-weathervane-rooster.png", w: 210, h: 300 },
+  { id: "star-yellow", label: "Star (yellow)", src: "/stickers/idfw-star-yellow.png", w: 84, h: 83 },
+  { id: "star-maroon", label: "Star (maroon)", src: "/stickers/idfw-star-maroon.png", w: 83, h: 83 },
+  { id: "star-tan", label: "Star (tan)", src: "/stickers/idfw-star-tan.png", w: 84, h: 83 },
+  { id: "star-navy", label: "Star (navy)", src: "/stickers/idfw-star-navy.png", w: 84, h: 82 },
+];
+
+/**
  * Self-camera capture screen for the booth.
  *
  * Live webcam preview → tap to capture a frame to a canvas → show
