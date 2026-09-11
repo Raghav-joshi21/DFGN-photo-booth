@@ -537,9 +537,9 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // frame is no longer an independent toggle.
   //
   // The strip is split into two categories a guest can flip between: Fun (the
-  // full spread — every face prop plus every Snap lens) and Professional (a
-  // deliberately short list for guests who don't want a costume — just the
-  // house potato hat, the IDFW event frame, and no filter at all).
+  // full spread — every face prop plus every Snap lens) and Professional (no
+  // costumes — just the house potato hat, the IDFW event frame, a corner
+  // stamp from the official sticker sheet, and no filter at all).
   const [category, setCategory] = useState<"fun" | "professional">("fun");
 
   const carousel = useMemo<CarouselItem[]>(() => {
@@ -549,12 +549,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     items.push({ key: "none", label: "No filter", fallback: "🚫" });
 
     if (category === "professional") {
-      // Nothing else on purpose — this list is meant to stay short.
       const potato = arReady ? FACE_LENSES.find((f) => f.id === "potato-hat") : null;
       if (potato) {
         items.push({ key: `face:${potato.id}`, label: potato.name, fallback: potato.emoji });
       }
       items.push({ key: "frame", label: "IDFW frame", fallback: "IDFW" });
+      for (const s of IDFW_STICKERS) {
+        items.push({ key: `sticker:${s.id}`, label: s.label, icon: s.src });
+      }
       return items;
     }
 
