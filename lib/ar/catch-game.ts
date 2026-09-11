@@ -153,16 +153,122 @@ export function drawFallingPotato(ctx: CanvasRenderingContext2D, p: FallingPotat
   ctx.save();
   ctx.translate(p.x, p.y);
   ctx.rotate(p.rotation);
+  // Golden potatoes get a warm glow so they read as "special" even mid-fall,
+  // not just once caught.
+  if (p.golden) {
+    ctx.shadowColor = "rgba(255,206,64,0.9)";
+    ctx.shadowBlur = p.r * 0.9;
+  }
   if (img) {
     ctx.drawImage(img, -p.r, -p.r, p.r * 2, p.r * 2);
   } else {
     // Still loading — a plain circle keeps the game visible meanwhile.
     ctx.beginPath();
     ctx.arc(0, 0, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = "#d9a441";
+    ctx.fillStyle = p.golden ? "#f2c744" : "#d9a441";
     ctx.fill();
   }
   ctx.restore();
+}
+
+// --- Catch "juice": burst particles + a floating score popup --------------
+// Purely cosmetic feedback layered on top of the same overlay canvas — short
+// lived (a few hundred ms) so it never needs its own on/off state, just a
+// step + draw pass alongside the potatoes each frame.
+
+export interface CatchParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number; // ms remaining
+  maxLife: number;
+  color: string;
+  size: number;
+}
+
+export interface ScorePopup {
+  x: number;
+  y: number;
+  text: string;
+  life: number; // ms remaining
+  maxLife: number;
+  color: string;
+}
+
+const PARTICLE_COLORS = ["#d9a441", "#e8c27a", "#fff4dc"];
+const GOLDEN_COLORS = ["#f2c744", "#ffe27a", "#ffffff"];
+
+/** A little burst of crumbs at a catch, plus a bigger sparkle burst for gold. */
+export function spawnCatchParticles(particles: CatchParticle[], x: number, y: number, golden: boolean): void {
+  const count = golden ? 14 : 8;
+  const colors = golden ? GOLDEN_COLORS : PARTICLE_COLORS;
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+    const speed = (golden ? 0.25 : 0.16) + Math.random() * 0.12;
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.05, // slight upward bias
+      life: 380 + Math.random() * 160,
+      maxLife: 500,
+      color: colors[i % colors.length],
+      size: (golden ? 3.5 : 2.5) + Math.random() * 2,
+    });
+  }
+}
+
+export function stepParticles(particles: CatchParticle[], dt: number): CatchParticle[] {
+  for (const p of particles) {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 0.0006 * dt; // gentle gravity
+    p.life -= dt;
+  }
+  return particles.filter((p) => p.life > 0);
+}
+
+export function drawParticles(ctx: CanvasRenderingContext2D, particles: CatchParticle[]): void {
+  for (const p of particles) {
+    const t = Math.max(0, p.life / p.maxLife);
+    ctx.save();
+    ctx.globalAlpha = t;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * t, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/** "+1", "+3 GOLDEN!", or a combo callout — rises and fades over its life. */
+export function spawnScorePopup(popups: ScorePopup[], x: number, y: number, text: string, color = "#fff"): void {
+  popups.push({ x, y, text, life: 700, maxLife: 700, color });
+}
+
+export function stepPopups(popups: ScorePopup[], dt: number): ScorePopup[] {
+  for (const p of popups) {
+    p.y -= 0.045 * dt;
+    p.life -= dt;
+  }
+  return popups.filter((p) => p.life > 0);
+}
+
+export function drawPopups(ctx: CanvasRenderingContext2D, popups: ScorePopup[]): void {
+  for (const p of popups) {
+    const t = Math.max(0, p.life / p.maxLife);
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, t * 1.4);
+    ctx.font = "bold 22px sans-serif";
+    ctx.textAlign = "center";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.strokeText(p.text, p.x, p.y);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, p.x, p.y);
+    ctx.restore();
+  }
 }
 
 export function drawMouthRing(ctx: CanvasRenderingContext2D, mouth: MouthState): void {
