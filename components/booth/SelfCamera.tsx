@@ -931,10 +931,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
    */
   const startOver = () => {
     retake();
-    setGameOn(false);
-    setEaten(0);
-    eatenRef.current = 0;
-    potatoesRef.current = [];
+    resetGame();
 
     // Back to the house default: "No filter", the carousel's first entry —
     // same landing spot a fresh guest gets.
