@@ -504,20 +504,10 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       kitRef.current = result;
       setLenses(result.lenses);
       setKitReady(true);
-
-      // Start on the potato lens. Best-effort like the rest of this layer: a
-      // lens that won't download leaves the plain (unfiltered) session up.
-      if (result.defaultLens) {
-        setActiveLensId(result.defaultLens.id);
-        // The AR boot below may already have put the potato hat on: whichever
-        // finishes last would otherwise leave both showing. The Snap lens is
-        // the richer effect, so it wins and clears the prop.
-        setFaceLensId(null);
-        result.session.applyLens(result.defaultLens).catch((err) => {
-          console.warn("[booth] could not apply the default lens", err);
-          setActiveLensId(null);
-        });
-      }
+      // Deliberately not auto-applying `result.defaultLens` here: the booth's
+      // own default is "No filter" (see the carousel's `autoSelected` effect
+      // below), not a lens picked for the guest before they've touched the
+      // strip. `defaultLens` is still there for "Start over" to fall back on.
     });
 
     return () => {
