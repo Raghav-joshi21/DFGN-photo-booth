@@ -783,7 +783,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     // adds to every frame on its way to Storage.
     canvas.toBlob((blob) => (capturedBlob.current = blob), "image/jpeg", 0.92);
     setPhase("captured");
-  }, [kitReady, faceLensId, gameOn, frameOn, stickerId]);
+  }, [kitReady, faceLensId, stage, frameOn, stickerId]);
 
   // --- Filter carousel -----------------------------------------------------
   // Every effect the booth offers, as one list, because the carousel has one
