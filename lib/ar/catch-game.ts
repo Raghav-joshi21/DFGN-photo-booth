@@ -99,31 +99,38 @@ export function spawnPotato(
   });
 }
 
-/**
- * Advance falling potatoes by `dt` ms, drop the ones that fell off the
- * bottom, and — when the mouth is open — eat any potato it reaches. Mutates
- * and returns the same array (filtered), plus how many were eaten this tick.
- */
+/** One caught potato, at the moment it's eaten — enough to spawn a burst of
+ *  particles and a score popup right where the catch happened. */
+export interface CatchEvent {
+  x: number;
+  y: number;
+  value: number;
+  golden: boolean;
+}
+
 /**
  * Advance the potatoes and let any open mouth eat them.
  *
  * Takes every mouth in frame, not one: the booth tracks a group, so a whole
  * huddle can play at once. A potato is removed on the first mouth that catches
- * it, so two people lunging at the same one cannot both score it.
+ * it, so two people lunging at the same one cannot both score it. Returns the
+ * updated list plus one `CatchEvent` per potato eaten this tick, so the
+ * caller can react at each catch's exact position (particles, a "+1" popup,
+ * a sound) rather than just knowing a count.
  */
 export function stepPotatoes(
   potatoes: FallingPotato[],
   dt: number,
   canvasHeight: number,
   mouths: MouthState[],
-): { potatoes: FallingPotato[]; eaten: number } {
+): { potatoes: FallingPotato[]; eaten: number; catches: CatchEvent[] } {
   for (const p of potatoes) {
     p.y += p.vy * dt;
     p.rotation += p.spin * dt;
   }
 
   let next = potatoes.filter((p) => p.y - p.r < canvasHeight + 60);
-  let eaten = 0;
+  const catches: CatchEvent[] = [];
 
   for (const mouth of mouths) {
     if (!mouth.open) continue;
@@ -132,13 +139,13 @@ export function stepPotatoes(
       const d = Math.hypot(p.x - mouth.x, p.y - mouth.y);
       if (d < p.r + mouth.catchRadius) {
         p.eaten = true;
-        eaten++;
+        catches.push({ x: p.x, y: p.y, value: p.value, golden: !!p.golden });
       }
     }
   }
-  if (eaten > 0) next = next.filter((p) => !p.eaten);
+  if (catches.length > 0) next = next.filter((p) => !p.eaten);
 
-  return { potatoes: next, eaten };
+  return { potatoes: next, eaten: catches.length, catches };
 }
 
 export function drawFallingPotato(ctx: CanvasRenderingContext2D, p: FallingPotato): void {
