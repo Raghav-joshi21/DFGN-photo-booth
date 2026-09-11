@@ -3,7 +3,13 @@
  * into SelfCamera's own preview (no separate screen, no second camera
  * stream). Every potato is the same plain sprite — `/art/potatoes.png`, the
  * project's own mascot art, reused via `getPotatoImage()` so it isn't loaded
- * twice — and eating one just scores a point. There is no danger variant.
+ * twice — tinted per-variant on the canvas rather than loading extra art.
+ * Most potatoes are plain (+1); a rare golden one is worth +3, and a rotten
+ * one (tagged with 🤢) costs a point and breaks the guest's combo if eaten.
+ *
+ * SelfCamera runs this as a timed round (countdown → 30s → results), not an
+ * open-ended toggle — see its own comments for that state machine. This
+ * module stays purely about the falling-potato physics/scoring/juice.
  *
  * Pure/stateless on purpose: these functions take the current state and
  * return the next one rather than owning any of it, so SelfCamera can drive
