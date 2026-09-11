@@ -712,22 +712,12 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           </span>
         ) : null}
 
-        {/* Top-right controls: the Fun/Professional filter-category dropdown,
-            plus the front/rear camera flip when the device has both. Grouped
-            in one flex row so neither ever has to guess around the other's
-            width. */}
+        {/* Top-right controls: the front/rear camera flip when the device has
+            both, plus the Fun/Professional filter-category dropdown at the
+            far right. Grouped in one flex row so neither ever has to guess
+            around the other's width. */}
         {phase === "preview" ? (
           <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as "fun" | "professional")}
-              aria-label="Filter category"
-              className="h-10 rounded-full border-2 border-white/50 bg-black/45 px-3 font-display text-xs font-bold text-white backdrop-blur-sm outline-none transition-transform hover:scale-105"
-            >
-              <option value="fun">Fun</option>
-              <option value="professional">Professional</option>
-            </select>
-
             {/* Flip between the front and rear camera. Only when the device
                 actually has both, which keeps it off single-camera booth
                 screens without hard-coding "phones only". */}
@@ -760,6 +750,16 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
                 </svg>
               </button>
             ) : null}
+
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as "fun" | "professional")}
+              aria-label="Filter category"
+              className="h-10 rounded-full border-2 border-white/50 bg-black/45 px-3 font-display text-xs font-bold text-white backdrop-blur-sm outline-none transition-transform hover:scale-105"
+            >
+              <option value="fun">Fun</option>
+              <option value="professional">Professional</option>
+            </select>
           </div>
         ) : null}
 
