@@ -321,8 +321,36 @@ body {
   transform-origin: center;
 }
 
+/* Triggered imperatively (SelfCamera's `triggerShake`, via classList rather
+   than React state) on a golden catch, a rotten mistake, or a combo bonus —
+   restarted on retrigger via a forced reflow, so a fast run of catches keeps
+   shaking rather than the class no-op-ing back onto an already-applied one. */
+@keyframes catch-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-6px, 2px, 0);
+  }
+  40% {
+    transform: translate3d(5px, -2px, 0);
+  }
+  60% {
+    transform: translate3d(-4px, 1px, 0);
+  }
+  80% {
+    transform: translate3d(3px, -1px, 0);
+  }
+}
+
+.catch-shake {
+  animation: catch-shake 320ms ease-in-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .catch-pulse {
+  .catch-pulse,
+  .catch-shake {
     animation: none;
   }
 }
