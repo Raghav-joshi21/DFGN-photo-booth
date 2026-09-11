@@ -223,18 +223,37 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   // --- "Catch the falling potatoes" mode ----------------------------------
   // Runs right inside this same preview and the same detection loop below —
-  // no separate screen, no second camera stream. Plain potatoes only (no
-  // colour variants): open your mouth under one to eat it and score.
+  // no separate screen, no second camera stream. Open your mouth under a
+  // potato to eat it and score; a rare golden one is worth 3 and gets its own
+  // sound and sparkle burst. Consecutive catches build a combo (pitch climbs,
+  // a "xN combo!" popup fires) as long as they land within COMBO_WINDOW_MS of
+  // each other.
   const [gameOn, setGameOn] = useState(false);
   const [eaten, setEaten] = useState(0);
   const gameOnRef = useRef(false);
   const eatenRef = useRef(0);
   const potatoesRef = useRef<FallingPotato[]>([]);
+  const particlesRef = useRef<CatchParticle[]>([]);
+  const popupsRef = useRef<ScorePopup[]>([]);
   const spawnAccRef = useRef(0);
   const lastFrameRef = useRef(0);
+  // Combo streak: resets once a catch is more than COMBO_WINDOW_MS after the
+  // last one, rather than on a fixed timer, so a guest who's on a roll never
+  // gets cut off mid-streak by a clock they can't see.
+  const comboRef = useRef(0);
+  const lastCatchAtRef = useRef(0);
+  // Bumped on every catch and threaded onto the score badge's `key`, so its
+  // CSS pop animation replays each time — see .catch-pulse in globals.css.
+  const [pulseKey, setPulseKey] = useState(0);
   useEffect(() => {
     gameOnRef.current = gameOn;
-    if (!gameOn) potatoesRef.current = []; // clear the board when switched off
+    if (!gameOn) {
+      // Clear the board (and any in-flight juice) when switched off.
+      potatoesRef.current = [];
+      particlesRef.current = [];
+      popupsRef.current = [];
+      comboRef.current = 0;
+    }
   }, [gameOn]);
   // The loop only steps/spawns while the guest can actually see it.
   const phaseRef = useRef<Phase>("preview");
