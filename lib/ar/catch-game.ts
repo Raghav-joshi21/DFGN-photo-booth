@@ -218,23 +218,53 @@ export interface ScorePopup {
 
 const PARTICLE_COLORS = ["#d9a441", "#e8c27a", "#fff4dc"];
 const GOLDEN_COLORS = ["#f2c744", "#ffe27a", "#ffffff"];
+const ROTTEN_COLORS = ["#5c6b2e", "#7a8c3d", "#3c4620"];
+const CONFETTI_COLORS = ["#ee8b2b", "#f2c744", "#7fa045", "#5a1618", "#ffffff"];
 
-/** A little burst of crumbs at a catch, plus a bigger sparkle burst for gold. */
-export function spawnCatchParticles(particles: CatchParticle[], x: number, y: number, golden: boolean): void {
-  const count = golden ? 14 : 8;
-  const colors = golden ? GOLDEN_COLORS : PARTICLE_COLORS;
+/** A little burst at a catch: crumbs normally, a bigger sparkle burst for
+ *  gold, a dull downward splat for rotten. */
+export function spawnCatchParticles(
+  particles: CatchParticle[],
+  x: number,
+  y: number,
+  kind: "normal" | "golden" | "rotten" = "normal",
+): void {
+  const count = kind === "golden" ? 14 : kind === "rotten" ? 10 : 8;
+  const colors = kind === "golden" ? GOLDEN_COLORS : kind === "rotten" ? ROTTEN_COLORS : PARTICLE_COLORS;
+  const speedBase = kind === "golden" ? 0.25 : kind === "rotten" ? 0.14 : 0.16;
+  // Rotten crumbs splat downward (gravity already pulls them, so barely any
+  // upward bias) instead of bursting outward like a "got it" would.
+  const upwardBias = kind === "rotten" ? 0.01 : 0.05;
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-    const speed = (golden ? 0.25 : 0.16) + Math.random() * 0.12;
+    const speed = speedBase + Math.random() * 0.12;
     particles.push({
       x,
       y,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 0.05, // slight upward bias
+      vy: Math.sin(angle) * speed - upwardBias,
       life: 380 + Math.random() * 160,
       maxLife: 500,
       color: colors[i % colors.length],
-      size: (golden ? 3.5 : 2.5) + Math.random() * 2,
+      size: (kind === "golden" ? 3.5 : 2.5) + Math.random() * 2,
+    });
+  }
+}
+
+/** A bigger, brighter confetti burst for score milestones (10, 25, 50…). */
+export function spawnMilestoneBurst(particles: CatchParticle[], x: number, y: number): void {
+  for (let i = 0; i < 26; i++) {
+    const angle = (Math.PI * 2 * i) / 26 + Math.random() * 0.3;
+    const speed = 0.2 + Math.random() * 0.22;
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.1,
+      life: 550 + Math.random() * 250,
+      maxLife: 800,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 3 + Math.random() * 2.5,
     });
   }
 }
