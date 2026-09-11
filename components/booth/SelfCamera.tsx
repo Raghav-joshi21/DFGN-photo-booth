@@ -712,37 +712,55 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           </span>
         ) : null}
 
-        {/* Flip between the front and rear camera. Only when the device
-            actually has both, which keeps it off single-camera booth screens
-            without hard-coding "phones only". Sits opposite Snap's badge. */}
-        {hasTwoCameras && phase === "preview" ? (
-          <button
-            type="button"
-            onClick={() =>
-              setFacing((f) => (f === "user" ? "environment" : "user"))
-            }
-            aria-label={
-              facing === "user" ? "Switch to the rear camera" : "Switch to the front camera"
-            }
-            title={facing === "user" ? "Rear camera" : "Front camera"}
-            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/50 bg-black/45 text-white backdrop-blur-sm transition-transform hover:scale-105 active:scale-95"
-          >
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
-              <path
-                d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.4l1-1.6h6.2l1 1.6h1.4A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M9.8 12.4a2.6 2.6 0 0 1 4.4-1.7m0 0h-1.7m1.7 0v-1.7M14.2 13a2.6 2.6 0 0 1-4.4 1.7m0 0h1.7m-1.7 0v1.7"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+        {/* Top-right controls: the Fun/Professional filter-category dropdown,
+            plus the front/rear camera flip when the device has both. Grouped
+            in one flex row so neither ever has to guess around the other's
+            width. */}
+        {phase === "preview" ? (
+          <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as "fun" | "professional")}
+              aria-label="Filter category"
+              className="h-10 rounded-full border-2 border-white/50 bg-black/45 px-3 font-display text-xs font-bold text-white backdrop-blur-sm outline-none transition-transform hover:scale-105"
+            >
+              <option value="fun">Fun</option>
+              <option value="professional">Professional</option>
+            </select>
+
+            {/* Flip between the front and rear camera. Only when the device
+                actually has both, which keeps it off single-camera booth
+                screens without hard-coding "phones only". */}
+            {hasTwoCameras ? (
+              <button
+                type="button"
+                onClick={() =>
+                  setFacing((f) => (f === "user" ? "environment" : "user"))
+                }
+                aria-label={
+                  facing === "user" ? "Switch to the rear camera" : "Switch to the front camera"
+                }
+                title={facing === "user" ? "Rear camera" : "Front camera"}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white/50 bg-black/45 text-white backdrop-blur-sm transition-transform hover:scale-105 active:scale-95"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+                  <path
+                    d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.4l1-1.6h6.2l1 1.6h1.4A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9.8 12.4a2.6 2.6 0 0 1 4.4-1.7m0 0h-1.7m1.7 0v-1.7M14.2 13a2.6 2.6 0 0 1-4.4 1.7m0 0h1.7m-1.7 0v1.7"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         {/* Event frame, over the live preview. Mounted whenever it is on (not
