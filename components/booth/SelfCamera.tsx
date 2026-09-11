@@ -480,10 +480,30 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // selection: whichever chip is sitting in the middle. That subsumes the
   // separate Snap / face-prop / frame pickers, which is also why the IDFW
   // frame is no longer an independent toggle.
+  //
+  // The strip is split into two categories a guest can flip between: Fun (the
+  // full spread — every face prop plus every Snap lens) and Professional (a
+  // deliberately short list for guests who don't want a costume — just the
+  // house potato hat, the IDFW event frame, and no filter at all).
+  const [category, setCategory] = useState<"fun" | "professional">("fun");
+
   const carousel = useMemo<CarouselItem[]>(() => {
     const items: CarouselItem[] = [];
-    // The potato leads. It is the house look, and the carousel starts on its
-    // first entry, so whatever sits here is what the booth opens wearing.
+
+    if (category === "professional") {
+      // Nothing else on purpose — this list is meant to stay short.
+      const potato = arReady ? FACE_LENSES.find((f) => f.id === "potato-hat") : null;
+      if (potato) {
+        items.push({ key: `face:${potato.id}`, label: potato.name, fallback: potato.emoji });
+      }
+      items.push({ key: "frame", label: "IDFW frame", fallback: "IDFW" });
+      items.push({ key: "none", label: "No filter", fallback: "🚫" });
+      return items;
+    }
+
+    // Fun: everything. The potato leads. It is the house look, and the
+    // carousel starts on its first entry, so whatever sits here is what the
+    // booth opens wearing.
     if (arReady) {
       for (const f of FACE_LENSES) {
         items.push({ key: `face:${f.id}`, label: f.name, fallback: f.emoji });
@@ -498,7 +518,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     // Last, not first: "off" should not be what a guest lands on.
     items.push({ key: "none", label: "No filter", fallback: "🚫" });
     return items;
-  }, [kitReady, lenses, arReady]);
+  }, [kitReady, lenses, arReady, category]);
 
   const [selectedKey, setSelectedKey] = useState("none");
   const stripRef = useRef<HTMLDivElement>(null);
