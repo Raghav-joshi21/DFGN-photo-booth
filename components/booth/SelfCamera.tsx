@@ -15,9 +15,17 @@ import {
   playCatchSound,
   drawFallingPotato,
   drawMouthRing,
+  drawParticles,
+  drawPopups,
+  spawnCatchParticles,
   spawnPotato,
+  spawnScorePopup,
+  stepParticles,
+  stepPopups,
   stepPotatoes,
+  type CatchParticle,
   type FallingPotato,
+  type ScorePopup,
 } from "@/lib/ar/catch-game";
 import { drawFaceLens } from "@/lib/ar/draw";
 import { savePhoto } from "@/lib/photos/save";
