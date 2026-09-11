@@ -832,6 +832,25 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           />
         ) : null}
 
+        {/* IDFW sticker stamp, over the live preview. Mounted whenever one is
+            picked (not gated on phase) so the element is decoded and ready
+            for the capture to draw — same reasoning as the event frame
+            above. Positioned as a bottom-right corner badge, in percentages
+            so the CSS box matches the fractions `capture()` uses on the
+            canvas. */}
+        {stickerId ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            ref={stickerImgRef}
+            src={IDFW_STICKERS.find((s) => s.id === stickerId)?.src}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute z-10 w-[30%] object-contain drop-shadow-md"
+            style={{ right: "4%", bottom: "4%" }}
+            hidden={phase === "captured"}
+          />
+        ) : null}
+
         {/* Captured still. */}
         {captured ? (
           // eslint-disable-next-line @next/next/no-img-element
