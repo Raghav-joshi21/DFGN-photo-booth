@@ -489,6 +489,9 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   const carousel = useMemo<CarouselItem[]>(() => {
     const items: CarouselItem[] = [];
+    // First, not last: the carousel starts on "No filter", so that's what a
+    // guest lands on before picking anything.
+    items.push({ key: "none", label: "No filter", fallback: "🚫" });
 
     if (category === "professional") {
       // Nothing else on purpose — this list is meant to stay short.
@@ -497,13 +500,10 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         items.push({ key: `face:${potato.id}`, label: potato.name, fallback: potato.emoji });
       }
       items.push({ key: "frame", label: "IDFW frame", fallback: "IDFW" });
-      items.push({ key: "none", label: "No filter", fallback: "🚫" });
       return items;
     }
 
-    // Fun: everything. The potato leads. It is the house look, and the
-    // carousel starts on its first entry, so whatever sits here is what the
-    // booth opens wearing.
+    // Fun: everything else.
     if (arReady) {
       for (const f of FACE_LENSES) {
         items.push({ key: `face:${f.id}`, label: f.name, fallback: f.emoji });
@@ -515,8 +515,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
         items.push({ key: `snap:${lens.id}`, label: lens.name, icon: lens.iconUrl });
       }
     }
-    // Last, not first: "off" should not be what a guest lands on.
-    items.push({ key: "none", label: "No filter", fallback: "🚫" });
     return items;
   }, [kitReady, lenses, arReady, category]);
 
