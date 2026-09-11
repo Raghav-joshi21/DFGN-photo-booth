@@ -508,6 +508,8 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             if (gameOnRef.current) {
               for (const p of potatoesRef.current) drawFallingPotato(ctx, p);
               for (const m of mouths) drawMouthRing(ctx, m);
+              drawParticles(ctx, particlesRef.current);
+              drawPopups(ctx, popupsRef.current);
             }
           }
         }
