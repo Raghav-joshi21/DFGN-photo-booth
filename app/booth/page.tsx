@@ -147,10 +147,13 @@ function IdleScreen() {
           aria-hidden
           width={277}
           height={246}
-          className="pointer-events-none absolute left-1/2 top-1 hidden w-16 -translate-x-1/2 rotate-[-5deg] opacity-60 drop-shadow-sm sm:top-2 sm:block sm:w-20 md:w-24"
+          // -z-10: absolutely positioned elements otherwise paint above
+          // normal-flow siblings regardless of DOM order, which put this
+          // decoration on top of (covering) the header text below it.
+          className="pointer-events-none absolute left-1/2 top-1 -z-10 hidden w-16 -translate-x-1/2 rotate-[-5deg] opacity-60 drop-shadow-sm sm:top-2 sm:block sm:w-20 md:w-24"
         />
 
-        <header className="mb-[clamp(0.5rem,1.2vh,1rem)] flex shrink-0 items-center gap-3">
+        <header className="relative z-10 mb-[clamp(0.5rem,1.2vh,1rem)] flex shrink-0 items-center gap-3">
           <div className="h-[clamp(2.25rem,4vh,3rem)] w-[clamp(2.25rem,4vh,3rem)] shrink-0 overflow-hidden rounded-full border-[3px] border-brand-orange bg-cream-light">
             <Clip
               src="/art/potato-booth.mp4"
