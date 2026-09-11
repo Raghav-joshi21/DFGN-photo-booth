@@ -373,6 +373,18 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     setStage("results");
   }, []);
 
+  /** A brief screen shake for a golden catch, a rotten mistake, or a combo
+   *  bonus — applied straight to the DOM node rather than through React
+   *  state, so restarting it mid-shake (a fast run of catches) is just a
+   *  reflow away instead of a re-render. See .catch-shake in globals.css. */
+  const triggerShake = useCallback(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    el.classList.remove("catch-shake");
+    void el.offsetWidth; // force reflow so a re-trigger restarts the animation
+    el.classList.add("catch-shake");
+  }, []);
+
   // The loop only steps/spawns while the guest can actually see it.
   const phaseRef = useRef<Phase>("preview");
   useEffect(() => {
