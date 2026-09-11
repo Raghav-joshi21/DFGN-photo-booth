@@ -782,7 +782,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
   // full spread — every face prop plus every Snap lens) and Professional (no
   // costumes — just the house potato hat, the IDFW event frame, a corner
   // stamp from the official sticker sheet, and no filter at all).
-  const [category, setCategory] = useState<"fun" | "professional">("fun");
+  const [category, setCategory] = useState<"fun" | "professional">("professional");
 
   const carousel = useMemo<CarouselItem[]>(() => {
     const items: CarouselItem[] = [];
