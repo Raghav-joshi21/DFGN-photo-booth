@@ -161,10 +161,13 @@ export function drawFallingPotato(ctx: CanvasRenderingContext2D, p: FallingPotat
   ctx.translate(p.x, p.y);
   ctx.rotate(p.rotation);
   // Golden potatoes get a warm glow so they read as "special" even mid-fall,
-  // not just once caught.
+  // not just once caught. Rotten ones are tinted sickly green — the one to
+  // dodge, not eat — via a canvas filter so the same sprite doubles as both.
   if (p.golden) {
     ctx.shadowColor = "rgba(255,206,64,0.9)";
     ctx.shadowBlur = p.r * 0.9;
+  } else if (p.rotten) {
+    ctx.filter = "sepia(1) hue-rotate(70deg) saturate(3.5) brightness(0.75)";
   }
   if (img) {
     ctx.drawImage(img, -p.r, -p.r, p.r * 2, p.r * 2);
@@ -172,10 +175,20 @@ export function drawFallingPotato(ctx: CanvasRenderingContext2D, p: FallingPotat
     // Still loading — a plain circle keeps the game visible meanwhile.
     ctx.beginPath();
     ctx.arc(0, 0, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = p.golden ? "#f2c744" : "#d9a441";
+    ctx.fillStyle = p.golden ? "#f2c744" : p.rotten ? "#5c6b2e" : "#d9a441";
     ctx.fill();
   }
   ctx.restore();
+
+  // A little warning glyph above rotten ones — the tint alone is subtle at
+  // kiosk viewing distance, and this is the one potato a guest must avoid.
+  if (p.rotten) {
+    ctx.save();
+    ctx.font = `${Math.round(p.r * 0.9)}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("🤢", p.x, p.y - p.r * 1.15);
+    ctx.restore();
+  }
 }
 
 // --- Catch "juice": burst particles + a floating score popup --------------
