@@ -23,6 +23,10 @@ export interface FallingPotato {
   rotation: number;
   spin: number;
   eaten?: boolean;
+  /** A rare golden potato is worth more and gets its own catch sound/particle colour. */
+  golden?: boolean;
+  /** Points this potato is worth when caught — 1 normally, more if golden. */
+  value: number;
 }
 
 export interface MouthState {
