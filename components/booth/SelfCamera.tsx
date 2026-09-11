@@ -819,9 +819,13 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           hidden={phase === "captured"}
         />
 
-        {/* Catch-game score, while it's on. */}
+        {/* Catch-game score, while it's on. Re-keyed on every catch so its
+            CSS pop animation (see .catch-pulse in globals.css) replays. */}
         {gameOn && phase !== "captured" ? (
-          <span className="absolute left-3 top-3 z-20 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm">
+          <span
+            key={pulseKey}
+            className="catch-pulse absolute left-3 top-3 z-20 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm"
+          >
             🥔 Eaten: {eaten}
           </span>
         ) : null}
