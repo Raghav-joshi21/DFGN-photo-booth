@@ -533,13 +533,10 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     startFaceAr().then((ar: FaceArHandle | null) => {
       if (cancelled || !ar) return;
       setArReady(true);
-      // House style: the potato hat leads — but only when no Snap lens is
-      // already on, so the booth never starts with two effects at once. Only
-      // sets it the first time, so it doesn't clobber a guest's own pick
-      // across a "Try again" re-run.
-      setFaceLensId((cur) =>
-        cur ?? (activeLensIdRef.current ? null : "potato-hat"),
-      );
+      // Deliberately not auto-applying the potato hat here: the booth's own
+      // default is "No filter" (see the carousel's `autoSelected` effect
+      // below), so a guest who hasn't touched the strip yet sees a plain
+      // preview, not a costume they didn't pick.
 
       const loop = () => {
         if (cancelled) return;
