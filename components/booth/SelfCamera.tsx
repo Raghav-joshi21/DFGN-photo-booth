@@ -236,38 +236,138 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
 
   // --- "Catch the falling potatoes" mode ----------------------------------
   // Runs right inside this same preview and the same detection loop below —
-  // no separate screen, no second camera stream. Open your mouth under a
-  // potato to eat it and score; a rare golden one is worth 3 and gets its own
-  // sound and sparkle burst. Consecutive catches build a combo (pitch climbs,
-  // a "xN combo!" popup fires) as long as they land within COMBO_WINDOW_MS of
-  // each other.
-  const [gameOn, setGameOn] = useState(false);
+  // no separate screen, no second camera stream. A timed round, not an
+  // open-ended toggle: tapping the game button runs a "3, 2, 1, GO!"
+  // countdown, then a 30s round, then a results card with the final score,
+  // best combo, and a localStorage high score. Open your mouth under a
+  // potato to eat it — plain ones are +1, a rare golden one is +3 with its
+  // own sound and sparkle burst, and a rotten one (🤢) is -1 and breaks the
+  // combo, so it's not just catch-everything. Consecutive good catches build
+  // a combo (pitch climbs, a "×N combo!" popup fires) as long as they land
+  // within COMBO_WINDOW_MS of each other, and every score milestone (see
+  // MILESTONES) gets its own confetti burst and fanfare.
+  type GameStage = "off" | "countdown" | "playing" | "results";
+  const [stage, setStage] = useState<GameStage>("off");
+  const stageRef = useRef<GameStage>("off");
+  useEffect(() => {
+    stageRef.current = stage;
+  }, [stage]);
+
   const [eaten, setEaten] = useState(0);
-  const gameOnRef = useRef(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [countdownBeat, setCountdownBeat] = useState<number>(COUNTDOWN_BEATS[0]);
+  const [highScore, setHighScore] = useState(0);
+  const [results, setResults] = useState<{ score: number; bestCombo: number; isNewHigh: boolean } | null>(
+    null,
+  );
+
   const eatenRef = useRef(0);
+  const timeLeftRef = useRef(0);
+  const highScoreRef = useRef(0);
   const potatoesRef = useRef<FallingPotato[]>([]);
   const particlesRef = useRef<CatchParticle[]>([]);
   const popupsRef = useRef<ScorePopup[]>([]);
   const spawnAccRef = useRef(0);
   const lastFrameRef = useRef(0);
+  const roundEndAtRef = useRef(0);
+  // Which score milestones this round has already celebrated, so a guest who
+  // lingers at (say) 10 doesn't get the confetti burst fired every frame.
+  const milestoneHitRef = useRef<Set<number>>(new Set());
   // Combo streak: resets once a catch is more than COMBO_WINDOW_MS after the
   // last one, rather than on a fixed timer, so a guest who's on a roll never
-  // gets cut off mid-streak by a clock they can't see.
+  // gets cut off mid-streak by a clock they can't see. A rotten catch also
+  // resets it immediately, regardless of timing.
   const comboRef = useRef(0);
+  const bestComboRef = useRef(0);
   const lastCatchAtRef = useRef(0);
   // Bumped on every catch and threaded onto the score badge's `key`, so its
   // CSS pop animation replays each time — see .catch-pulse in globals.css.
   const [pulseKey, setPulseKey] = useState(0);
+
+  // Load the saved high score once. Best-effort: a kiosk in a private/locked
+  // browser context just plays without one.
   useEffect(() => {
-    gameOnRef.current = gameOn;
-    if (!gameOn) {
-      // Clear the board (and any in-flight juice) when switched off.
-      potatoesRef.current = [];
-      particlesRef.current = [];
-      popupsRef.current = [];
-      comboRef.current = 0;
+    try {
+      const saved = Number(localStorage.getItem(HIGH_SCORE_KEY)) || 0;
+      highScoreRef.current = saved;
+      setHighScore(saved);
+    } catch {
+      // No storage access — the round still plays, just without a "Best".
     }
-  }, [gameOn]);
+  }, []);
+
+  /** Wipe the board back to a fresh, un-started game. Also how "Start over"
+   *  (after a capture) leaves the game for the next guest. */
+  const resetGame = useCallback(() => {
+    setStage("off");
+    setResults(null);
+    eatenRef.current = 0;
+    setEaten(0);
+    potatoesRef.current = [];
+    particlesRef.current = [];
+    popupsRef.current = [];
+    comboRef.current = 0;
+    bestComboRef.current = 0;
+    milestoneHitRef.current.clear();
+  }, []);
+
+  /** Tapping the game button from "off": clear the board and start the
+   *  countdown. */
+  const startRound = useCallback(() => {
+    eatenRef.current = 0;
+    setEaten(0);
+    potatoesRef.current = [];
+    particlesRef.current = [];
+    popupsRef.current = [];
+    comboRef.current = 0;
+    bestComboRef.current = 0;
+    milestoneHitRef.current.clear();
+    spawnAccRef.current = 0;
+    setResults(null);
+    setStage("countdown");
+  }, []);
+
+  // The "3, 2, 1, GO!" beats, then straight into "playing" with a fresh round
+  // clock. A plain setInterval rather than the rAF loop below: it needs to
+  // run even before that loop's face-model promise has resolved.
+  useEffect(() => {
+    if (stage !== "countdown") return;
+    let i = 0;
+    setCountdownBeat(COUNTDOWN_BEATS[0]);
+    const id = setInterval(() => {
+      i += 1;
+      if (i >= COUNTDOWN_BEATS.length) {
+        clearInterval(id);
+        roundEndAtRef.current = performance.now() + ROUND_MS;
+        setStage("playing");
+        return;
+      }
+      setCountdownBeat(COUNTDOWN_BEATS[i]);
+    }, COUNTDOWN_BEAT_MS);
+    return () => clearInterval(id);
+  }, [stage]);
+
+  /** Round over — by the clock running out, or the guest ending it early.
+   *  Scores the round, updates the high score, and shows the results card. */
+  const endRound = useCallback(() => {
+    const score = eatenRef.current;
+    const isNewHigh = score > highScoreRef.current;
+    if (isNewHigh) {
+      highScoreRef.current = score;
+      setHighScore(score);
+      try {
+        localStorage.setItem(HIGH_SCORE_KEY, String(score));
+      } catch {
+        // No storage access — the high score just won't survive a refresh.
+      }
+    }
+    setResults({ score, bestCombo: bestComboRef.current, isNewHigh });
+    potatoesRef.current = [];
+    particlesRef.current = [];
+    popupsRef.current = [];
+    setStage("results");
+  }, []);
+
   // The loop only steps/spawns while the guest can actually see it.
   const phaseRef = useRef<Phase>("preview");
   useEffect(() => {
