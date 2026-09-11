@@ -13,6 +13,7 @@ import { FACE_LENSES, startFaceAr, type FaceArHandle } from "@/lib/ar";
 import {
   computeMouth,
   playCatchSound,
+  playComboBonusSound,
   playMilestoneSound,
   playRottenSound,
   drawFallingPotato,
