@@ -954,17 +954,8 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           It must be `container-type: size`, not Tailwind's `@container`
           (inline-size): cqh only resolves under size containment, and without
           it the max-width is dropped and max-height squashes the frame off
-          16:9.
-
-          `items-start`, not `items-center`: on a wide screen the frame is
-          width-bound (it hits max-w before max-h), so it renders shorter
-          than this container. Centering it vertically then stranded it with
-          a dead gap between the header above and the frame, which read as
-          the header floating up near the page's own top chrome — anchoring
-          the frame to the top instead keeps it right under the header and
-          pushes the leftover slack down below it, where it's just empty
-          space above the shutter strip instead of a visual disconnect. */}
-      <div className="flex min-h-0 w-full flex-1 items-start justify-center [container-type:size]">
+          16:9. */}
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
         <div
           ref={frameRef}
           className="relative mx-auto aspect-[9/16] max-h-full w-full max-w-[calc(100cqh*9/16)] overflow-hidden rounded-[26px] border-[4px] border-ink bg-black shadow-[8px_8px_0_var(--color-ink)] sm:aspect-[16/9] sm:max-w-[calc(100cqh*16/9)]"
