@@ -300,14 +300,23 @@ export function drawParticles(ctx: CanvasRenderingContext2D, particles: CatchPar
   }
 }
 
-/** "+1", "+3 GOLDEN!", or a combo callout — rises and fades over its life. */
-export function spawnScorePopup(popups: ScorePopup[], x: number, y: number, text: string, color = "#fff"): void {
-  popups.push({ x, y, text, life: 700, maxLife: 700, color });
+/** "+1", "+3 GOLDEN!", or a combo callout — rises and fades over its life.
+ *  `big` is for a combo-streak bonus: bigger, and it lingers longer. */
+export function spawnScorePopup(
+  popups: ScorePopup[],
+  x: number,
+  y: number,
+  text: string,
+  color = "#fff",
+  big = false,
+): void {
+  const life = big ? 1000 : 700;
+  popups.push({ x, y, text, life, maxLife: life, color, big });
 }
 
 export function stepPopups(popups: ScorePopup[], dt: number): ScorePopup[] {
   for (const p of popups) {
-    p.y -= 0.045 * dt;
+    p.y -= (p.big ? 0.03 : 0.045) * dt;
     p.life -= dt;
   }
   return popups.filter((p) => p.life > 0);
