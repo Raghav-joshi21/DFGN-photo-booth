@@ -282,40 +282,61 @@ export function drawMouthRing(ctx: CanvasRenderingContext2D, mouth: MouthState):
 }
 
 /**
- * A short "pop" when a potato is caught.
+ * A short "pop" when a potato is caught — pitches up with the guest's combo
+ * streak so a run of quick catches actually sounds like it's building into
+ * something, and swaps in a brighter two-note chime for a golden potato.
  *
- * Synthesised rather than loaded from a file: it is two hundred milliseconds
- * of tone, and a booth that already pulls a 6MB face model does not need
- * another asset for it. The context is created on first use, which is always
- * inside a tap (the game is switched on by one), so autoplay policy is happy.
+ * Synthesised rather than loaded from a file: it is a fraction of a second of
+ * tone, and a booth that already pulls a 6MB face model does not need another
+ * asset for it. The context is created on first use, which is always inside a
+ * tap (the game is switched on by one), so autoplay policy is happy.
  *
  * Best-effort throughout — a booth with no audio output should still play the
  * game, so every failure here is swallowed.
  */
 let audio: AudioContext | null = null;
 
-export function playCatchSound(): void {
+function tone(
+  ctx: AudioContext,
+  startAt: number,
+  from: number,
+  to: number,
+  duration: number,
+  peakGain: number,
+  type: OscillatorType,
+): void {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(from, startAt);
+  osc.frequency.exponentialRampToValueAtTime(to, startAt + duration * 0.45);
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(peakGain, startAt + duration * 0.06);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + duration);
+}
+
+export function playCatchSound(opts: { combo?: number; golden?: boolean } = {}): void {
+  const { combo = 1, golden = false } = opts;
   try {
     audio ??= new AudioContext();
     if (audio.state === "suspended") void audio.resume();
-
     const t = audio.currentTime;
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
 
-    // A quick rise reads as "got it" rather than as an error beep.
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(520, t);
-    osc.frequency.exponentialRampToValueAtTime(920, t + 0.09);
+    if (golden) {
+      // A little two-note chime — reads as a jackpot, not just another catch.
+      tone(audio, t, 660, 990, 0.16, 0.24, "triangle");
+      tone(audio, t + 0.08, 990, 1320, 0.18, 0.2, "sine");
+      return;
+    }
 
-    // Ramps to a small non-zero value: exponential ramps cannot reach 0.
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.22, t + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
-
-    osc.connect(gain).connect(audio.destination);
-    osc.start(t);
-    osc.stop(t + 0.2);
+    // Combo climbs the pitch each consecutive catch (capped so it never
+    // shrieks), which is most of what makes a streak feel like a streak.
+    const step = Math.min(combo - 1, 6);
+    const base = 480 + step * 55;
+    tone(audio, t, base, base + 380, 0.2, 0.22, "triangle");
   } catch {
     // No audio output, or a context the browser refused to start.
   }
