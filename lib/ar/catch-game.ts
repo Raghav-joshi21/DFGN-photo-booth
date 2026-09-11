@@ -146,7 +146,7 @@ export function stepPotatoes(
       const d = Math.hypot(p.x - mouth.x, p.y - mouth.y);
       if (d < p.r + mouth.catchRadius) {
         p.eaten = true;
-        catches.push({ x: p.x, y: p.y, value: p.value, golden: !!p.golden });
+        catches.push({ x: p.x, y: p.y, value: p.value, golden: !!p.golden, rotten: !!p.rotten });
       }
     }
   }
