@@ -325,13 +325,24 @@ export function stepPopups(popups: ScorePopup[], dt: number): ScorePopup[] {
 export function drawPopups(ctx: CanvasRenderingContext2D, popups: ScorePopup[]): void {
   for (const p of popups) {
     const t = Math.max(0, p.life / p.maxLife);
+    // Big ones punch in with a quick overshoot-then-settle scale, rather
+    // than just fading in place like a plain "+1" — that's most of what
+    // reads as "big" beyond the larger font.
+    const growIn = p.big ? Math.min(1, (1 - t) * 6) : 1;
+    const scale = p.big ? 0.7 + 0.5 * Math.sin(Math.min(growIn, 1) * (Math.PI / 2)) : 1;
     ctx.save();
     ctx.globalAlpha = Math.min(1, t * 1.4);
-    ctx.font = "bold 22px sans-serif";
+    ctx.translate(p.x, p.y);
+    ctx.scale(scale, scale);
+    if (p.big) {
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 18;
+    }
+    ctx.font = p.big ? "bold 40px sans-serif" : "bold 22px sans-serif";
     ctx.textAlign = "center";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = p.big ? 5 : 3;
     ctx.strokeStyle = "rgba(0,0,0,0.55)";
-    ctx.strokeText(p.text, p.x, p.y);
+    ctx.strokeText(p.text, 0, 0);
     ctx.fillStyle = p.color;
     ctx.fillText(p.text, p.x, p.y);
     ctx.restore();
