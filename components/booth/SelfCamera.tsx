@@ -1278,15 +1278,22 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
               </button>
             ) : null}
             {/* Catch game is a booth-screen amusement: on a phone it eats the
-                preview and there is no crowd around it. */}
-            <button
-              onClick={() => setGameOn((v) => !v)}
-              className={`hidden rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-bold shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 sm:inline-flex ${
-                gameOn ? "bg-brand-green text-white" : "bg-cream-light text-ink"
-              }`}
-            >
-              🥔 Catch game{gameOn ? `: ${eaten}` : ""}
-            </button>
+                preview and there is no crowd around it. Hidden during
+                "results" — that card has its own Play again / Done buttons. */}
+            {stage !== "results" ? (
+              <button
+                onClick={() => {
+                  if (stage === "off") startRound();
+                  else if (stage === "countdown") setStage("off"); // cancel before it starts
+                  else endRound(); // "playing": end the round early
+                }}
+                className={`hidden rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-bold shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 sm:inline-flex ${
+                  stage !== "off" ? "bg-brand-green text-white" : "bg-cream-light text-ink"
+                }`}
+              >
+                {stage === "off" ? "🥔 Catch game" : stage === "countdown" ? "🥔 Get ready…" : `🥔 Catch game: ${eaten}`}
+              </button>
+            ) : null}
           </>
         )}
       </div>
