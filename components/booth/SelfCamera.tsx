@@ -198,6 +198,14 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  // --- IDFW stickers (Professional category) -------------------------------
+  // A single sticker stamped in the corner of the shot, baked into the
+  // capture the same way the event frame is. Only one of frame / sticker /
+  // lens is ever on at once — see `applySelection`.
+  const [stickerId, setStickerId] = useState<string | null>(null);
+  const stickerImgRef = useRef<HTMLImageElement>(null);
+
   // The rAF loop below reads the selection through a ref so picking a new
   // lens doesn't need to tear down and restart the detection loop.
   const faceLensIdRef = useRef<string | null>(null);
