@@ -71,16 +71,31 @@ export function computeMouth(lm: NormalizedLandmark[], w: number, h: number): Mo
 
 let nextId = 0;
 
-export function spawnPotato(potatoes: FallingPotato[], canvasWidth: number): void {
-  const r = canvasWidth * (0.05 + Math.random() * 0.02);
+/** One in this many potatoes is golden — worth more, and worth chasing. */
+const GOLDEN_ODDS = 8;
+
+/**
+ * `speedMul` ramps the game up as the guest's score climbs (see SelfCamera's
+ * difficulty curve) — 1 at the start, capped well short of "unfair" so a
+ * kiosk guest can always still catch something.
+ */
+export function spawnPotato(
+  potatoes: FallingPotato[],
+  canvasWidth: number,
+  speedMul = 1,
+): void {
+  const golden = Math.random() < 1 / GOLDEN_ODDS;
+  const r = canvasWidth * (0.05 + Math.random() * 0.02) * (golden ? 0.85 : 1);
   potatoes.push({
     id: nextId++,
     x: r + Math.random() * (canvasWidth - r * 2),
     y: -r,
-    vy: 0.16 + Math.random() * 0.07, // canvas px per ms
+    vy: (0.16 + Math.random() * 0.07) * speedMul, // canvas px per ms
     r,
     rotation: Math.random() * Math.PI * 2,
-    spin: (Math.random() - 0.5) * 0.004,
+    spin: (Math.random() - 0.5) * 0.004 * (golden ? 2.2 : 1),
+    golden,
+    value: golden ? 3 : 1,
   });
 }
 
