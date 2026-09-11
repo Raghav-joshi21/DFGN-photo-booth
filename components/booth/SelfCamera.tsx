@@ -618,25 +618,15 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
    */
   const startOver = () => {
     retake();
-    setFrameOn(false);
     setGameOn(false);
     setEaten(0);
     eatenRef.current = 0;
     potatoesRef.current = [];
 
-    // Back to the house default — one effect, picked the same way the boot
-    // above picks it: the Snap potato lens when there is one, our own potato
-    // hat otherwise. Never both.
-    const kit = kitRef.current;
-    const snapDefault = kit?.defaultLens ?? null;
-    setActiveLensId(snapDefault?.id ?? null);
-    setFaceLensId(snapDefault ? null : arReady ? "potato-hat" : null);
-    if (kit) {
-      (snapDefault
-        ? kit.session.applyLens(snapDefault)
-        : kit.session.removeLens()
-      ).catch(() => setActiveLensId(null));
-    }
+    // Back to the house default: "No filter", the carousel's first entry —
+    // same landing spot a fresh guest gets.
+    applySelection("none");
+    centreChip("none");
   };
 
   const usePhoto = async () => {
