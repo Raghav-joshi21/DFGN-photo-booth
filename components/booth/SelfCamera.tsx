@@ -55,6 +55,14 @@ const IDFW_FRAME_PORTRAIT = "/art/idfw-frame-portrait.webp";
 const IDFW_FRAME_LANDSCAPE = "/art/idfw-frame-landscape.webp";
 /** Catches within this many ms of each other extend the catch-game combo. */
 const COMBO_WINDOW_MS = 1400;
+/** Length of one catch-game round, once the "3, 2, 1, GO!" countdown ends. */
+const ROUND_MS = 30_000;
+/** The "3, 2, 1" beats before a round starts — GO! gets the last, shorter one. */
+const COUNTDOWN_BEATS = [3, 2, 1, 0] as const; // 0 stands in for "GO!"
+const COUNTDOWN_BEAT_MS = 700;
+/** Score milestones worth a confetti burst + fanfare. */
+const MILESTONES = [10, 25, 50, 75, 100];
+const HIGH_SCORE_KEY = "dfgn-booth-catch-high-score";
 
 /**
  * The official "IDFW '26 — Latvia" sticker sheet (public/stickers), cut out
