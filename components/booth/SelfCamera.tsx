@@ -815,24 +815,6 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
             already centred takes the photo. */}
         {phase !== "captured" ? (
           <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/60 to-transparent pb-3 pt-10">
-            {/* Fun / Professional category switch. */}
-            <div className="mb-2 flex items-center justify-center gap-2">
-              {(["fun", "professional"] as const).map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat)}
-                  aria-pressed={category === cat}
-                  className={`rounded-full border-2 px-3.5 py-1 font-display text-[11px] font-bold capitalize transition-colors ${
-                    category === cat
-                      ? "border-white bg-white text-ink"
-                      : "border-white/40 bg-white/10 text-white/70 hover:bg-white/20"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
             <div
               ref={stripRef}
               onScroll={onStripScroll}
