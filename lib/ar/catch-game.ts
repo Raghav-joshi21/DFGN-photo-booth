@@ -344,7 +344,7 @@ export function drawPopups(ctx: CanvasRenderingContext2D, popups: ScorePopup[]):
     ctx.strokeStyle = "rgba(0,0,0,0.55)";
     ctx.strokeText(p.text, 0, 0);
     ctx.fillStyle = p.color;
-    ctx.fillText(p.text, p.x, p.y);
+    ctx.fillText(p.text, 0, 0);
     ctx.restore();
   }
 }
