@@ -433,6 +433,22 @@ export function playRottenSound(): void {
   }
 }
 
+/** A stacked power-chord "sting" for a combo-streak bonus (see
+ *  COMBO_BONUS_EVERY in SelfCamera) — three tones at once, punchier and more
+ *  triumphant than a single catch, distinct from the milestone fanfare. */
+export function playComboBonusSound(): void {
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+    const t = audio.currentTime;
+    tone(audio, t, 440, 660, 0.3, 0.2, "sawtooth");
+    tone(audio, t, 660, 990, 0.3, 0.16, "triangle");
+    tone(audio, t, 880, 1320, 0.3, 0.12, "sine");
+  } catch {
+    // No audio output, or a context the browser refused to start.
+  }
+}
+
 /** A quick three-note rising fanfare for a score milestone (10, 25, 50…). */
 export function playMilestoneSound(): void {
   try {
