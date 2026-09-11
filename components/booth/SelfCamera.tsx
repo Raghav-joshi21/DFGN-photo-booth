@@ -1003,15 +1003,65 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
           hidden={phase === "captured"}
         />
 
-        {/* Catch-game score, while it's on. Re-keyed on every catch so its
-            CSS pop animation (see .catch-pulse in globals.css) replays. */}
-        {gameOn && phase !== "captured" ? (
+        {/* Catch-game score + round clock, while a round is live. Re-keyed on
+            every catch so its CSS pop animation (see .catch-pulse in
+            globals.css) replays. */}
+        {stage === "playing" && phase !== "captured" ? (
           <span
             key={pulseKey}
             className="catch-pulse absolute left-3 top-3 z-20 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold text-white backdrop-blur-sm"
           >
-            🥔 Eaten: {eaten}
+            🥔 {eaten} · ⏱ {timeLeft}s
           </span>
+        ) : null}
+
+        {/* "3, 2, 1, GO!" countdown before a round starts. Re-keyed per beat
+            so its pop animation replays each count. */}
+        {stage === "countdown" && phase !== "captured" ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/35">
+            <span
+              key={countdownBeat}
+              className="catch-pulse font-display text-7xl font-extrabold text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.4)]"
+            >
+              {countdownBeat === 0 ? "GO!" : countdownBeat}
+            </span>
+          </div>
+        ) : null}
+
+        {/* Round results — final score, best combo, and the high score. */}
+        {stage === "results" && results && phase !== "captured" ? (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2.5 bg-black/70 p-6 text-center text-white">
+            <p className="font-display text-sm font-bold uppercase tracking-wide text-white/70">
+              Time&apos;s up!
+            </p>
+            <p className="font-display text-5xl font-extrabold">🥔 {results.score}</p>
+            {results.isNewHigh ? (
+              <p className="font-display text-sm font-bold uppercase tracking-wide text-brand-yellow">
+                🏆 New high score!
+              </p>
+            ) : (
+              <p className="text-xs text-white/60">Best: {highScore}</p>
+            )}
+            {results.bestCombo >= 3 ? (
+              <p className="text-xs text-white/60">Best combo: ×{results.bestCombo}</p>
+            ) : null}
+            <div className="mt-2 flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setStage("off")}
+                className="rounded-full border-[3px] border-ink bg-cream-light px-5 py-2 font-display font-bold text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
+              >
+                Done
+              </button>
+              <button
+                type="button"
+                onClick={startRound}
+                className="rounded-full border-[3px] border-ink bg-brand-orange px-5 py-2 font-display font-bold text-white shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5"
+              >
+                Play again
+              </button>
+            </div>
+          </div>
         ) : null}
 
         {/* Top-right controls: the front/rear camera flip when the device has
