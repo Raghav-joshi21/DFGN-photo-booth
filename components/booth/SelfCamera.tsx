@@ -507,7 +507,7 @@ export function SelfCamera({ onExit }: { onExit?: () => void }) {
       // Deliberately not auto-applying `result.defaultLens` here: the booth's
       // own default is "No filter" (see the carousel's `autoSelected` effect
       // below), not a lens picked for the guest before they've touched the
-      // strip. `defaultLens` is still there for "Start over" to fall back on.
+      // strip.
     });
 
     return () => {
