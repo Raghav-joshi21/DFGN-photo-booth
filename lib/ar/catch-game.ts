@@ -391,3 +391,30 @@ export function playCatchSound(opts: { combo?: number; golden?: boolean } = {}):
     // No audio output, or a context the browser refused to start.
   }
 }
+
+/** A low descending "yuck" for eating the rotten potato — unmistakably a
+ *  penalty, not another catch. */
+export function playRottenSound(): void {
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+    const t = audio.currentTime;
+    tone(audio, t, 260, 120, 0.28, 0.2, "sawtooth");
+  } catch {
+    // No audio output, or a context the browser refused to start.
+  }
+}
+
+/** A quick three-note rising fanfare for a score milestone (10, 25, 50…). */
+export function playMilestoneSound(): void {
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+    const t = audio.currentTime;
+    tone(audio, t, 520, 660, 0.14, 0.2, "triangle");
+    tone(audio, t + 0.1, 660, 830, 0.14, 0.2, "triangle");
+    tone(audio, t + 0.2, 830, 1100, 0.22, 0.22, "triangle");
+  } catch {
+    // No audio output, or a context the browser refused to start.
+  }
+}
