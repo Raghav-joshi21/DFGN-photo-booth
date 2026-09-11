@@ -75,6 +75,8 @@ let nextId = 0;
 
 /** One in this many potatoes is golden — worth more, and worth chasing. */
 const GOLDEN_ODDS = 8;
+/** One in this many (of the non-golden rest) is rotten — the one to dodge. */
+const ROTTEN_ODDS = 5;
 
 /**
  * `speedMul` ramps the game up as the guest's score climbs (see SelfCamera's
@@ -87,6 +89,7 @@ export function spawnPotato(
   speedMul = 1,
 ): void {
   const golden = Math.random() < 1 / GOLDEN_ODDS;
+  const rotten = !golden && Math.random() < 1 / ROTTEN_ODDS;
   const r = canvasWidth * (0.05 + Math.random() * 0.02) * (golden ? 0.85 : 1);
   potatoes.push({
     id: nextId++,
@@ -97,7 +100,8 @@ export function spawnPotato(
     rotation: Math.random() * Math.PI * 2,
     spin: (Math.random() - 0.5) * 0.004 * (golden ? 2.2 : 1),
     golden,
-    value: golden ? 3 : 1,
+    rotten,
+    value: golden ? 3 : rotten ? -1 : 1,
   });
 }
 
@@ -108,6 +112,7 @@ export interface CatchEvent {
   y: number;
   value: number;
   golden: boolean;
+  rotten: boolean;
 }
 
 /**
